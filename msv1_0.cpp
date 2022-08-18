@@ -52,6 +52,7 @@ namespace {
                             *returnBuffer = nullptr;
                             LsaFreeReturnBuffer(returnBuffer);
                         }
+                        std::cout << "ProtocolStatus: 0x" << protocolStatus << std::endl;
                     }
                     else {
                         std::cout << "Error: " << status << std::endl;
