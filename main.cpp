@@ -15,7 +15,7 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         auto domain{ converter.from_bytes(result["domain"].as<std::string>()) };
         auto account{ converter.from_bytes(result["account"].as<std::string>()) };
-        auto computer{ std::make_shared<std::wstring>((result.count("computer")) ? converter.from_bytes(result["computer"].as<std::string>()) : L"") };
+        auto computer{ std::wstring((result.count("computer")) ? converter.from_bytes(result["computer"].as<std::string>()) : L"") };
         std::vector<byte> hash;
         if (result.count("hash")) {
             hash = HexDecode(converter.from_bytes(result["hash"].as<std::string>()));
@@ -23,24 +23,25 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
         else {
             hash = CalculateNtOwfPassword(result["pass"].as<std::string>());
         }
-        auto logonInfo{ GetLogonInfo(domain, account, result.count("computer") ? computer : nullptr, hash) };
+        auto logonInfo{ GetLogonInfo(domain, account, computer, hash) };
         // Populate the validation info and supplemental creds
         ULONG requestFlags = static_cast<ULONG>(CacheLogonFlags::RequestInfo4);
-        Netlogon::PVALIDATION_SAM_INFO4 validationInfo4;
+        Netlogon::VALIDATION_SAM_INFO4 validationInfo4;
+        std::memset(&validationInfo4, 0, sizeof(Netlogon::VALIDATION_SAM_INFO4));
         std::vector<byte> supplementalCreds;
         if (result.count("mitlogon")) {
             requestFlags |= static_cast<ULONG>(MSV1_0::CacheLogonFlags::RequestMitLogon);
             auto upn{ converter.from_bytes(result["mitlogon"].as<std::string>()) };
             supplementalCreds = GetSupplementalMitCreds(domain, upn);
         }
-        else if (result.count("suppcreds")) {
+        if (result.count("suppcreds")) {
             supplementalCreds = HexDecode(converter.from_bytes(result["suppcreds"].as<std::string>()));
         }
         // Set any additional flags that may have been specified
         requestFlags |= (result.count("delete")) ? static_cast<ULONG>(MSV1_0::CacheLogonFlags::DeleteEntry) : 0;
         requestFlags |= (result.count("smartcard")) ? static_cast<ULONG>(MSV1_0::CacheLogonFlags::RequestSmartcardOnly) : 0;
         void* response{ nullptr };
-        return CacheLogon(&logonInfo, &validationInfo4, supplementalCreds, requestFlags);
+        return CacheLogon(logonInfo.get(), &validationInfo4, supplementalCreds, requestFlags);
     }
     case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
         break;
@@ -57,8 +58,17 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
         break;
     case PROTOCOL_MESSAGE_TYPE::DeleteTbalSecrets:
         return DeleteTbalSecrets();
+    case PROTOCOL_MESSAGE_TYPE::DeriveCredential: {
+        LUID luid;
+        reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+        auto credType{ (result.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::vector<byte> mixingBits;
+        mixingBits = HexDecode(converter.from_bytes(result["mixingbits"].as<std::string>()));
+        return DeriveCredential(&luid, credType, mixingBits);
+    }
     case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
-        return EnumerateUsers();
+        return EnumerateUsers((result.count("dc")));
     case PROTOCOL_MESSAGE_TYPE::GetCredentialKey: {
         LUID luid;
         reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
@@ -116,10 +126,12 @@ int main(int argc, char** argv) {
         ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
         ("luid", "Logon session", cxxopts::value<long long>())
         ("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())
+        ("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())
         ("newpass", "New password", cxxopts::value<std::string>())
         ("oldpass", "Old password", cxxopts::value<std::string>())
         ("option", "Process option", cxxopts::value<std::string>())
         ("pass", "Password", cxxopts::value<std::string>())
+        ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
         ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
         ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
         ;

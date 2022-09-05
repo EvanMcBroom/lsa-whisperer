@@ -39,6 +39,7 @@ namespace {
                     ULONG returnBufferLength;
                     NTSTATUS protocolStatus;
                     OutputHex("InputData", submitBuffer);
+                    auto submitBufferPtr{ submitBuffer.data() };
                     auto status{ LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus) };
                     if (SUCCEEDED(status)) {
                         if (protocolStatus >= 0) {
@@ -55,7 +56,7 @@ namespace {
                         std::cout << "ProtocolStatus: 0x" << protocolStatus << std::endl;
                     }
                     else {
-                        std::cout << "Error: " << status << std::endl;
+                        std::cout << "Error: 0x" << status << std::endl;
                     }
                 }
                 LsaDeregisterLogonProcess(lsaHandle);
@@ -64,12 +65,20 @@ namespace {
         return result;
     }
 
-    void OutputHex(const std::string& prompt, const std::string& data) {
-        std::cout << prompt << "[" << data.length() << "]: ";
+    void OutputHex(const std::string& data) {
         for (const auto& item : data) {
             std::cout << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(static_cast<unsigned char>(item));
         }
+    }
+
+    void OutputHex(const std::string& prompt, const std::string& data) {
+        std::cout << prompt << "[" << data.length() << "]: ";
+        OutputHex(data);
         std::cout << std::endl;
+    }
+
+    constexpr size_t RoundUp(size_t count, size_t powerOfTwo) {
+        return (count + powerOfTwo - 1) & (~powerOfTwo - 1);
     }
 }
 
@@ -79,8 +88,14 @@ namespace MSV1_0 {
     }
 
     template<typename _Request, typename _Response>
-    bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) { // submitBufferPadding
+    bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) {
         std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
+        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
+    }
+
+    template<typename _Request, typename _Response>
+    bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) {
+        std::string stringSubmitBuffer(reinterpret_cast<const char*>(submitBuffer), submitBufferLength);
         return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
     }
 
@@ -90,7 +105,7 @@ namespace MSV1_0 {
     //}
 
     bool CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) {
-        MSV1_0::CACHE_LOGON_REQUEST request;
+        CACHE_LOGON_REQUEST request;
         request.LogonInformation = logonInfo;
         request.ValidationInformation = validationInfo;
         request.SupplementalCacheData = const_cast<byte*>(supplementalCacheData.data());
@@ -99,7 +114,7 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool CacheLookupEx(const std::wstring username, const std::wstring domain, MSV1_0::CacheLookupCredtype type, const std::string credential) {
+    bool CacheLookupEx(const std::wstring username, const std::wstring domain, MSV1_0::CacheLookupCredType type, const std::string credential) {
         CACHE_LOOKUP_EX_REQUEST request;
         UnicodeString userName{ username };
         request.UserName = userName;
@@ -162,10 +177,39 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool EnumerateUsers() {
+    bool DeriveCredential(PLUID luid, DeriveCredType type, const std::vector<byte>& mixingBits) {
+        size_t requestLength{ sizeof(DERIVECRED_REQUEST) + mixingBits.size() };
+        auto request{ reinterpret_cast<DERIVECRED_REQUEST*>(std::malloc(requestLength)) };
+        request->MessageType = PROTOCOL_MESSAGE_TYPE::DeriveCredential;
+        request->LogonId.LowPart = luid->LowPart;
+        request->LogonId.HighPart = luid->HighPart;
+        request->DeriveCredType = static_cast<ULONG>(type);
+        request->DeriveCredInfoLength = mixingBits.size();
+        std::memcpy(request->DeriveCredSubmitBuffer, mixingBits.data(), mixingBits.size());
+        DERIVECRED_RESPONSE* response;
+        auto result{ CallPackage(request, requestLength, &response) };
+        if (result) {
+            std::string cred(reinterpret_cast<const char*>(&response->DeriveCredReturnBuffer), response->DeriveCredInfoLength);
+            OutputHex("Derived Cred", cred);
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
+    bool EnumerateUsers(bool passthrough) {
         ENUMUSERS_REQUEST request;
         ENUMUSERS_RESPONSE* response;
-        auto result{ CallPackage(request, &response) };
+        bool result;
+        if (passthrough) {
+            std::vector<byte> data{ sizeof(decltype(request)), 0 };
+            std::memcpy(data.data(), &request, sizeof(decltype(request)));
+            GenericPassthrough(L"", MSV1_0_PACKAGE_NAMEW, data);
+            response = reinterpret_cast<decltype(response)>(malloc(sizeof(ENUMUSERS_RESPONSE)));
+            std::memcpy(response, data.data(), sizeof(decltype(response)));
+        }
+        else {
+            result = CallPackage(request, &response);
+        }
         if (result) {
             auto count{ response->NumberOfLoggedOnUsers };
             std::cout << "NumberOfLoggedOnUsers: " << count << std::endl;
@@ -183,10 +227,43 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool GenericPassthrough() {
-        //GENERIC request;
-        //TRANSFER_CRED_RESPONSE* response;
-        //auto result{ CallPackage(request, &response) };
+    bool GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) {
+        auto requestSize{ sizeof(MSV1_0_PASSTHROUGH_REQUEST)
+            + (domainName.size() + 1) * sizeof(wchar_t)
+            + (packageName.size() + 1) * sizeof(wchar_t)
+            + data.size()
+        };
+
+        auto aa1 = offsetof(PASSTHROUGH_REQUEST, MessageType);
+        auto aa2 = offsetof(PASSTHROUGH_REQUEST, DomainName);
+        auto aa3 = offsetof(PASSTHROUGH_REQUEST, PackageName);
+        auto aa4 = offsetof(PASSTHROUGH_REQUEST, DataLength);
+        auto aa5 = offsetof(PASSTHROUGH_REQUEST, LogonData);
+        auto aa6 = offsetof(PASSTHROUGH_REQUEST, Pad);
+
+
+        auto request{reinterpret_cast<PASSTHROUGH_REQUEST*>(malloc(requestSize))};
+        std::memset(request, '\0', requestSize);
+        request->MessageType = MSV1_0::PROTOCOL_MESSAGE_TYPE::GenericPassthrough;
+
+        auto ptr{ reinterpret_cast<byte*>(request + 1) };
+        request->DomainName.MaximumLength = request->DomainName.Length = domainName.size();
+        request->DomainName.Buffer = reinterpret_cast<PWSTR>(ptr - reinterpret_cast<byte*>(request));
+        std::memcpy(ptr, domainName.data(), domainName.size());
+
+        ptr += (domainName.size() + 1) * sizeof(wchar_t);
+        request->PackageName.MaximumLength = request->PackageName.Length = packageName.size();
+        request->PackageName.Buffer = reinterpret_cast<PWSTR>(ptr - reinterpret_cast<byte*>(request));
+        std::memcpy(ptr, packageName.data(), packageName.size());
+
+        ptr += (packageName.size() + 1) * sizeof(wchar_t);
+        request->DataLength = data.size();
+        request->LogonData = reinterpret_cast<PUCHAR>(ptr - reinterpret_cast<byte*>(request));
+        std::memcpy(ptr, data.data(), data.size());
+
+        PASSTHROUGH_RESPONSE* response;
+        std::string stringSubmitBuffer(reinterpret_cast<const char*>(request), requestSize);
+        auto result{ CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(&response)) };
         // Parse response
         return false;
     }

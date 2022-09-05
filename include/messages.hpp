@@ -3,6 +3,14 @@
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Ntsecapi.h>
 
+#pragma pack(show) // normally 16
+#ifdef _WIN64
+    #pragma pack(push, 8)
+#else
+    #pragma pack(push, 4)
+#endif
+#pragma pack(show)
+
 namespace MSV1_0 {
     enum class CacheLogonFlags : ULONG {
         RequestMitLogon = 1,
@@ -11,10 +19,15 @@ namespace MSV1_0 {
         RequestSmartcardOnly = 8
     };
 
-    enum class CacheLookupCredtype : ULONG {
+    enum class CacheLookupCredType : ULONG {
         None = 0,
         Raw, // Used for public-key smart card data
         Ntowf
+    };
+
+    enum class DeriveCredType : ULONG {
+        Sha1 = 0,
+        Sha1V2
     };
 
     enum class ProcessOption : ULONG {
@@ -67,7 +80,7 @@ namespace MSV1_0 {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::CacheLookup };
         UNICODE_STRING UserName;
         UNICODE_STRING DomainName;
-        CacheLookupCredtype CredentialType;
+        CacheLookupCredType CredentialType;
         ULONG CredentialInfoLength;
         UCHAR CredentialSubmitBuffer[1]; // in-place array of length CredentialInfoLength
     } CACHE_LOOKUP_REQUEST, * PCACHE_LOOKUP_REQUEST;
@@ -132,6 +145,20 @@ namespace MSV1_0 {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DeleteTbalSecrets };
     } DELETE_TBAL_SECRETS_REQUEST, * PDELETE_TBAL_SECRETS_REQUEST;
 
+    typedef struct _DERIVECRED_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DeriveCredential };
+        LUID LogonId;
+        ULONG DeriveCredType;
+        ULONG DeriveCredInfoLength;
+        UCHAR DeriveCredSubmitBuffer[1];
+    } DERIVECRED_REQUEST, * PDERIVECRED_REQUEST;
+
+    typedef struct _DERIVECRED_RESPONSE {
+        MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+        ULONG DeriveCredInfoLength;
+        UCHAR DeriveCredReturnBuffer[1];
+    } DERIVECRED_RESPONSE, * PDERIVECRED_RESPONSE;
+
     typedef struct _ENUMUSERS_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::EnumerateUsers };
     } ENUMUSERS_REQUEST, * PENUMUSERS_REQUEST;
@@ -189,12 +216,12 @@ namespace MSV1_0 {
         UNICODE_STRING PackageName;
         ULONG DataLength;
         PUCHAR LogonData;
-        ULONG Pad;
+        ULONG Pad{ 0 };
     } PASSTHROUGH_REQUEST, * PPASSTHROUGH_REQUEST;
 
     typedef struct _PASSTHROUGH_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
-        ULONG Pad;
+        ULONG Pad{ 0 };
         ULONG DataLength;
         PUCHAR ValidationData;
     } PASSTHROUGH_RESPONSE, * PPASSTHROUGH_RESPONSE;
@@ -223,3 +250,5 @@ namespace MSV1_0 {
         // ...
     } TRANSFER_CRED_RESPONSE, * PTRANSFER_CRED_RESPONSE;
 }
+
+#pragma pack(pop)

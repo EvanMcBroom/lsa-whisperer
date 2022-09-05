@@ -1,10 +1,10 @@
-# MSV1_0 CLI
+# MSV1_0 CLI - An LSA Whisperer
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.txt)
 
 > Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for this utility and the research, support, and collaboration throughout its development.
 
-MSV1_0 CLI is a utility for interacting with the Microsoft Authentication Package v1.0 (MSV1_0).
+MSV1_0 CLI, or LSA Whisperer, is a utility for interacting with the Microsoft Authentication Package v1.0 (MSV1_0).
 The main goal of this project is to provide an easy utility for interacting with the additional functionality provided by MSV1_0.
 
 The additional functionality that MSV1_0 supports is documented on MSDN and included here for convenience<sup>1</sup>:
@@ -21,7 +21,7 @@ The additional functionality that MSV1_0 supports is documented on MSDN and incl
 | `0x07` | `GenericPassthrough`       | _Planned_          | _All_        | `MspLm20GenericPassthrough`     |
 | `0x08` | `CacheLogon`               | :heavy_check_mark: | _All_        | `MspLm20CacheLogon`             |
 | `0x09` | `SubAuth`                  | :x:                |              | `MspNtSubAuth`                  |
-| `0x0A` | `DeriveCredential`         | :x:                |              | `MspNtDeriveCredential`         |
+| `0x0A` | `DeriveCredential`         | :heavy_check_mark: | _All_        | `MspNtDeriveCredential`         |
 | `0x0B` | `CacheLookup`              | _Planned_          | _All_        | `MspLm20CacheLookup`            |
 | `0x0C` | `SetProcessOption`         | :heavy_check_mark: | _All_        | `MspSetProcessOption`           |
 | `0x0D` | `ConfigLocalAliases`       | :x:                |              | `MspConfigLocalAliases`         |
@@ -44,8 +44,8 @@ The additional functionality that MSV1_0 supports is documented on MSDN and incl
 MSV1_0 CLI requres [cxxopts](https://github.com/jarro2783/cxxopts) and [magic_enum](https://github.com/Neargye/magic_enum) which can be installed using [vcpkg](https://github.com/microsoft/vcpkg).
 
 ```
-vcpkg install cxxopts
-vcpkg install magic_enum
+vcpkg install cxxopts:x64-windows-static
+vcpkg install magic-enum:x64-windows-static
 ```
 
 MSV1_0 CLI uses [CMake](https://cmake.org/) to generate and run the build system files for your platform.
@@ -53,7 +53,7 @@ MSV1_0 CLI uses [CMake](https://cmake.org/) to generate and run the build system
 ```
 git clone https://github.com/EvanMcBroom/msv1_0-cli.git && cd msv1_0-cli
 mkdir builds && cd builds
-cmake ..
+cmake .. -DCMAKE_TOOLCHAIN_FILE=PATH_TO_VCPKG\scripts\buildsystems\vcpkg.cmake
 cmake --build .
 ```
 
@@ -65,9 +65,11 @@ MSV1_0 CLI will link against the static version of the runtime library which all
 - [CacheLookup](#CacheLookup)
 - [CacheLookupEx](#CacheLookupEx)
 - [ChangeCachedPassword](#ChangeCachedPassword)
+- [ChangePassword](#ChangePassword)
 - [ClearCachedCredentials](#ClearCachedCredentials)
 - [DecryptDpapiMasterKey](#DecryptDpapiMasterKey)
 - [DeleteTbalSecrets](#DeleteTbalSecrets)
+- [DeriveCredential](#DeriveCredential)
 - [EnumerateUsers](#EnumerateUsers)
 - [GenericPassthrough](#GenericPassthrough)
 - [GetCredentialKey](#GetCredentialKey)
@@ -80,6 +82,7 @@ MSV1_0 CLI will link against the static version of the runtime library which all
 ### CacheLogon
 
 This dispatch routine caches logon information in the logon cache.
+MSV1_0 will check to make sure the client request came from the same process.
 
 ```
 msv1_0-cli.exe -f CacheLogon --domain {name} --account {name} [--computer name] {--hash {value} | --pass {value}} [--mitlogon {upn}] [--suppcreds {data}] [--delete] [--smartcard]
@@ -114,6 +117,11 @@ The `SeTcbPrivilege` is required if you are changing the cached entry for someon
 msv1_0-cli.exe -f ChangeCachedPassword --domain {name} --account {name} --oldpass {password} --newpass {password}
 ```
 
+## ChangePassword
+
+Not implemented.
+Appears at first to be coercible, but LSASS will impersonate itself and remove the admin (`S-1-5-32-544`) sid before making a connection to another computer.
+
 ### ClearCachedCredentials
 
 Clear the credentials in the local NTLM logon cache.
@@ -137,6 +145,15 @@ Clear the Trusted Boot Auto-Logon (TBAL) secrets in the System vault.<sup>2</sup
 
 ```
 msv1_0-cli.exe -f DeleteTbalSecrets
+```
+
+## DeriveCredential
+
+Get the HMAC_SHA1 hash of the one-way function password of a logon session.
+The NT OWF password will be used by default but the SHA OWF password may be used instead by specifying `--sha1v2`.
+
+```
+msv1_0-cli.exe -f DeriveCredential --luid {logon session} [--sha1v2] --cred {ascii hex}
 ```
 
 ### EnumerateUsers
@@ -184,7 +201,8 @@ msv1_0-cli.exe -f GetUserInfo --luid {logon id}
 
 ### ProvisionTbal
 
-Provision Trusted Boot Auto-Logon (TBAL) secrets for a logon session and store them in the System vault.<sup>2</sup>
+Provision the Trusted Boot Auto-Logon (TBAL) LSA secrets for a logon session.<sup>2</sup>
+The host is required to be actively kernel debugged for the function to succeed.
 
 ```
 msv1_0-cli.exe -f ProvisionTbal --luid {logon id}

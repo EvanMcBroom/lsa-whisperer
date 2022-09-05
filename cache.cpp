@@ -38,7 +38,7 @@ namespace {
     }
 }
 
-std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::shared_ptr<std::wstring>& computerName, const std::vector<byte>& hash, ULONG logonType) {
+std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::wstring& computerName, const std::vector<byte>& hash, ULONG logonType) {
     auto logonInfo{ std::make_unique<Netlogon::INTERACTIVE_INFO>() };
     std::memset(logonInfo.get(), 0, sizeof(Netlogon::INTERACTIVE_INFO));
     // Populate the Identity portion of logonInfo
@@ -46,14 +46,14 @@ std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& dom
     RtlInitUnicodeString(&identity.LogonDomainName, domainName.data());
     identity.ParameterControl = logonType;
     RtlInitUnicodeString(&identity.UserName, userName.data());
-    if (!computerName) {
+    if (!computerName.size()) {
         // For setting Workstation, there is no need to call GetComputerNameW twice to get the length
         // The value is the NetBIOS name which is at most 16 characters followed by a null terminator
-        computerName = std::make_unique<std::wstring>(16 + 1, '\0');
-        auto size{ static_cast<DWORD>(computerName->size()) };
-        GetComputerNameW(computerName->data(), &size); // Assume this works for brevity
+        computerName = std::wstring(16 + 1, '\0');
+        auto size{ static_cast<DWORD>(computerName.size()) };
+        GetComputerNameW(computerName.data(), &size); // Assume this works for brevity
     }
-    RtlInitUnicodeString(&identity.Workstation, computerName->data());
+    RtlInitUnicodeString(&identity.Workstation, computerName.data());
     // Populate the remainder of logonInfo
     std::memcpy(&logonInfo->NtOwfPassword, hash.data(), hash.size());
     return logonInfo;

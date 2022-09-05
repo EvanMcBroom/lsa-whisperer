@@ -8,6 +8,11 @@ project(msv1_0-cli
 find_package(cxxopts CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 
+string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+
 add_executable(msv1_0-cli cache.cpp crypt.cpp main.cpp msv1_0.cpp)
 target_link_libraries(msv1_0-cli PRIVATE cxxopts::cxxopts magic_enum::magic_enum)
 set_target_properties(msv1_0-cli PROPERTIES
@@ -16,8 +21,3 @@ set_target_properties(msv1_0-cli PROPERTIES
 )
 
 add_subdirectory(include)
-
-string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
