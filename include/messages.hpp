@@ -173,6 +173,7 @@ namespace MSV1_0 {
     typedef struct _GET_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetCredentialKey };
         LUID LogonId;
+        ULONG unknown[4] = { 0 };
     } GET_CREDENTIAL_KEY_REQUEST, * PGET_CREDENTIAL_KEY_REQUEST;
 
     typedef struct _GET_CREDENTIAL_KEY_RESPONSE {

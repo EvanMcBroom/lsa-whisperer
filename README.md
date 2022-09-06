@@ -179,7 +179,7 @@ msv1_0-cli.exe -d -f {function name} [function arguments]...
 
 ### GetCredentialKey
 
-Get the credential key of the authentication packet.
+Get the primary credential key (e.g. the NTLM and SHA1 hashes) for a logon session.
 The `SeTcbPrivilege` is required.
 
 ```
