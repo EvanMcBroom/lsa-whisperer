@@ -44,7 +44,6 @@ namespace {
                     if (SUCCEEDED(status)) {
                         if (protocolStatus >= 0) {
                             OutputHex("OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
-                            std::cout << std::endl;
                             *returnBuffer = returnBuffer2;
                             result = true;
                         }
@@ -53,7 +52,7 @@ namespace {
                             *returnBuffer = nullptr;
                             LsaFreeReturnBuffer(returnBuffer);
                         }
-                        std::cout << "ProtocolStatus: 0x" << protocolStatus << std::endl;
+                        std::cout << "ProtocolStatus: 0x" << protocolStatus << std::endl << std::endl;
                     }
                     else {
                         std::cout << "Error: 0x" << status << std::endl;
@@ -72,7 +71,7 @@ namespace {
     }
 
     void OutputHex(const std::string& prompt, const std::string& data) {
-        std::cout << prompt << "[" << data.length() << "]: ";
+        std::cout << prompt << "[0x" << std::setw(2) << std::setfill('0') << std::hex << data.length() << "]: ";
         OutputHex(data);
         std::cout << std::endl;
     }
@@ -309,6 +308,18 @@ namespace MSV1_0 {
             std::wcout << L"LogonDomainName: " << response->LogonDomainName.Buffer << std::endl;
             offset = offset + response->LogonServer.Length;
             std::wcout << L"LogonServer    : " << response->LogonServer.Buffer << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
+    bool Lm20ChallengeRequest() {
+        LM20_CHALLENGE_REQUEST request;
+        LM20_CHALLENGE_RESPONSE* response;
+        bool result{ CallPackage(request, &response) };
+        if (result) {
+            std::string challenge(reinterpret_cast<const char*>(&response->ChallengeToClient), sizeof(response->ChallengeToClient));
+            OutputHex("Challenge To Client", challenge);
             LsaFreeReturnBuffer(response);
         }
         return result;

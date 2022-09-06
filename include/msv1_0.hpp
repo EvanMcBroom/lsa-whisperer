@@ -37,6 +37,7 @@ namespace MSV1_0 {
     bool GetCredentialKey(PLUID luid);
     bool GetStrongCredentialKey();
     bool GetUserInfo(PLUID luid);
+    bool Lm20ChallengeRequest();
     bool ProvisionTbal(PLUID luid);
     bool SetProcessOption(ProcessOption options, bool disable);
     bool TransferCred();

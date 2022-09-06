@@ -210,6 +210,15 @@ namespace MSV1_0 {
         // ...
     } GET_STRONG_CREDENTIAL_KEY_RESPONSE, * PGET_STRONG_CREDENTIAL_KEY_RESPONSE;
 
+    typedef struct _LM20_CHALLENGE_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest };
+    } LM20_CHALLENGE_REQUEST, * PLM20_CHALLENGE_REQUEST;
+
+    typedef struct _LM20_CHALLENGE_RESPONSE {
+        PROTOCOL_MESSAGE_TYPE MessageType;
+        UCHAR ChallengeToClient[8]; // challenge length
+    } LM20_CHALLENGE_RESPONSE, * PLM20_CHALLENGE_RESPONSE;
+
     typedef struct _PASSTHROUGH_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GenericPassthrough };
         UNICODE_STRING DomainName;
@@ -236,6 +245,13 @@ namespace MSV1_0 {
         ULONG ProcessOptions{ 0 };
         BOOLEAN DisableOptions;
     } SETPROCESSOPTION_REQUEST, * PSETPROCESSOPTION_REQUEST;
+
+    typedef struct _SETTHREADOPTION_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::SetProcessOption };
+        ULONG ThreadOptions{ 0 };
+        BOOLEAN DisableOptions; // correct
+        BOOLEAN unknown; // something else
+    } SETTHREADOPTION_REQUEST, * PSETTHREADOPTION_REQUEST;
 
     typedef struct _TRANSFER_CRED_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::TransferCred };

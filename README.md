@@ -11,7 +11,7 @@ The additional functionality that MSV1_0 supports is documented on MSDN and incl
 
 | Id     | Message Type               | CLI Support        | NT Version   | Internal Function               |
 | ---    | ---                        | ---                | ---          | ---                             |
-| `0x00` | `Lm20ChallengeRequest`     | :x:                |              | `MspLm20Challenge`              |
+| `0x00` | `Lm20ChallengeRequest`     | :heavy_check_mark: | _All_        | `MspLm20Challenge`              |
 | `0x01` | `Lm20GetChallengeResponse` | :x:                |              | `MspLm20GetChallengeResponse`   |
 | `0x02` | `EnumerateUsers`           | :heavy_check_mark: | _All_        | `MspLm20EnumUsers`              |
 | `0x03` | `GetUserInfo`              | :heavy_check_mark: | _All_        | `MspLm20GetUserInfo`            |
@@ -75,8 +75,10 @@ MSV1_0 CLI will link against the static version of the runtime library which all
 - [GetCredentialKey](#GetCredentialKey)
 - [GetStrongCredentialKey](#GetStrongCredentialKey)
 - [GetUserInfo](#GetUserInfo)
+- [Lm20ChallengeRequest](#Lm20ChallengeRequest)
 - [ProvisionTbal](#ProvisionTbal)
 - [SetProcessOption](#SetProcessOption)
+- [SetThreadOption](#SetThreadOption)
 - [TransferCred](#TransferCred)
 
 ### CacheLogon
@@ -149,11 +151,12 @@ msv1_0-cli.exe -f DeleteTbalSecrets
 
 ## DeriveCredential
 
-Get the HMAC_SHA1 hash of the one-way function password of a logon session.
-The NT OWF password will be used by default but the SHA OWF password may be used instead by specifying `--sha1v2`.
+Get the [SHA1 HMAC](https://en.wikipedia.org/wiki/HMAC) for a provided message using an NT OWF or SHA1 OWF password as the key, specified by the LUID for a logon session.
+The `--sha1v2` argument specifies to use the SHA1 OWF password instead of the NT OWF password.
+The `SeTcbPrivilege` may be required when specifying the LUID of another logon session but still need to verify that.
 
 ```
-msv1_0-cli.exe -f DeriveCredential --luid {logon session} [--sha1v2] --cred {ascii hex}
+msv1_0-cli.exe -f DeriveCredential --luid {logon session} [--sha1v2] --message {ascii hex}
 ```
 
 ### EnumerateUsers
@@ -199,6 +202,15 @@ Get information about a logon id.
 msv1_0-cli.exe -f GetUserInfo --luid {logon id}
 ```
 
+### Lm20ChallengeRequest
+
+Get a challenge that may be delivered to a host that initiated an NTLMv2 logon.
+Once a challenge response is received, it may be passed to `LsaLogonUser` with a `LogonType` of `MsV1_0Lm20Logon` to complete the logon.
+
+```
+msv1_0-cli.exe -f Lm20ChallengeRequest
+```
+
 ### ProvisionTbal
 
 Provision the Trusted Boot Auto-Logon (TBAL) LSA secrets for a logon session.<sup>2</sup>
@@ -224,6 +236,16 @@ MSV1_0 may internally check for one these options using `NtLmCheckProcessOption`
 
 ```
 msv1_0-cli.exe -f SetProcessOption --option {process option} [--disable]
+```
+
+## SetThreadOption
+
+Enable or disable an option for the calling thread.
+The set of options are the same as with the `SetProcessOption` command but they will take precedence over process options.
+The `SeTcbPrivilege` is required.
+
+```
+msv1_0-cli.exe -f SetThreadOption --option {thread option} [--disable]
 ```
 
 ### TransferCred

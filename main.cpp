@@ -45,6 +45,8 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
     }
     case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
         break;
+    case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
+        return Lm20ChallengeRequest();
     case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
         //auto domain{ result["domain"].as<std::string>() };
         //auto account{ result["account"].as<std::string>() };
