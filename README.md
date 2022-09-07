@@ -1,11 +1,17 @@
-# MSV1_0 CLI - An LSA Whisperer
+# LSA Whisperer
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.txt)
 
-> Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for this utility and the research, support, and collaboration throughout its development.
+> Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for these tools and the research, support, and collaboration throughout their development.
 
-MSV1_0 CLI, or LSA Whisperer, is a utility for interacting with the Microsoft Authentication Package v1.0 (MSV1_0).
-The main goal of this project is to provide an easy utility for interacting with the additional functionality provided by MSV1_0.
+LSA Whisperer is a set of tools for interacting with the authentication package for local Windows accounts, the Microsoft Authentication Package v1.0 (MSV1_0).
+The main goal of this project is to provide easy tools for interacting with the additional functionality provided by MSV1_0.
+
+The LSA Whisperer project provides the following tools for interacting with MSV1_0:
+
+- `msv1_0-cli` - A CLI for interacting with MSV1_0
+- `msv1_0-dotnet` -  A .NET assembly equivalent to `msv1_0-cli`
+- `pymsv1_0` - A python module for interacting with MSV1_0
 
 The additional functionality that MSV1_0 supports is documented on MSDN and included here for convenience<sup>1</sup>:
 
@@ -41,14 +47,19 @@ The additional functionality that MSV1_0 supports is documented on MSDN and incl
 
 ## Building
 
-MSV1_0 CLI requres [cxxopts](https://github.com/jarro2783/cxxopts) and [magic_enum](https://github.com/Neargye/magic_enum) which can be installed using [vcpkg](https://github.com/microsoft/vcpkg).
+LSA Whisperer requres [cxxopts](https://github.com/jarro2783/cxxopts) and [magic_enum](https://github.com/Neargye/magic_enum) which can both be installed using [vcpkg](https://github.com/microsoft/vcpkg).
 
-```
+```cmd
 vcpkg install cxxopts:x64-windows-static
 vcpkg install magic-enum:x64-windows-static
+rem Optional install
+vcpkg install pybind11:x64-windows
 ```
 
-MSV1_0 CLI uses [CMake](https://cmake.org/) to generate and run the build system files for your platform.
+You may optionally install [pybind11](https://github.com/pybind/pybind11) for `pymsv1_0` to be built as well.
+If you choose to build `pymsv1_0`, you will need to ensure that the Python debug binaries have been installed on your host.
+
+LSA Whisperer uses [CMake](https://cmake.org/) to generate and run the build system files for your platform.
 
 ```
 git clone https://github.com/EvanMcBroom/msv1_0-cli.git && cd msv1_0-cli
@@ -57,7 +68,7 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=PATH_TO_VCPKG\scripts\buildsystems\vcpkg.cmake
 cmake --build .
 ```
 
-MSV1_0 CLI will link against the static version of the runtime library which allows the tool to run as a standalone program on other hosts.
+The `msv1_0-cli` utility will link against the static version of the runtime library which allows the tool to run as a standalone program on other hosts.
 
 ## Functions
 
