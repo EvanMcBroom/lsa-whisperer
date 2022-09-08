@@ -45,8 +45,6 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
     }
     case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
         break;
-    case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
-        return Lm20ChallengeRequest();
     case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
         //auto domain{ result["domain"].as<std::string>() };
         //auto account{ result["account"].as<std::string>() };
@@ -57,7 +55,7 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
     case PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials:
         return ClearCachedCredentials();
     case PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey:
-        break;
+        return DecryptDpapiMasterKey();
     case PROTOCOL_MESSAGE_TYPE::DeleteTbalSecrets:
         return DeleteTbalSecrets();
     case PROTOCOL_MESSAGE_TYPE::DeriveCredential: {
@@ -83,6 +81,8 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
         reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
         return GetUserInfo(&luid);
     }
+    case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
+        return Lm20ChallengeRequest();
     case PROTOCOL_MESSAGE_TYPE::ProvisionTbal: {
         LUID luid;
         reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
@@ -90,19 +90,12 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
     }
     case PROTOCOL_MESSAGE_TYPE::SetProcessOption:
         return SetProcessOption(magic_enum::enum_cast<ProcessOption>(result["option"].as<std::string>()).value(), result["disable"].as<bool>());
-    case PROTOCOL_MESSAGE_TYPE::TransferCred:
-        //if (result.count("sluid") && result.count("dluid")) {
-        //    LUID source;
-        //    source.LowPart = result["sluid"].as<DWORD>();
-        //    LUID destination;
-        //    destination.LowPart = result["sluid"].as<DWORD>();
-        //    return TransferCreds(source, destination);
-        //}
-        //else {
-        //    std::cout << "A source or destination LUID was not specified." << std::endl;
-        //    return -1;
-        //}
-        break;
+    case PROTOCOL_MESSAGE_TYPE::TransferCred: {
+        LUID sourceLuid, destinationLuid;
+        reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = result["sluid"].as<long long>();
+        reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = result["dluid"].as<long long>();
+        return TransferCred(&sourceLuid, &destinationLuid);
+    }
     default:
         std::cout << "Unsupported function" << std::endl;
         break;
@@ -123,6 +116,7 @@ int Parse(int argc, char** argv) {
         ("computer", "Computer name", cxxopts::value<std::string>())
         ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
         ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
+        ("dluid", "Destination logon session", cxxopts::value<long long>())
         ("domain", "Domain name", cxxopts::value<std::string>())
         ("hash", "Asciihex hash", cxxopts::value<std::string>())
         ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
@@ -134,6 +128,7 @@ int Parse(int argc, char** argv) {
         ("option", "Process option", cxxopts::value<std::string>())
         ("pass", "Password", cxxopts::value<std::string>())
         ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
+        ("sluid", "Source logon session", cxxopts::value<long long>())
         ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
         ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
         ;

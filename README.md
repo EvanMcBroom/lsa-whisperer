@@ -4,16 +4,18 @@
 
 > Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for these tools and the research, support, and collaboration throughout their development.
 
-LSA Whisperer is a set of tools for interacting with the authentication package for local Windows accounts, the Microsoft Authentication Package v1.0 (MSV1_0).
-The main goal of this project is to provide easy tools for interacting with the additional functionality provided by MSV1_0.
+LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
+The initial release of LSA Whisperer includes support for the Microsoft Authentication Package v1.0 (MSV1_0).
+More authentication packages may be added in the future.
+
 
 The LSA Whisperer project provides the following tools for interacting with MSV1_0:
 
-- `msv1_0-cli` - A CLI for interacting with MSV1_0
+- `msv1_0-cli` - An interactive CLI for MSV1_0
 - `msv1_0-dotnet` -  A .NET assembly equivalent to `msv1_0-cli`
 - `pymsv1_0` - A python module for interacting with MSV1_0
 
-The additional functionality that MSV1_0 supports is documented on MSDN and included here for convenience<sup>1</sup>:
+The protocol messages that MSV1_0 supports is documented on MSDN and included here for convenience<sup>1</sup>:
 
 | Id     | Message Type               | CLI Support        | NT Version   | Internal Function               |
 | ---    | ---                        | ---                | ---          | ---                             |
@@ -35,11 +37,11 @@ The additional functionality that MSV1_0 supports is documented on MSDN and incl
 | `0x0F` | `LookupToken`              | :x:                |              | `MspLookupToken`                |
 | `0x10` | `ValidateAuth`             | :x:                |              | `MspValidateAuth`               |
 | `0x11` | `CacheLookupEx`            | _Planned_          | `>=6.2`      | `MspLm20CacheLookup`            |
-| `0x12` | `GetCredentialKey`         | _Planned_          | `>=6.2`      | `MspGetCredentialKey`           |
+| `0x12` | `GetCredentialKey`         | :heavy_check_mark: | `>=6.2`      | `MspGetCredentialKey`           |
 | `0x13` | `SetThreadOption`          | :x:                |              | `MspSetThreadOption`            |
 | `0x14` | `DecryptDpapiMasterKey`    | _Planned_          | `>=6.4`      | `MspDecryptDpapiMasterKey`      |
 | `0x15` | `GetStrongCredentialKey`   | _Planned_          | `>=6.4`      | `MspGetStrongCredentialKey`     |
-| `0x16` | `TransferCred`             | _Planned_          | `>=10.0`     | `MspTransferCreds`              |
+| `0x16` | `TransferCred`             | :heavy_check_mark: | `>=10.0`     | `MspTransferCreds`              |
 | `0x17` | `ProvisionTbal`            | :heavy_check_mark: | `>=10.0`     | `MspProvisionTbal`              |
 | `0x18` | `DeleteTbalSecrets`        | :heavy_check_mark: | `>=10.0`     | `MspDeleteTbalSecrets`          |
 
@@ -162,12 +164,12 @@ msv1_0-cli.exe -f DeleteTbalSecrets
 
 ## DeriveCredential
 
-Get the [SHA1 HMAC](https://en.wikipedia.org/wiki/HMAC) for a provided message using an NT OWF or SHA1 OWF password as the key, specified by the LUID for a logon session.
+Get the [SHA1 HMAC](https://en.wikipedia.org/wiki/HMAC) for a provided message using an NT OWF or SHA1 OWF password as the key, specified by the logon session id.
 The `--sha1v2` argument specifies to use the SHA1 OWF password instead of the NT OWF password.
-The `SeTcbPrivilege` may be required when specifying the LUID of another logon session but still need to verify that.
+The `SeTcbPrivilege` may be required when specifying an id for another logon session but still need to verify that.
 
 ```
-msv1_0-cli.exe -f DeriveCredential --luid {logon session} [--sha1v2] --message {ascii hex}
+msv1_0-cli.exe -f DeriveCredential --luid {session id} [--sha1v2] --message {ascii hex}
 ```
 
 ### EnumerateUsers
@@ -190,11 +192,12 @@ msv1_0-cli.exe -d -f {function name} [function arguments]...
 
 ### GetCredentialKey
 
-Get the primary credential key (e.g. the NTLM and SHA1 hashes) for a logon session.
-The `SeTcbPrivilege` is required.
+Get the primary credential keys for a logon session.
+The keys will either be the NT and SHA OWF hashes or the SHA hash and the DPAPI key.
+The `SeTcbPrivilege` is required and credential isolation must also not be enabled.
 
 ```
-msv1_0-cli.exe -f GetCredentialKey --luid {logon session}
+msv1_0-cli.exe -f GetCredentialKey --luid {session id}
 ```
 
 ### GetStrongCredentialKey
@@ -207,10 +210,10 @@ msv1_0-cli.exe -f GetStrongCredentialKey ...
 
 ### GetUserInfo
 
-Get information about a logon id.
+Get information about a session id.
 
 ```
-msv1_0-cli.exe -f GetUserInfo --luid {logon id}
+msv1_0-cli.exe -f GetUserInfo --luid {session id}
 ```
 
 ### Lm20ChallengeRequest
@@ -228,7 +231,7 @@ Provision the Trusted Boot Auto-Logon (TBAL) LSA secrets for a logon session.<su
 The host is required to be actively kernel debugged for the function to succeed.
 
 ```
-msv1_0-cli.exe -f ProvisionTbal --luid {logon id}
+msv1_0-cli.exe -f ProvisionTbal --luid {session id}
 ```
 
 ### SetProcessOption
@@ -261,10 +264,11 @@ msv1_0-cli.exe -f SetThreadOption --option {thread option} [--disable]
 
 ### TransferCred
 
-...
+Transfer data from one logon session to another logon session.
+The specific data that is transferred and privileges that may be required are still being determined.
 
 ```
-msv1_0-cli.exe -f TransferCred ...
+msv1_0-cli.exe -f TransferCred --sluid {session id} --dluid {session id}
 ```
 
 ## References

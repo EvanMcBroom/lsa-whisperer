@@ -13,6 +13,6 @@ namespace {
 
 PYBIND11_MODULE(pymsv1_0, m) {
     m.doc() = "Python module for the MSV1_0 authentication package";
-    m.attr("__version__") = "1.0";
-    m.def("get_credential_key", &GetCredentialKey);
+    m.attr("__version__") = MODULE_VERSION;
+    m.def("get_credential_key", &GetCredentialKey, "");
 }

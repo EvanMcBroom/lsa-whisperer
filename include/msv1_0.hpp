@@ -40,5 +40,5 @@ namespace MSV1_0 {
     bool Lm20ChallengeRequest();
     bool ProvisionTbal(PLUID luid);
     bool SetProcessOption(ProcessOption options, bool disable);
-    bool TransferCred();
+    bool TransferCred(PLUID sourceLuid, PLUID destinationLuid);
 }

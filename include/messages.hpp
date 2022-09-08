@@ -132,13 +132,15 @@ namespace MSV1_0 {
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey };
         DWORD unknown2;
-        LUID unknown3;
+        LUID LogonSession;
         DWORD unknown4;
+        DWORD unknown5[10];
     } DECRYPT_DPAPI_MASTER_KEY_REQUEST, * PDECRYPT_DPAPI_MASTER_KEY_REQUEST;
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
-        // ...
+        DWORD Reserved;
+        UCHAR Key[];
     } DECRYPT_DPAPI_MASTER_KEY_RESPONSE, * PDECRYPT_DPAPI_MASTER_KEY_RESPONSE;
 
     typedef struct _DELETE_TBAL_SECRETS_REQUEST {
@@ -147,7 +149,7 @@ namespace MSV1_0 {
 
     typedef struct _DERIVECRED_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DeriveCredential };
-        LUID LogonId;
+        LUID LogonSession;
         ULONG DeriveCredType;
         ULONG DeriveCredInfoLength;
         UCHAR DeriveCredSubmitBuffer[1];
@@ -166,24 +168,28 @@ namespace MSV1_0 {
     typedef struct _ENUMUSERS_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         ULONG NumberOfLoggedOnUsers;
-        PLUID LogonIds;
+        PLUID LogonSessions;
         PULONG EnumHandles;
     } ENUMUSERS_RESPONSE, * PENUMUSERS_RESPONSE;
 
     typedef struct _GET_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetCredentialKey };
-        LUID LogonId;
-        ULONG unknown[4] = { 0 };
+        LUID LogonSession;
+        UCHAR Reserved[16] = { 0 };
     } GET_CREDENTIAL_KEY_REQUEST, * PGET_CREDENTIAL_KEY_REQUEST;
 
     typedef struct _GET_CREDENTIAL_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
-        // ...
+        UCHAR Reserved[16];
+        // Will be 0x28
+        DWORD DataLength;
+        // The NT and SHA OWF passwords or the DPAPI key
+        UCHAR CredentialData[1];
     } GET_CREDENTIAL_KEY_RESPONSE, * PGET_CREDENTIAL_KEY_RESPONSE;
 
     typedef struct _GETUSERINFO_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetUserInfo  };
-        LUID LogonId;
+        LUID LogonSession;
     } GETUSERINFO_REQUEST, * PGETUSERINFO_REQUEST;
 
     typedef struct _GETUSERINFO_RESPONSE {
@@ -238,7 +244,7 @@ namespace MSV1_0 {
 
     typedef struct _PROVISION_TBAL_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ProvisionTbal };
-        LUID LogonId;
+        LUID LogonSession;
     } PROVISION_TBAL_REQUEST, * PPROVISION_TBAL_REQUEST;
 
     typedef struct _SETPROCESSOPTION_REQUEST {
@@ -256,16 +262,9 @@ namespace MSV1_0 {
 
     typedef struct _TRANSFER_CRED_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::TransferCred };
-        DWORD LUID;
-        DWORD unknown2;
-        DWORD unknown3;
-        DWORD unknown4;
+        LUID SourceLuid;
+        LUID DestinationLuid;
     } TRANSFER_CRED_REQUEST, * PTRANSFER_CRED_REQUEST;
-
-    typedef struct _TRANSFER_CRED_RESPONSE {
-        PROTOCOL_MESSAGE_TYPE MessageType;
-        // ...
-    } TRANSFER_CRED_RESPONSE, * PTRANSFER_CRED_RESPONSE;
 }
 
 #pragma pack(pop)

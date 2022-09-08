@@ -164,6 +164,7 @@ namespace MSV1_0 {
 
     bool DecryptDpapiMasterKey() {
         DECRYPT_DPAPI_MASTER_KEY_REQUEST request;
+        std::cout << "Size: " <<  sizeof(request) << std::endl;
         DECRYPT_DPAPI_MASTER_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         // Parse response
@@ -180,8 +181,8 @@ namespace MSV1_0 {
         size_t requestLength{ sizeof(DERIVECRED_REQUEST) + mixingBits.size() };
         auto request{ reinterpret_cast<DERIVECRED_REQUEST*>(std::malloc(requestLength)) };
         request->MessageType = PROTOCOL_MESSAGE_TYPE::DeriveCredential;
-        request->LogonId.LowPart = luid->LowPart;
-        request->LogonId.HighPart = luid->HighPart;
+        request->LogonSession.LowPart = luid->LowPart;
+        request->LogonSession.HighPart = luid->HighPart;
         request->DeriveCredType = static_cast<ULONG>(type);
         request->DeriveCredInfoLength = mixingBits.size();
         std::memcpy(request->DeriveCredSubmitBuffer, mixingBits.data(), mixingBits.size());
@@ -214,7 +215,7 @@ namespace MSV1_0 {
             std::cout << "NumberOfLoggedOnUsers: " << count << std::endl;
             std::cout << "LogonIds             : ";
             for (size_t index{ 0 }; index < count; index++) {
-                std::cout << "0x" << reinterpret_cast<LARGE_INTEGER*>(response->LogonIds)[index].QuadPart << ((index < (count - 1)) ? ", " : "");
+                std::cout << "0x" << reinterpret_cast<LARGE_INTEGER*>(response->LogonSessions)[index].QuadPart << ((index < (count - 1)) ? ", " : "");
             }
             std::cout << std::endl << "EnumHandles          : ";
             for (size_t index{ 0 }; index < count; index++) {
@@ -269,12 +270,22 @@ namespace MSV1_0 {
 
     bool GetCredentialKey(PLUID luid) {
         GET_CREDENTIAL_KEY_REQUEST request;
-        request.LogonId.LowPart = luid->LowPart;
-        request.LogonId.HighPart = luid->HighPart;
+        request.LogonSession.LowPart = luid->LowPart;
+        request.LogonSession.HighPart = luid->HighPart;
         GET_CREDENTIAL_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::cout << "Testing... GET_CREDENTIAL_KEY_RESPONSE size: " << sizeof(GET_CREDENTIAL_KEY_RESPONSE) << std::endl;
+            std::string shaOwf(reinterpret_cast<const char*>(&response->CredentialData), MSV1_0_SHA_PASSWORD_LENGTH);
+            OutputHex("ShaOwf", shaOwf);
+            // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
+            if (*reinterpret_cast<DWORD*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH + MSV1_0_OWF_PASSWORD_LENGTH])) {
+                std::string dpapiKey(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_CREDENTIAL_KEY_LENGTH);
+                OutputHex("DpapiKey", dpapiKey);
+            }
+            else {
+                std::string ntOwf(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_OWF_PASSWORD_LENGTH);
+                OutputHex("NtOwf", ntOwf);
+            }
         }
         return result;
     }
@@ -289,8 +300,8 @@ namespace MSV1_0 {
 
     bool GetUserInfo(PLUID luid) {
         GETUSERINFO_REQUEST request;
-        request.LogonId.LowPart = luid->LowPart;
-        request.LogonId.HighPart = luid->HighPart;
+        request.LogonSession.LowPart = luid->LowPart;
+        request.LogonSession.HighPart = luid->HighPart;
         GETUSERINFO_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
@@ -327,8 +338,8 @@ namespace MSV1_0 {
 
     bool ProvisionTbal(PLUID luid) {
         PROVISION_TBAL_REQUEST request;
-        request.LogonId.LowPart = luid->LowPart;
-        request.LogonId.HighPart = luid->HighPart;
+        request.LogonSession.LowPart = luid->LowPart;
+        request.LogonSession.HighPart = luid->HighPart;
         void* response{ nullptr };
         return CallPackage(request, &response);
     }
@@ -341,11 +352,13 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool TransferCred() {
+    bool TransferCred(PLUID sourceLuid, PLUID destinationLuid) {
         TRANSFER_CRED_REQUEST request;
-        TRANSFER_CRED_RESPONSE* response;
-        auto result{ CallPackage(request, &response) };
-        // Parse response
-        return result;
+        request.SourceLuid.LowPart = sourceLuid->LowPart;
+        request.SourceLuid.HighPart = sourceLuid->HighPart;
+        request.DestinationLuid.LowPart = destinationLuid->LowPart;
+        request.DestinationLuid.HighPart = destinationLuid->HighPart;
+        void* response;
+        return CallPackage(request, &response);
     }
 }
