@@ -1,8 +1,5 @@
 #include <crypt.hpp>
 
-#pragma comment(lib, "Bcrypt.lib")
-#pragma comment(lib, "Crypt32.lib")
-
 #define STATUS_SUCCESS 0
 
 std::vector<byte> CalculateNtOwfPassword(const std::string& password) {

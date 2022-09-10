@@ -1,20 +1,6 @@
 #pragma once
-#include <Windows.h>
-#include <messages.hpp>
+#include <msv1_0/messages.hpp>
 #include <string>
-
-namespace {
-    class UnicodeString : public UNICODE_STRING {
-    public:
-        UnicodeString(std::wstring data);
-        ~UnicodeString();
-    };
-
-    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer);
-    PSID MakeDomainRelativeSid(PSID DomainId, ULONG RelativeId);
-    void OutputHex(const std::string& data);
-    void OutputHex(const std::string& prompt, const std::string& data);
-}
 
 namespace MSV1_0 {
     // You must free all returnBuffer outputs with LsaFreeReturnBuffer

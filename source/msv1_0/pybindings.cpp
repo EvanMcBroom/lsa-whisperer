@@ -1,6 +1,5 @@
-#include <Windows.h>
-#include <cache.hpp>
-#include <msv1_0.hpp>
+#include <winnt.h>
+#include <msv1_0/stubs.hpp>
 #include <pybind11/pybind11.h>
 
 namespace {

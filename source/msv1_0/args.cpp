@@ -1,10 +1,9 @@
-#include <Windows.h>
-#include <args.hpp>
-#include <cache.hpp>
 #include <codecvt>
 #include <crypt.hpp>
 #include <magic_enum.hpp>
-#include <msv1_0.hpp>
+#include <msv1_0/args.hpp>
+#include <msv1_0/cache.hpp>
+#include <msv1_0/stubs.hpp>
 
 using namespace MSV1_0;
 
@@ -103,7 +102,7 @@ bool HandleFunction(const cxxopts::ParseResult& result) {
 }
 
 int Parse(int argc, char** argv) {
-    cxxopts::Options options{ "msv-cli", "A CLI for the MSV1_0 authentication package" };
+    cxxopts::Options options{ "msv1_0-cli", "A CLI for the MSV1_0 authentication package" };
 
     options.add_options("MSV1_0 Function")
         ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"))

@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 #include <MsChapp.h>
 #include <Ntsecapi.h>
 #include <crypt.hpp>

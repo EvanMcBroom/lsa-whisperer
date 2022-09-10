@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Ntsecapi.h>
 
