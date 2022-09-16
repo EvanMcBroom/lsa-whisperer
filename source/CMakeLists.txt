@@ -1,21 +1,25 @@
-target_sources(${PROJECT_NAME} PRIVATE
+target_sources(core PRIVATE
     crypt.cpp
     lsa.cpp
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC Bcrypt.lib Crypt32.lib)
+target_link_libraries(core PUBLIC Bcrypt.lib Crypt32.lib Ntdll.lib Secur32.lib)
 
-target_ap_sources(msv1_0 SOURCES
+target_sources(msv1_0 PRIVATE
     msv1_0/args.cpp
     msv1_0/cache.cpp
-    msv1_0/stubs.cpp
+    msv1_0/proxy.cpp
 )
 
-target_ap_sources(pku2u SOURCES
+target_sources(pku2u PRIVATE
     pku2u/args.cpp
-    pku2u/stubs.cpp
+    pku2u/proxy.cpp
 )
 
-target_ap_sources(schannel SOURCES
+target_sources(schannel PRIVATE
     schannel/args.cpp
-    schannel/stubs.cpp
+    schannel/proxy.cpp
+)
+
+target_sources(lsa-whisperer PRIVATE
+    lsa-whisperer.cpp
 )

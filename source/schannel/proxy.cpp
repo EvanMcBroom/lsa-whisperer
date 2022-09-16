@@ -6,17 +6,10 @@
 #include <vector>
 #include <schannel.h>
 #include <schannel/messages.hpp>
-
-#define STATUS_SUCCESS 0
+#include <schannel/proxy.hpp>
 
 namespace Schannel {
-    template<typename _Request, typename _Response>
-    bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) {
-        std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
-        return ::CallPackage(UNISP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
-    }
-
-    bool CacheInfo(PLUID logonId, const std::wstring& serverName, ULONG flags) {
+    bool Proxy::CacheInfo(PLUID logonId, const std::wstring & serverName, ULONG flags) const {
         SESSION_CACHE_INFO_REQUEST request;
         request.LogonId.LowPart = logonId->LowPart;
         request.LogonId.HighPart = logonId->HighPart;
@@ -27,7 +20,7 @@ namespace Schannel {
         return CallPackage(request, &response);
     }
 
-    bool LookupCert(const std::vector<byte>& certificate, ULONG flags, std::vector<std::vector<byte>> issuers) {
+    bool Proxy::LookupCert(const std::vector<byte>& certificate, ULONG flags, std::vector<std::vector<byte>> issuers) const {
         //CERT_LOGON_REQUEST request;
         //request.LogonInformation = logonInfo;
         //request.ValidationInformation = validationInfo;
@@ -38,7 +31,7 @@ namespace Schannel {
         return false;
     }
 
-    bool LookupExternalCert(ULONG type, const std::vector<byte>& credential, ULONG flags) {
+    bool Proxy::LookupExternalCert(ULONG type, const std::vector<byte>& credential, ULONG flags) const {
         EXTERNAL_CERT_LOGON_REQUEST request;
         request.Length = 0; // ?
         request.CredentialType = type;
@@ -54,7 +47,7 @@ namespace Schannel {
         return result;
     }
 
-    bool PerfmonInfo(ULONG flags) {
+    bool Proxy::PerfmonInfo(ULONG flags) const {
         PERFMON_INFO_REQUEST request;
         request.Flags = flags;
         PERFMON_INFO_RESPONSE* response;
@@ -72,7 +65,7 @@ namespace Schannel {
         return result;
     }
 
-    bool PurgeCache(PLUID logonId, const std::wstring& serverName, ULONG flags) {
+    bool Proxy::PurgeCache(PLUID logonId, const std::wstring& serverName, ULONG flags) const {
         PURGE_SESSION_CACHE_REQUEST request;
         request.LogonId.LowPart = logonId->LowPart;
         request.LogonId.HighPart = logonId->HighPart;
@@ -83,7 +76,7 @@ namespace Schannel {
         return CallPackage(request, &response);
     }
 
-    bool StreamSizes() {
+    bool Proxy::StreamSizes() const {
         STREAM_SIZES_REQUEST request;
         PSTREAM_SIZES_RESPONSE response;
         auto result{ CallPackage(request, &response) };
@@ -93,5 +86,14 @@ namespace Schannel {
             std::cout << "unknown3: " << response->unknown[2] << std::endl;
         }
         return result;
+    }
+
+    template<typename _Request, typename _Response>
+    bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
+        if (lsa->Connected()) {
+            std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
+            return lsa->CallPackage(UNISP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
+        }
+        return false;
     }
 }

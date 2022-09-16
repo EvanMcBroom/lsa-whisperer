@@ -1,5 +1,8 @@
 #pragma once
 #include <cxxopts.hpp>
+#include <pku2u/proxy.hpp>
 
-bool HandleFunction(const cxxopts::ParseResult& result);
-int Parse(int argc, char** argv);
+namespace Pku2u {
+	bool HandleFunction(const Proxy& proxy, const cxxopts::ParseResult& result);
+	bool Parse(int argc, char** argv);
+}

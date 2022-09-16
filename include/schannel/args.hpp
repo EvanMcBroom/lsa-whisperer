@@ -1,5 +1,8 @@
 #pragma once
 #include <cxxopts.hpp>
+#include <schannel/proxy.hpp>
 
-bool HandleFunction(const cxxopts::ParseResult& result);
-int Parse(int argc, char** argv);
+namespace Schannel {
+	bool HandleFunction(const Proxy& proxy, const cxxopts::ParseResult& result);
+	bool Parse(int argc, char** argv);
+}

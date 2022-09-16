@@ -6,36 +6,15 @@
 #include <lsa.hpp>
 #include <magic_enum.hpp>
 #include <msv1_0/cache.hpp>
-#include <msv1_0/stubs.hpp>
+#include <msv1_0/proxy.hpp>
 #include <string>
 #include <vector>
 #include <netlogon.hpp>
 
 #define STATUS_SUCCESS 0
 
-namespace MSV1_0 {
-    bool CallPackage(const std::string& submitBuffer, void** returnBuffer) {
-        return ::CallPackage(MSV1_0_PACKAGE_NAME, submitBuffer, returnBuffer);
-    }
-
-    template<typename _Request, typename _Response>
-    bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) {
-        std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
-        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
-    }
-
-    template<typename _Request, typename _Response>
-    bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) {
-        std::string stringSubmitBuffer(reinterpret_cast<const char*>(submitBuffer), submitBufferLength);
-        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
-    }
-
-    //template<typename _Request, typename _Response>
-    //bool CallPackage(const _Request&& submitBuffer, _Response** returnBuffer) {
-    //    return CallPackage(std::forward<_Request>(submitBuffer), 0, returnBuffer);
-    //}
-
-    bool CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) {
+namespace Msv1_0 {
+    bool Proxy::CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) const {
         CACHE_LOGON_REQUEST request;
         request.LogonInformation = logonInfo;
         request.ValidationInformation = validationInfo;
@@ -45,7 +24,7 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool CacheLookupEx(const std::wstring username, const std::wstring domain, MSV1_0::CacheLookupCredType type, const std::string credential) {
+    bool Proxy::CacheLookupEx(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const {
         CACHE_LOOKUP_EX_REQUEST request;
         UnicodeString userName{ username };
         request.UserName = userName;
@@ -62,7 +41,7 @@ namespace MSV1_0 {
         return 1;
     }
 
-    bool ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& oldPassword, const std::wstring& newPassword, bool impersonating) {
+    bool Proxy::ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& oldPassword, const std::wstring& newPassword, bool impersonating) const {
         CHANGE_CACHED_PASSWORD_REQUEST request;
         UnicodeString domainNameGuard{ domainName };
         request.DomainName = domainNameGuard;
@@ -88,28 +67,28 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool ClearCachedCredentials() {
+    bool Proxy::ClearCachedCredentials() const {
         CLEAR_CACHED_CREDENTIALS_REQUEST request;
         void* response;
         return CallPackage(request, &response);
     }
 
-    bool DecryptDpapiMasterKey() {
+    bool Proxy::DecryptDpapiMasterKey() const {
         DECRYPT_DPAPI_MASTER_KEY_REQUEST request;
-        std::cout << "Size: " <<  sizeof(request) << std::endl;
+        std::cout << "Size: " << sizeof(request) << std::endl;
         DECRYPT_DPAPI_MASTER_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         // Parse response
         return result;
     }
 
-    bool DeleteTbalSecrets() {
+    bool Proxy::DeleteTbalSecrets() const {
         DELETE_TBAL_SECRETS_REQUEST request;
         void* response{ nullptr };
         return CallPackage(request, &response);
     }
 
-    bool DeriveCredential(PLUID luid, DeriveCredType type, const std::vector<byte>& mixingBits) {
+    bool Proxy::DeriveCredential(PLUID luid, DeriveCredType type, const std::vector<byte>& mixingBits) const {
         size_t requestLength{ sizeof(DERIVECRED_REQUEST) + mixingBits.size() };
         auto request{ reinterpret_cast<DERIVECRED_REQUEST*>(std::malloc(requestLength)) };
         request->MessageType = PROTOCOL_MESSAGE_TYPE::DeriveCredential;
@@ -128,7 +107,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool EnumerateUsers(bool passthrough) {
+    bool Proxy::EnumerateUsers(bool passthrough) const {
         ENUMUSERS_REQUEST request;
         ENUMUSERS_RESPONSE* response;
         bool result;
@@ -159,7 +138,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) {
+    bool Proxy::GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const {
         auto requestSize{ sizeof(MSV1_0_PASSTHROUGH_REQUEST)
             + (domainName.size() + 1) * sizeof(wchar_t)
             + (packageName.size() + 1) * sizeof(wchar_t)
@@ -174,9 +153,9 @@ namespace MSV1_0 {
         auto aa6 = offsetof(PASSTHROUGH_REQUEST, Pad);
 
 
-        auto request{reinterpret_cast<PASSTHROUGH_REQUEST*>(malloc(requestSize))};
+        auto request{ reinterpret_cast<PASSTHROUGH_REQUEST*>(malloc(requestSize)) };
         std::memset(request, '\0', requestSize);
-        request->MessageType = MSV1_0::PROTOCOL_MESSAGE_TYPE::GenericPassthrough;
+        request->MessageType = PROTOCOL_MESSAGE_TYPE::GenericPassthrough;
 
         auto ptr{ reinterpret_cast<byte*>(request + 1) };
         request->DomainName.MaximumLength = request->DomainName.Length = domainName.size();
@@ -200,7 +179,7 @@ namespace MSV1_0 {
         return false;
     }
 
-    bool GetCredentialKey(PLUID luid) {
+    bool Proxy::GetCredentialKey(PLUID luid) const {
         GET_CREDENTIAL_KEY_REQUEST request;
         request.LogonSession.LowPart = luid->LowPart;
         request.LogonSession.HighPart = luid->HighPart;
@@ -222,7 +201,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool GetStrongCredentialKey() {
+    bool Proxy::GetStrongCredentialKey() const {
         GET_STRONG_CREDENTIAL_KEY_REQUEST request;
         GET_STRONG_CREDENTIAL_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
@@ -230,7 +209,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool GetUserInfo(PLUID luid) {
+    bool Proxy::GetUserInfo(PLUID luid) const {
         GETUSERINFO_REQUEST request;
         request.LogonSession.LowPart = luid->LowPart;
         request.LogonSession.HighPart = luid->HighPart;
@@ -256,7 +235,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool Lm20ChallengeRequest() {
+    bool Proxy::Lm20ChallengeRequest() const {
         LM20_CHALLENGE_REQUEST request;
         LM20_CHALLENGE_RESPONSE* response;
         bool result{ CallPackage(request, &response) };
@@ -268,7 +247,7 @@ namespace MSV1_0 {
         return result;
     }
 
-    bool ProvisionTbal(PLUID luid) {
+    bool Proxy::ProvisionTbal(PLUID luid) const {
         PROVISION_TBAL_REQUEST request;
         request.LogonSession.LowPart = luid->LowPart;
         request.LogonSession.HighPart = luid->HighPart;
@@ -276,7 +255,7 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool SetProcessOption(ProcessOption options, bool disable) {
+    bool Proxy::SetProcessOption(ProcessOption options, bool disable) const {
         SETPROCESSOPTION_REQUEST request;
         request.ProcessOptions = static_cast<ULONG>(options);
         request.DisableOptions = disable;
@@ -284,7 +263,7 @@ namespace MSV1_0 {
         return CallPackage(request, &response);
     }
 
-    bool TransferCred(PLUID sourceLuid, PLUID destinationLuid) {
+    bool Proxy::TransferCred(PLUID sourceLuid, PLUID destinationLuid) const {
         TRANSFER_CRED_REQUEST request;
         request.SourceLuid.LowPart = sourceLuid->LowPart;
         request.SourceLuid.HighPart = sourceLuid->HighPart;
@@ -293,4 +272,28 @@ namespace MSV1_0 {
         void* response;
         return CallPackage(request, &response);
     }
+
+    bool Proxy::CallPackage(const std::string& submitBuffer, void** returnBuffer) const {
+        if (lsa->Connected()) {
+            return lsa->CallPackage(MSV1_0_PACKAGE_NAME, submitBuffer, returnBuffer);
+        }
+        return false;
+    }
+
+    template<typename _Request, typename _Response>
+    bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
+        std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
+        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
+    }
+
+    template<typename _Request, typename _Response>
+    bool Proxy::CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const {
+        std::string stringSubmitBuffer(reinterpret_cast<const char*>(submitBuffer), submitBufferLength);
+        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
+    }
+
+    //template<typename _Request, typename _Response>
+    //bool Proxy::CallPackage(const _Request&& submitBuffer, _Response** returnBuffer) {
+    //    return CallPackage(std::forward<_Request>(submitBuffer), 0, returnBuffer);
+    //}
 }

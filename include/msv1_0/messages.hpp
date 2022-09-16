@@ -1,16 +1,17 @@
 #pragma once
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
+#include <Winternl.h>
 #include <Ntsecapi.h>
 
-#pragma pack(show) // normally 16
-#ifdef _WIN64
-    #pragma pack(push, 8)
-#else
-    #pragma pack(push, 4)
-#endif
-#pragma pack(show)
+//#pragma pack(show) // normally 16
+//#ifdef _WIN64
+//    #pragma pack(push, 8)
+//#else
+//    #pragma pack(push, 4)
+//#endif
+//#pragma pack(show)
 
-namespace MSV1_0 {
+namespace Msv1_0 {
     enum class CacheLogonFlags : ULONG {
         RequestMitLogon = 1,
         RequestInfo4 = 2,
