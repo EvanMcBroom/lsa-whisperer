@@ -38,7 +38,7 @@ NOTE: The internal function for each message type will be located in `msv1_0.dll
 
 == Functions
 
-Each function may be called in lsa-whisperer using `sspi msv1_0 --function <name>`.
+Each function may be called in Lsa Whisperer using `sspi msv1_0 --function <name>`.
 
 === CacheLogon
 

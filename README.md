@@ -50,5 +50,5 @@ Thank you to the following related projects that greatly helped in the developme
 
 Aside from the creators and maintainers of the above [open source](#open) projects, additional thanks are needed to following people who's research helped as well:
 
-- [Dr. Nestori Syynimaa](https://twitter.com/DrAzureAD)
 - [Lee Christensen](https://twitter.com/tifkin_)
+- [Dr. Nestori Syynimaa](https://twitter.com/DrAzureAD)

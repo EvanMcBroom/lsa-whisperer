@@ -1,0 +1,34 @@
+= Digest Authentication for Windows
+
+The wdiget package does not support custom protocol messages.
+Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
+As such, it is not currently included as an SSPI module in LSA Whisperer.
+
+// The Lsa calls are mapped to SECPKG_FUNCTION_TABLE which is documented here:
+// https://learn.microsoft.com/en-us/windows/win32/api/ntsecpkg/ns-ntsecpkg-secpkg_function_table
+.Symbol NtDigestFunctionTable
+|===
+| Offset (x64) | Lsa Call                   | Function Pointer             | NT Version | Remarks
+| `0x010`      | CallPackage                | LsaApCallPackage             | _None_     |
+| `0x018`      | LogonTerminated            | LsaApLogonTerminated         | _All_      |
+| `0x020`      | CallPackageUntrusted       | LsaApCallPackageUntrusted    | _None_     |
+| `0x028`      | CallPackagePassthrough     | LsaApCallPackagePassthrough  | _All_      |
+| `0x038`      | LogonUserEx2               | LsaApLogonUserEx2            | _None_     |
+| `0x040`      | Initialize                 | SpInitialize                 | _All_      |
+| `0x048`      | Shutdown                   | SpShutdown                   | _All_      |
+| `0x050`      | GetInfo                    | SpGetInfo                    | _All_      |
+| `0x058`      | AcceptCredentials          | SpAcceptCredentials          | _All_      |
+| `0x060`      | AcquireCredentialsHandle   | SpAcquireCredentialsHandle   | _All_      | Auth data is provided as `_SEC_WINNT_AUTH_IDENTITY_EXW`
+| `0x068`      | QueryCredentialsAttributes | SpQueryCredentialsAttributes | _All_      | Returns the user name associated with the credential
+| `0x070`      | FreeCredentialsHandle      | SpFreeCredentialsHandle      | _All_      |
+| `0x090`      | InitLsaModeContext         | SpInitLsaModeContext         | _All_      |
+| `0x098`      | AcceptLsaModeContext       | SpAcceptLsaModeContext       | _All_      |
+| `0x0a0`      | DeleteContext              | SpDeleteContext              | _All_      |
+| `0x0a8`      | ApplyControlToken          | SpApplyControlToken          | _None_     |
+| `0x0b8`      | GetExtendedInformation     | SpGetExtendedInformation     | _All_      | Returns the SysWOW64 path for wdigest
+| `0x0d0`      | SetExtendedInformation     | SpSetExtendedInformation     | _None_     |
+| `0x0e0`      | SetCredentialsAttributes   | SpSetCredentialsAttributes   | :grey_question: |
+| `0x120`      | ValidateTargetInfo         | LsaApValidateTargetInfo      | `>=6.1`    |
+|===
+
+NOTE: Functions marked as _None_ are available but return `SEC_E_UNSUPPORTED_FUNCTION` in NT 5.1 to 10.
