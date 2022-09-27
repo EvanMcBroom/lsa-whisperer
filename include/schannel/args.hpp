@@ -3,6 +3,6 @@
 #include <schannel/proxy.hpp>
 
 namespace Schannel {
-	bool HandleFunction(const Proxy& proxy, const cxxopts::ParseResult& result);
-	bool Parse(int argc, char** argv);
+	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result);
+	void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

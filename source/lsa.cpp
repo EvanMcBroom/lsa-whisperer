@@ -13,7 +13,8 @@ UnicodeString::~UnicodeString() {
     RtlFreeUnicodeString(this);
 }
 
-Lsa::Lsa() {
+Lsa::Lsa(std::ostream& out)
+    : out(out) {
     if (SUCCEEDED(LsaConnectUntrusted(&this->lsaHandle))) {
         connected = true;
     }
@@ -34,28 +35,28 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
             PVOID returnBuffer2;
             ULONG returnBufferLength;
             NTSTATUS protocolStatus;
-            OutputHex("InputData", submitBuffer);
+            OutputHex(this->out, "InputData", submitBuffer);
             auto submitBufferPtr{ submitBuffer.data() };
             auto status{ LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus) };
             if (SUCCEEDED(status)) {
                 if (protocolStatus >= 0) {
-                    OutputHex("OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
+                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
                     *returnBuffer = returnBuffer2;
                     result = true;
                 }
                 else {
-                    std::cout << "OutputData[0]: nullptr" << std::endl;
+                    out << "OutputData[0]: nullptr" << std::endl;
                     *returnBuffer = nullptr;
                     LsaFreeReturnBuffer(returnBuffer);
                 }
-                std::cout << "ProtocolStatus: 0x" << protocolStatus << std::endl << std::endl;
+                out << "ProtocolStatus: 0x" << protocolStatus << std::endl << std::endl;
             }
             else {
-                std::cout << "Error: 0x" << status << std::endl;
+                out << "Error: 0x" << status << std::endl;
             }
         }
         else {
-            std::cout << "Error: Could not find authentication package " << package << std::endl;
+            out << "Error: Could not find authentication package " << package << std::endl;
         }
     }
     return result;
@@ -66,16 +67,16 @@ SspiProxy::SspiProxy(const std::shared_ptr<Lsa>& lsa)
 
 }
 
-void OutputHex(const std::string& data) {
+void OutputHex(std::ostream& out, const std::string& data) {
     for (const auto& item : data) {
-        std::cout << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(static_cast<unsigned char>(item));
+        out << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(static_cast<unsigned char>(item));
     }
 }
 
-void OutputHex(const std::string& prompt, const std::string& data) {
-    std::cout << prompt << "[0x" << std::setw(2) << std::setfill('0') << std::hex << data.length() << "]: ";
-    OutputHex(data);
-    std::cout << std::endl;
+void OutputHex(std::ostream& out, const std::string& prompt, const std::string& data) {
+    out << prompt << "[0x" << std::setw(2) << std::setfill('0') << std::hex << data.length() << "]: ";
+    OutputHex(out, data);
+    out << std::endl;
 }
 
 constexpr size_t RoundUp(size_t count, size_t powerOfTwo) {

@@ -9,4 +9,4 @@ typedef struct _USER_SESSION_KEY {
 
 std::vector<byte> CalculateNtOwfPassword(const std::string& password);
 std::vector<byte> HashMessage(const std::wstring& algoType, const std::vector<byte>& message);
-std::vector<byte> HexDecode(const std::wstring& asciiHex);
+std::vector<byte> HexDecode(std::ostream& out, const std::wstring& asciiHex);

@@ -1,6 +1,7 @@
 #pragma once
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
+#include <iostream>
 #include <string>
 
 class UnicodeString : public UNICODE_STRING {
@@ -9,9 +10,23 @@ public:
     ~UnicodeString();
 };
 
+// https://stackoverflow.com/a/46455079
+class NullStream : public std::ostream {
+public:
+    NullStream() : std::ostream(&nullBuffer) {}
+
+private:
+    class NullBuffer : public std::streambuf {
+    public:
+        int overflow(int c) { return c; }
+    } nullBuffer;
+};
+
 class Lsa {
 public:
-    Lsa();
+    std::ostream& out;
+
+    Lsa(std::ostream& out = NullStream());
     ~Lsa();
     bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer);
     auto Connected() { return connected; };
@@ -30,5 +45,5 @@ protected:
 };
 
 PSID MakeDomainRelativeSid(PSID DomainId, ULONG RelativeId);
-void OutputHex(const std::string& data);
-void OutputHex(const std::string& prompt, const std::string& data);
+void OutputHex(std::ostream& out, const std::string& data);
+void OutputHex(std::ostream& out, const std::string& prompt, const std::string& data);

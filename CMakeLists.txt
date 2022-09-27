@@ -8,9 +8,10 @@ project(lsa-whisperer
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-find_package(cxxopts CONFIG REQUIRED)
-find_package(magic_enum CONFIG REQUIRED)
-find_package(pybind11 QUIET)
+include(cmake/requirements.cmake)
+#find_package(cli CONFIG REQUIRED)
+#find_package(magic_enum CONFIG REQUIRED)
+#find_package(pybind11 QUIET)
 
 string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
@@ -32,11 +33,11 @@ add_authentication_package(schannel)
 
 add_executable(lsa-whisperer)
 target_sources(lsa-whisperer PRIVATE source/main.cpp)
-target_link_libraries(lsa-whisperer PRIVATE ${AUTHENTICATION_PACKAGES})
+target_link_libraries(lsa-whisperer PRIVATE ${AUTHENTICATION_PACKAGES} cli::cli)
 
 add_executable(lsa-dotnet)
 target_sources(lsa-dotnet PRIVATE source/main.cpp)
-target_link_libraries(lsa-dotnet PRIVATE ${AUTHENTICATION_PACKAGES})
+target_link_libraries(lsa-dotnet PRIVATE ${AUTHENTICATION_PACKAGES} cli::cli)
 set_target_properties(lsa-dotnet PROPERTIES COMMON_LANGUAGE_RUNTIME "")
 
 #if(pybind11_FOUND)

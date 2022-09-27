@@ -1,0 +1,4 @@
+
+There's some code here:
+
+* https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/3f562cb9-4456-4de7-9267-c3686bf2a81c

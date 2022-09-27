@@ -1,0 +1,9 @@
+[submodule "libraries/cli"]
+	path = libraries/cli
+	url = https://github.com/daniele77/cli.git
+[submodule "libraries/cxxopts"]
+	path = libraries/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+[submodule "libraries/magic_enum"]
+	path = libraries/magic_enum
+	url = https://github.com/Neargye/magic_enum.git

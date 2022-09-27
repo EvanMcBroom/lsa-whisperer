@@ -55,13 +55,13 @@ namespace Msv1_0 {
         CHANGE_CACHED_PASSWORD_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::cout << "PasswordInfoValid    : " << response->PasswordInfoValid << std::endl;
+            lsa->out << "PasswordInfoValid    : " << response->PasswordInfoValid << std::endl;
             auto& DomainPasswordInfo{ response->DomainPasswordInfo };
-            std::cout << "MinPasswordLength    : " << DomainPasswordInfo.MinPasswordLength << std::endl;
-            std::cout << "PasswordHistoryLength: " << DomainPasswordInfo.PasswordHistoryLength << std::endl;
-            std::cout << "PasswordProperties   : " << DomainPasswordInfo.PasswordProperties << std::endl;
-            std::cout << "MaxPasswordAge       : " << DomainPasswordInfo.MaxPasswordAge.QuadPart << std::endl;
-            std::cout << "MinPasswordAge       : " << DomainPasswordInfo.MinPasswordAge.QuadPart << std::endl;
+            lsa->out << "MinPasswordLength    : " << DomainPasswordInfo.MinPasswordLength << std::endl;
+            lsa->out << "PasswordHistoryLength: " << DomainPasswordInfo.PasswordHistoryLength << std::endl;
+            lsa->out << "PasswordProperties   : " << DomainPasswordInfo.PasswordProperties << std::endl;
+            lsa->out << "MaxPasswordAge       : " << DomainPasswordInfo.MaxPasswordAge.QuadPart << std::endl;
+            lsa->out << "MinPasswordAge       : " << DomainPasswordInfo.MinPasswordAge.QuadPart << std::endl;
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -75,7 +75,7 @@ namespace Msv1_0 {
 
     bool Proxy::DecryptDpapiMasterKey() const {
         DECRYPT_DPAPI_MASTER_KEY_REQUEST request;
-        std::cout << "Size: " << sizeof(request) << std::endl;
+        lsa->out << "Size: " << sizeof(request) << std::endl;
         DECRYPT_DPAPI_MASTER_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         // Parse response
@@ -101,7 +101,7 @@ namespace Msv1_0 {
         auto result{ CallPackage(request, requestLength, &response) };
         if (result) {
             std::string cred(reinterpret_cast<const char*>(&response->DeriveCredReturnBuffer), response->DeriveCredInfoLength);
-            OutputHex("Derived Cred", cred);
+            OutputHex(lsa->out, "Derived Cred", cred);
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -123,16 +123,16 @@ namespace Msv1_0 {
         }
         if (result) {
             auto count{ response->NumberOfLoggedOnUsers };
-            std::cout << "NumberOfLoggedOnUsers: " << count << std::endl;
-            std::cout << "LogonIds             : ";
+            lsa->out << "NumberOfLoggedOnUsers: " << count << std::endl;
+            lsa->out << "LogonIds             : ";
             for (size_t index{ 0 }; index < count; index++) {
-                std::cout << "0x" << reinterpret_cast<LARGE_INTEGER*>(response->LogonSessions)[index].QuadPart << ((index < (count - 1)) ? ", " : "");
+                lsa->out << "0x" << reinterpret_cast<LARGE_INTEGER*>(response->LogonSessions)[index].QuadPart << ((index < (count - 1)) ? ", " : "");
             }
-            std::cout << std::endl << "EnumHandles          : ";
+            lsa->out << std::endl << "EnumHandles          : ";
             for (size_t index{ 0 }; index < count; index++) {
-                std::cout << "0x" << reinterpret_cast<ULONG*>(response->EnumHandles)[index] << ((index < (count - 1)) ? ", " : "");
+                lsa->out << "0x" << reinterpret_cast<ULONG*>(response->EnumHandles)[index] << ((index < (count - 1)) ? ", " : "");
             }
-            std::cout << std::endl;
+            lsa->out << std::endl;
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -187,15 +187,15 @@ namespace Msv1_0 {
         auto result{ CallPackage(request, &response) };
         if (result) {
             std::string shaOwf(reinterpret_cast<const char*>(&response->CredentialData), MSV1_0_SHA_PASSWORD_LENGTH);
-            OutputHex("ShaOwf", shaOwf);
+            OutputHex(lsa->out, "ShaOwf", shaOwf);
             // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
             if (*reinterpret_cast<DWORD*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH + MSV1_0_OWF_PASSWORD_LENGTH])) {
                 std::string dpapiKey(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_CREDENTIAL_KEY_LENGTH);
-                OutputHex("DpapiKey", dpapiKey);
+                OutputHex(lsa->out, "DpapiKey", dpapiKey);
             }
             else {
                 std::string ntOwf(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_OWF_PASSWORD_LENGTH);
-                OutputHex("NtOwf", ntOwf);
+                OutputHex(lsa->out, "NtOwf", ntOwf);
             }
         }
         return result;
@@ -216,7 +216,7 @@ namespace Msv1_0 {
         GETUSERINFO_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::cout << "LogonType      : " << magic_enum::enum_names<SECURITY_LOGON_TYPE>()[response->LogonType] << std::endl;
+            lsa->out << "LogonType      : " << magic_enum::enum_names<SECURITY_LOGON_TYPE>()[response->LogonType] << std::endl;
             auto offset{ reinterpret_cast<byte*>(response + 1) };
             auto sidLength{ reinterpret_cast<byte*>(response->UserName.Buffer) - offset };
             UNICODE_STRING sidString;
@@ -241,7 +241,7 @@ namespace Msv1_0 {
         bool result{ CallPackage(request, &response) };
         if (result) {
             std::string challenge(reinterpret_cast<const char*>(&response->ChallengeToClient), sizeof(response->ChallengeToClient));
-            OutputHex("Challenge To Client", challenge);
+            OutputHex(lsa->out, "Challenge To Client", challenge);
             LsaFreeReturnBuffer(response);
         }
         return result;

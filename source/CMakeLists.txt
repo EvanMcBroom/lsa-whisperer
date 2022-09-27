@@ -20,6 +20,6 @@ target_sources(schannel PRIVATE
     schannel/proxy.cpp
 )
 
-target_sources(lsa-whisperer PRIVATE
-    lsa-whisperer.cpp
-)
+#target_sources(lsa-whisperer PRIVATE
+#    cli.cpp
+#)

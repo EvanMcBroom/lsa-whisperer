@@ -43,7 +43,7 @@ std::vector<byte> HashMessage(const std::wstring& algoType, const std::vector<BY
     return result;
 }
 
-std::vector<byte> HexDecode(const std::wstring& asciiHex) {
+std::vector<byte> HexDecode(std::ostream& out, const std::wstring& asciiHex) {
     DWORD byteLength{ 0 };
     if (CryptStringToBinaryW(asciiHex.data(), 0, CRYPT_STRING_HEX, nullptr, &byteLength, nullptr, nullptr)) {
         std::vector<byte> bytes(byteLength, 0);

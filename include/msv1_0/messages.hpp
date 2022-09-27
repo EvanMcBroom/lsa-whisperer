@@ -131,10 +131,11 @@ namespace Msv1_0 {
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey };
-        DWORD unknown2;
+        DWORD unknown2; // Some enum. Must be 0 or 1
         LUID LogonSession;
-        DWORD unknown4;
-        DWORD unknown5[10];
+        DWORD unknown3[2];
+        DWORD unknown4; // used for something
+        DWORD unknown5[7];
     } DECRYPT_DPAPI_MASTER_KEY_REQUEST, * PDECRYPT_DPAPI_MASTER_KEY_REQUEST;
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_RESPONSE {

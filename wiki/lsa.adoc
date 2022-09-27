@@ -1,0 +1,150 @@
+= The Local Security Authority
+
+The Local Security Authority (LSA) provides several security related services for the Windows operating system.
+LSA is ran within the LSA Subsystem Service (LSASS) Windows service executable but is largely implemented in the LSA server DLL (e.g. `lsasrv.dll`).
+The components of LSA may be categorized in different ways.
+For the purposes of this project, they will be categorized by their RPC interfaces with documentation provided to assist with further developing LSA Whisperer.
+
+:toc:
+
+Endpoints :
+ncacn_np        : \pipe\lsass
+ncalrpc         : securityevent
+ncalrpc         : LSARPC_ENDPOINT
+ncalrpc         : LSA_IDPEXT_ENDPOINT
+ncalrpc         : LSA_EAS_ENDPOINT
+ncalrpc         : lsapolicylookup
+ncalrpc         : lsasspirpc
+ncalrpc         : protected_storage
+ncacn_ip_tcp    : 49678
+
+== Audit
+
+.Audit RPC Interface
+|===
+| UUID | `12345778-1234-abcd-ef00-0123456789ab`
+| Version | 0.0
+| Endpoint | ALRPC `audit`
+| DLL | C:\windows\SYSTEM32\lsasrv.dll
+|===
+
+== BackupKey RemoteProtocol (DPAPI)
+
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-bkrp/
+
+Still need to document these...
+
+* 11220835-5b26-4d94-ae86-c3e475a809de (1.0)
+* 5cbe92cb-f4be-45c9-9fc9-33e73e557b20 (1.0)
+
+.SidKey RPC Interface
+|===
+| UUID | `7f1317a8-4dea-4fa2-a551-df5516ff8879`
+| Version | 1.0
+| Endpoint | ALRPC `SidKey Local End Point`
+| DLL | C:\windows\SYSTEM32\dpapisrv.dll
+|===
+
+
+== Capabilities
+
+.Capabilities RPC Interface
+|===
+| UUID | `afc07e2e-311c-4435-808c-c483ffeec7c9`
+| Version | 1.0
+| Endpoint | ALRPC `lsacap`
+| DLL | C:\windows\SYSTEM32\lsasrv.dll
+|===
+
+== Encrypted File System
+
+.EFS RPC Interface
+|===
+| UUID | `c681d488-d850-11d0-8c52-00c04fd90f7e`
+| Version | 1.0
+| DLL | C:\windows\SYSTEM32\efslsaext.dll
+|===
+
+== Key Isolation
+
+.Key Isolation RPC Interface 1
+|===
+| UUID | `8fb74744-b2ff-4c00-be0d-9ef9a191fe1b`
+| Version | 1.0
+| DLL | C:\windows\SYSTEM32\keyiso.dll
+|===
+
+.Key Isolation TPM RPC Interface 2
+|===
+| UUID | `51a227ae-825b-41f2-b4a9-1ac9557a1018`
+| Version | 1.0
+| DLL | C:\windows\SYSTEM32\keyiso.dll
+|===
+
+.Key Isolation TPM RPC Interface 3
+|===
+| UUID | `b25a52bf-e5dd-4f4a-aea6-8ca7272a0e86`
+| Version | 2.0
+| DLL | C:\windows\SYSTEM32\keyiso.dll
+|===
+
+== Security Account Manager
+
+.SAM RPC interface
+|===
+| UUID | `12345778-1234-abcd-ef00-0123456789ac`
+| Version | 1.0
+| Endpoint | ALRPC `samss lpc`
+| DLL | C:\windows\SYSTEM32\samsrv.dll
+|===
+
+== Security Support Provider Interface
+
+.SSPI RPC Interface
+|===
+| UUID | `4f32adc8-6052-4a04-8701-293ccf2096f0`
+| Version | 1.0
+| Endpoint | ALRPC `lsasspirpc`
+| DLL | C:\windows\SYSTEM32\SspiSrv.dll
+|===
+
+The Security Support Provider Interface (SSPI) is an API for interacting with security support providers (SSPs).
+SSPs are DLLs that either implement a security protocol, called a security package (SP), and/or authentication logic, called an authentication package (AP).
+The LSA Whisperer project largely focuses on the authentication logic contained in an SSP.
+As such, the project will refer to SSPs that support both a security protocol and authentication logic as an authentication package (AP).
+
+https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[Authentication package functions] (ex. `LsaCallAuthenticationPackage`) previously communicated with LSASS over LPC in NT 5.2. Microsoft later introduced the SSPI RPC interface http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7] and swapped the previous LPC calls for RPC. The new SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` was built to support this.
+
+Windows does not register any security callback function when registering the interface. It does however make a low box security descriptor that it applies when registering the endpoint and the interface. The RPC server only does verification for if the client is local for operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandle`).
+
+.SSPI Operations
+[%header]
+|===
+| Opnum | Operation                          | Notes
+| 0x00  | SspirConnectRpc                    |
+| 0x01  | SspirDisconnectRpc                 | `lsasrv!SspiExRpcRundown`
+| 0x02  | SspirDisconnectRpc                 | `lsasrv!SspiExRpcRundown`
+| 0x03  | SspirCallRpc                       |
+| 0x04  | SspirAcquireCredentialsHandle      |
+| 0x05  | SspirFreeCredentialsHandle         |
+| 0x06  | SspirProcessSecurityContext        |
+| 0x07  | SspirDeleteSecurityContext         |
+| 0x08  | SspirSslQueryCredentialsAttributes |
+| 0x09  | SspirNegQueryContextAttributes     |
+| 0x10  | SspirSslSetCredentialsAttributes   |
+| 0x11  | SspirApplyControlToken             |
+| 0x12  | SspirLogonUser                     |
+| 0x13  | SspirLookupAccountSid              | Verifies that the provided SID is valid
+| 0x14  | SspirGetUserName                   |
+| 0x15  | SspirGetInprocDispatchTable        | Returns `&SspiInprocFunctions` if local
+|===
+
+== Vault
+
+.Vault RPC Interface
+|===
+| UUID | `bb8b98e8-84dd-45e7-9f34-c3fb6155eeed`
+| Version | 1.0
+| Transport | ncalrpc   Vault
+| DLL | C:\windows\SYSTEM32\vaultsvc.dll
+|===

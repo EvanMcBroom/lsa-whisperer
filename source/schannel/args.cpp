@@ -7,7 +7,7 @@
 #include <schannel/proxy.hpp>
 
 namespace Schannel {
-    bool HandleFunction(const Proxy& proxy, const cxxopts::ParseResult& result) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheInfo: {
             return false;// CacheInfo();
@@ -37,13 +37,14 @@ namespace Schannel {
         case PROTOCOL_MESSAGE_TYPE::StreamSizes:
             return proxy.StreamSizes();
         default:
-            std::cout << "Unsupported function" << std::endl;
+            out << "Unsupported function" << std::endl;
             return false;
         }
     }
 
-    bool Parse(int argc, char** argv) {
-        cxxopts::Options options{ "schannel-cli", "A CLI for the schannel authentication package" };
+    void Parse(std::ostream& out, const std::vector<std::string>& args) {
+        char* command{ "schannel" };
+        cxxopts::Options options{ command };
 
         options.add_options("Schannel Function")
             ("f,function", "Function name", cxxopts::value<std::string>())
@@ -61,19 +62,22 @@ namespace Schannel {
             ;
 
         try {
-            auto result{ options.parse(argc, argv) };
+            std::vector<char*> argv{ command };
+            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
+                argv.push_back(const_cast<char*>(arg.data()));
+            });
+            auto result{ options.parse(argv.size(), argv.data()) };
             if (result.count("function")) {
                 auto lsa{ std::make_shared<Lsa>() };
                 Proxy proxy{ lsa };
-                return HandleFunction(proxy, result);
+                HandleFunction(out, proxy, result);
             }
             else {
-                std::cout << options.help() << std::endl;
-                return false;
+                out << options.help() << std::endl;
             }
         }
         catch (const std::exception& exception) {
-            std::cout << exception.what() << std::endl;
+            out << exception.what() << std::endl;
         }
     }
 }

@@ -6,7 +6,7 @@
 #include <msv1_0/proxy.hpp>
 
 namespace Msv1_0 {
-    bool HandleFunction(const Proxy& proxy, const cxxopts::ParseResult& result) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
             // Populate the logon info
@@ -16,7 +16,7 @@ namespace Msv1_0 {
             auto computer{ std::wstring((result.count("computer")) ? converter.from_bytes(result["computer"].as<std::string>()) : L"") };
             std::vector<byte> hash;
             if (result.count("hash")) {
-                hash = HexDecode(converter.from_bytes(result["hash"].as<std::string>()));
+                hash = HexDecode(out, converter.from_bytes(result["hash"].as<std::string>()));
             }
             else {
                 hash = CalculateNtOwfPassword(result["pass"].as<std::string>());
@@ -33,7 +33,7 @@ namespace Msv1_0 {
                 supplementalCreds = GetSupplementalMitCreds(domain, upn);
             }
             if (result.count("suppcreds")) {
-                supplementalCreds = HexDecode(converter.from_bytes(result["suppcreds"].as<std::string>()));
+                supplementalCreds = HexDecode(out, converter.from_bytes(result["suppcreds"].as<std::string>()));
             }
             // Set any additional flags that may have been specified
             requestFlags |= (result.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
@@ -62,7 +62,7 @@ namespace Msv1_0 {
             auto credType{ (result.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             std::vector<byte> mixingBits;
-            mixingBits = HexDecode(converter.from_bytes(result["mixingbits"].as<std::string>()));
+            mixingBits = HexDecode(out, converter.from_bytes(result["mixingbits"].as<std::string>()));
             return proxy.DeriveCredential(&luid, credType, mixingBits);
         }
         case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
@@ -95,13 +95,15 @@ namespace Msv1_0 {
             return proxy.TransferCred(&sourceLuid, &destinationLuid);
         }
         default:
-            std::cout << "Unsupported function" << std::endl;
+            out << "Unsupported function" << std::endl;
             return false;
         }
+        return false;
     }
 
-    bool Parse(int argc, char** argv) {
-        cxxopts::Options options{ "msv1_0-cli", "A CLI for the MSV1_0 authentication package" };
+    void Parse(std::ostream& out, const std::vector<std::string>& args) {
+        char* command{ "msv1_0" };
+        cxxopts::Options options{ command };
 
         options.add_options("MSV1_0 Function")
             ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"))
@@ -132,19 +134,22 @@ namespace Msv1_0 {
             ;
 
         try {
-            auto result{ options.parse(argc, argv) };
+            std::vector<char*> argv{ command };
+            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
+                argv.push_back(const_cast<char*>(arg.data()));
+            });
+            auto result{ options.parse(argv.size(), argv.data()) };
             if (result.count("function")) {
-                auto lsa{ std::make_shared<Lsa>() };
+                auto lsa{ std::make_shared<Lsa>(out) };
                 Proxy proxy{ lsa };
-                return HandleFunction(proxy, result);
+                HandleFunction(out, proxy, result);
             }
             else {
-                std::cout << options.help() << std::endl;
-                return false;
+                out << options.help() << std::endl;
             }
         }
         catch (const std::exception& exception) {
-            std::cout << exception.what() << std::endl;
+            out << exception.what() << std::endl;
         }
     }
 }

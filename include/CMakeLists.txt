@@ -26,5 +26,5 @@ target_sources(schannel PRIVATE
 )
 
 target_sources(lsa-whisperer PRIVATE
-    lsa-whisperer.hpp
+    cli.hpp
 )
