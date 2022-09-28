@@ -1,6 +1,11 @@
-= Digest Authentication for Windows
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
 
-The wdigest package does not support custom protocol messages.
+= Digest Authentication for Windows
+revision number, revision date: revision remark
+
+The wdigest package does not support protocol messages.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
 As such, it is not currently included as an SSPI module in LSA Whisperer.
 
