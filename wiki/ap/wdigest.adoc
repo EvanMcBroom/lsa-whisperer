@@ -1,4 +1,9 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
 = Digest Authentication for Windows
+revision number, revision date: revision remark
 
 The wdiget package does not support custom protocol messages.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
