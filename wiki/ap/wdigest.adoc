@@ -5,7 +5,7 @@ endif::[]
 = Digest Authentication for Windows
 revision number, revision date: revision remark
 
-The wdiget package does not support protocol messages.
+The wdigest package does not support protocol messages.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
 As such, it is not currently included as an SSPI module in LSA Whisperer.
 
