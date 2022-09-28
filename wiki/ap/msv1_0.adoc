@@ -1,4 +1,16 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
 = Microsoft Authentication Package v1.0
+:toc: macro
+
+The msv1_0 authentication package (AP) supports local machine logons.
+It is also the security support provider (SSP) for NTLM challenge-response authentication on a network.
+
+toc::[]
+
+== Functions
 
 The protocol messages that msv1_0 supports is documented on MSDN and included here for conveniencefootnote:[https://docs.microsoft.com/en-us/windows/win32/api/ntsecapi/ne-ntsecapi-msv1_0_protocol_message_type[MSV1_0_PROTOCOL_MESSAGE_TYPE enumeration (ntsecapi.h)]]:
 
@@ -33,10 +45,6 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 |===
 
 NOTE: The internal function for each message type will be located in `msv1_0.dll`.
-
-:toc:
-
-== Functions
 
 Each function may be called in Lsa Whisperer using `sspi msv1_0 --function <name>`.
 
