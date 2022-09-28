@@ -1,12 +1,12 @@
 = Digest Authentication for Windows
 
-The wdiget package does not support custom protocol messages.
+The wdigest package does not support custom protocol messages.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
 As such, it is not currently included as an SSPI module in LSA Whisperer.
 
 // The Lsa calls are mapped to SECPKG_FUNCTION_TABLE which is documented here:
 // https://learn.microsoft.com/en-us/windows/win32/api/ntsecpkg/ns-ntsecpkg-secpkg_function_table
-.Symbol NtDigestFunctionTable
+.Symbol g_NtDigestFunctionTable
 |===
 | Offset (x64) | Lsa Call                   | Function Pointer             | NT Version | Remarks
 | `0x010`      | CallPackage                | LsaApCallPackage             | _None_     |
