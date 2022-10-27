@@ -37,7 +37,7 @@ The components of LSA may be categorized in different ways but are presented her
 
 The LSA Whisperer project focuses on interacting with security support provider (SSP) DLLs.
 Microsoft provides https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of functions] (ex. `LsaCallAuthenticationPackage`) for interacting with SSPs.
-These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface which was introduced in http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
+These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
 
 .SSPI Operations
 [%header]
@@ -115,11 +115,11 @@ Microsoft's need for doing this has still not been determined.
 // security callback and without RPC_IF_ALLOW_SECURE_ONLY flag
 #define ALLOW_UNSECURE_REMOTE_ACCESS 0x00000001
 
-// An interface may be called remotely by without
+// An interface may be called remotely without
 // RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 #define ALLOW_UNENCRYPTED_REMOTE_ACCESS 0x00000002
 
-// An interface may be called remotely by without mutual
+// An interface may be called remotely without mutual
 // authentication.
 #define ALLOW_NO_MUTUAL_AUTH_REMOTE_ACCESS 0x00000004
 
