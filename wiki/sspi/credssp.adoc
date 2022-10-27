@@ -1,0 +1,9 @@
+= Credential Delegation Security Package
+
+The credssp package implements a security protocol for delegating (e.g. transmitting) credentials from a client to a server for remote authentication.
+The client first establishes an TLS channel with the server.
+The client then authenticates with the server using the Simple and Protected Negotiate (SPNEGO) protocol which in turn will use either the Kerberos or NTLM protocol.
+
+// The Lsa calls are mapped to SecurityFunctionTableW which is documented here:
+// https://learn.microsoft.com/en-us/windows/win32/api/sspi/ns-sspi-securityfunctiontablew
+//.Symbol CREDSSPFnTableW (version 3)

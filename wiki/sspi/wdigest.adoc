@@ -3,21 +3,20 @@ ifdef::env-github[]
 endif::[]
 
 = Digest Authentication for Windows
-revision number, revision date: revision remark
 
-The wdigest package does not support protocol messages.
+The wdigest package only supports a single protocol message which is only reachable using the `CallPackagePassthrough` function.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
-As such, it is not currently included as an SSPI module in LSA Whisperer.
 
 // The Lsa calls are mapped to SECPKG_FUNCTION_TABLE which is documented here:
 // https://learn.microsoft.com/en-us/windows/win32/api/ntsecpkg/ns-ntsecpkg-secpkg_function_table
 .Symbol g_NtDigestFunctionTable
+[%header]
 |===
 | Offset (x64) | Lsa Call                   | Function Pointer             | NT Version | Remarks
 | `0x010`      | CallPackage                | LsaApCallPackage             | _None_     |
 | `0x018`      | LogonTerminated            | LsaApLogonTerminated         | _All_      |
 | `0x020`      | CallPackageUntrusted       | LsaApCallPackageUntrusted    | _None_     |
-| `0x028`      | CallPackagePassthrough     | LsaApCallPackagePassthrough  | _All_      |
+| `0x028`      | CallPackagePassthrough     | LsaApCallPackagePassthrough  | _All_      | Mainly processed in DigestResponseBru
 | `0x038`      | LogonUserEx2               | LsaApLogonUserEx2            | _None_     |
 | `0x040`      | Initialize                 | SpInitialize                 | _All_      |
 | `0x048`      | Shutdown                   | SpShutdown                   | _All_      |
@@ -37,3 +36,27 @@ As such, it is not currently included as an SSPI module in LSA Whisperer.
 |===
 
 NOTE: Functions marked as _None_ are available but return `SEC_E_UNSUPPORTED_FUNCTION` in NT 5.1 to 10.
+
+== Functions
+
+The protocol messages that wdigest supports is not documented by Microsoft but is provided here.
+
+[%header]
+|===
+| Id     | Message Type   | CLI Support | NT Version | Internal Function
+| `0x1a` | `VerifyDigest` | _Planned_   | _All_      | `DigestPackagePassthrough`
+|===
+
+NOTE: The internal function will be located in `wdigest.dll`.
+
+The function may be called in Lsa Whisperer using `sspi wdigest --function <name>`.
+
+=== VerifyDigest
+
+The request may be used to verify a plaintext password or OWF hash for a user.
+If the provided data is valid the response will contain a session key and PAC for the user.
+Request data is marshalled as a `DIGEST_BLOB_REQUEST` with responses sent as `DIGEST_BLOB_RESPONSE`.
+
+```
+wdigest -f VerifyDigest ...
+```

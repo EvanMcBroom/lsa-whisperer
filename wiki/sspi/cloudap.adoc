@@ -1,4 +1,222 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
 
-There's some code here:
+= Cloud Authentication Package
+:toc: macro
 
-* https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/3f562cb9-4456-4de7-9267-c3686bf2a81c
+The cloud authentication package (AP) supports logons with Azure and Microsoft accounts.
+It is also the security support provider (SSP) for OAuth 2.0 authentication with Microsoft's cloud services.
+
+toc::[]
+
+== Key Terms
+
+Some terms appear a lot when analyzing cloudap which are provided here:
+
+* Package: Structure of information about a cloudap plugin, which will be either AzureAD or MicrosoftAccount
+* TokenBlob: A PRT, also referred to as a "Cloud TGT"
+
+== Functions
+
+The protocol messages that cloudap or its plugins support are not documented by Microsoft.
+Microsoft provides a https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/3f562cb9-4456-4de7-9267-c3686bf2a81c[small example of calling one plugin function] with little context. 
+The remainder of the available functions and their usage were reverse engineered and documented here.
+It is not known on which version of NT these functions were originally introduced or if new functions have been introduced since this writting.
+
+[%header]
+|===
+| Id     | Message Type                       | CLI Support
+| `0x00` | `ReinitPlugin`                     | _Planned_
+| `0x01` | `GetTokenBlob`                     | _Planned_
+| `0x02` | `CallPluginGeneric`                | _Planned_
+| `0x03` | `ProfileDeleted`                   | _Planned_
+| `0x04` | `GetAuthenticatingProvider`        | _Planned_
+| `0x05` | `RenameAccount`                    | :x:
+| `0x06` | `RefreshTokenBlob`                 | _Planned_
+| `0x07` | `GenARSOPwd`                       | _Planned_
+| `0x08` | `SetTestParas`                     | :x:
+| `0x09` | `TransferCreds`                    | _Planned_
+| `0x0A` | `ProvisionNGCNode`                 | :x:
+| `0x0B` | `GetPwdExpiryInfo`                 | _Planned_
+| `0x0C` | `DisableOptimizedLogon`            | _Planned_
+| `0x0D` | `GetUnlockKeyType`                 | _Planned_
+| `0x0E` | `GetPublicCachedInfo`              | _Planned_
+| `0x0F` | `GetAccountInfo`                   | _Planned_
+| `0x10` | `GetDpApiCredKeyDecryptStatus`     | _Planned_
+| `0x11` | `IsCloudToOnPremTgtPresentInCache` | _Planned_
+|===
+
+=== ReinitPlugin
+
+Unloads then reloads all cloudap plugins.
+
+=== GetTokenBlob
+
+The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, also referred to as the CloudTGT.
+This function unprotects and returns the TokenBlob entry.
+
+=== CallPluginGeneric
+
+Call a CloudAP plugin function.
+The function id and its arguments are serialized as a single JSON object.
+
+=== ProfileDeleted
+
+Need to finish auditing.
+
+=== GetAuthenticatingProvider
+
+The `_LOGON_SESSION` structure has a GUID entry to identify which cloudap plugin was used (e.g., AzureAD or MicrosoftAccount)
+This function returns that GUID entry.
+
+=== RenameAccount
+
+Will update the account name in the Security Accounts Manager (SAM).
+Need to finish auditing.
+
+=== RefreshTokenBlob
+
+Refresh a logon session's TokenBlob using the `RefreshToken` cloudap function plugin.
+
+=== GenARSOPwd
+
+Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
+
+=== SetTestParas
+
+Sets a TestFlags bit.
+A ULONG must be provided after the call ID.
+
+|===
+| TestFlags | Description
+| 1         | Enable the internal `FlushIdentityCache` function
+| 2         | Enable the use of the internal `*PreRS2` functions
+|===
+
+=== TransferCreds
+
+Transfers creds between two CloudAP logon sessions.
+Will generate a new logon session for dst if needed.
+Src then dst LUIDs must follow call ID.
+
+=== ProvisionNGCNode
+
+Todo.
+Ngc Prime Cached Logon In Lsa.
+
+=== GetPwdExpiryInfo
+
+Returns a FILETIME for the TokenBlob expiry time followed by a unicode string.
+
+=== DisableOptimizedLogon
+
+Turn off optimized logon.
+
+=== GetUnlockKeyType
+
+Return the UnlockKeyType from the UserCacheEntry which can only be of value `x` for `0 < x < 8`.
+
+=== GetPublicCachedInfo
+
+Retrieve PublicCacheData from disk, deserialize, and return it.
+`code + package guid + uint 6 + (uint + uint) + (uint + uint).`
+
+=== GetAccountInfo
+
+Todo.
+
+=== GetDpApiCredKeyDecryptStatus
+
+Return DpApiCredKeyDecryptStatus from user cache entry.
+
+=== IsCloudToOnPremTgtPresentInCache
+
+Todo.
+
+== Plugins
+
+Cloudap currently only supports 2 plugins which facilitate logons to Azure AD (AAD) and a Microsoft Account (MSA).
+The internal names and IDs for interacting with the plugins are provided here.
+
+.Plugins
+[%header]
+|===
+| Plugin Name           | GUID                                   | File
+| AadGlobalId (AAD)     | `B16898C6-A148-4967-9171-64D755DA8520` | aadcloudap.dll
+| Windows Live ID (MSA) | `D7F9888F-E3FC-49b0-9EA6-A85B5F392A4F` | MicrosoftAccountCloudAP.dll
+|===
+
+Cloudap allows each plugin to implement a number of functions for cloudap or other applications to call.
+The full list of functions, their call ID, and the plugins that support them are listed here.
+
+.Plugin Functions
+[%header]
+|===
+| Id     | Message Type                     | Plugins  | CLI Support
+| `0x00` | `PluginUninitialize`             | AAD, MSA | :x:
+| `0x01` | `ValidateUserInfo`               | AAD, MSA | _Planned_
+| `0x02` | `GetUnlockKey`                   | AAD, MSA | _Planned_
+| `0x03` | _Reserved_                       |          |
+| `0x04` | `GetDefaultCredentialComplexity` | MSA      | _Planned_
+| `0x05` | `IsConnected`                    | MSA      | _Planned_
+| `0x06` | `AcceptPeerCertificate`          | AAD, MSA | :x:
+| `0x07` | `AssembleOpaqueData`             | AAD      | _Planned_
+| `0x08` | `DisassembleOpaqueData`          | AAD      | _Planned_
+| `0x09` | `GetToken`                       | AAD, MSA | _Planned_
+| `0x0a` | `RefreshToken`                   | AAD      | _Planned_
+| `0x0b` | `GetKeys`                        | AAD, MSA | _Planned_
+| `0x0c` | `LookupSIDFromIdentityName`      | AAD      | _Planned_
+| `0x0d` | `LookupIdentityFromSIDName`      | AAD      | _Planned_
+| `0x0e` | `UserProfileLoaded`              | MSA      | _Planned_
+| `0x0f` | `ConnectIdentity`                | MSA      | :x:
+| `0x10` | `DisconnectIdentity`             | MSA      | :x:
+| `0x11` | `RenewCertificate`               | MSA      | :x:
+| `0x12` | `GetCertificateFromCred`         | AAD      | _Planned_
+| `0x13` | `GenericCallPkg`                 | AAD, MSA | _Planned_
+| `0x14` | `PostLogonProcessing`            | AAD      | :x:
+|===
+
+== Key Structures
+
+Reverse engineering some structures were key in understanding the internal message protocol functions that cloudap provides.
+A description and partial definition for each of these structures is provided here for others to use and research further.
+These may not be completely accurate and contributions are appreciated.
+
+=== _LOGON_SESSION
+
+Cloudap maintains a linked list of `_LOGON_SESSION` structures for each cloudap provided user logon session.
+New entries have been appended to this structure over time, but the current list of known entries and their offsets are as follows.
+
+._LOGON_SESSION
+[%header]
+|===
+| Offset (x64) | Definition                     | NT Build | Remarks
+| `0x00`       | `LIST_ENTRY LogonSessions;`    | 19041    |
+| `0x1C`       | `LUID Luid;`                   | 19041    | The ID of the logon session
+| `0x24`       | `GUID CloudAPPackage;`         | 19041    | Microsoft's synonym for a CloudAP plugin
+| `0x38`       | `USER_CACHE_ENTRY* UserCache;` | 19041    |
+| `0x38`       | `SCARD_PIN* SCardPin;`         | 19041    | The format of _SCARD_PIN was not researched
+|===
+
+=== _USER_CACHE_ENTRY
+
+Cloudap maintains a `_USER_CACHE_ENTRY` structure for each cloudap user logon session to maintain user specific information about the session.
+
+._USER_CACHE_ENTRY
+[%header]
+|===
+| Offset (x64) | Definition                            | NT Build | Remarks
+| `0x010`      | `LPVOID UpdateCounter;`               | 19041    | A counter for how many times the cloudap updated this structure
+| `0x01C`      | `LPCRITICAL_SECTION CriticalSection;` | 19041    | A synchronization primitive for accessing the structure
+| `0x04C`      | `LPDWORD Counter;`                    | 19041    | Microsoft's synonym for a CloudAP plugin
+| `0x108`      | `LPVOID ProtectedMemory1;`            | 19041    | The data's purpose is unknown
+| `0x110`      | `LPVOID ProtectedMemory2;`            | 19041    | The data's purpose is unknown
+| `0x118`      | `ULONG ProtectedTokenBlobSize;`       | 19041    |
+| `0x120`      | `LPVOID ProtectedTokenBlob;`          | 19041    | The TokenBlob or "CloudTGT"
+| `0x128`      | `AP_BLOB CredentialData;`             | 19041    | AP_BLOB is the same as LSA_STRING with 4 byte length fields
+| `0x148`      | `LPDWORD LuidSize;`                   | 19041    |
+| `0x150`      | `LUID* Luid;`                         | 19041    |
+| `0x158`      | `LPDWORD UnlockKeyType;`              | 19041    |
+| `0x160`      | `LPDWORD DpApiCredDecryptStatus;`     | 19041    |
+|===
