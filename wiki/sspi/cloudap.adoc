@@ -177,6 +177,8 @@ The full list of functions, their call ID, and the plugins that support them are
 | `0x14` | `PostLogonProcessing`            | AAD      | :x:
 |===
 
+NOTE: Functions `0x00-0x08` are available offline and functions `0x09-0x14` require online connectivity.
+
 == Key Structures
 
 Reverse engineering some structures were key in understanding the internal message protocol functions that cloudap provides.
