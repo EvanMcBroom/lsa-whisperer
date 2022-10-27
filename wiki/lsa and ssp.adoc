@@ -105,7 +105,7 @@ The list includes multiple RPC servers that have been previously abused such as 
 
 Interestingly, Microsoft has only added 2 interfaces to this list since NT 5.2.
 One is the Remote Management interface and one is SSPI.
-Microsoft has also added 1 additional mitigation bypass which has only been applied to SSPI.
+Microsoft has also added 1 additional mitigation bypass which has only been applied to SSPI (flag `0x8`).
 The following is the full list of flags for bypassing RPC runtime mitigations which have all been applied to the SSPI interface.
 Microsoft's need for doing this has still not been determined.
 
