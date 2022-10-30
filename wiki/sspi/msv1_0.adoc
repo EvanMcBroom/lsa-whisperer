@@ -6,7 +6,7 @@ endif::[]
 :toc: macro
 
 The msv1_0 authentication package (AP) supports local machine logons.
-It is also the security support provider (SSP) for NTLM challenge-response authentication on a network.
+It is also the security package (SP) for NTLM challenge-response authentication on a network.
 
 toc::[]
 

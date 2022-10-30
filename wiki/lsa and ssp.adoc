@@ -77,7 +77,7 @@ As such, the project will refer to SSPs that support both a security protocol an
 | livessp  | Live Security Package                 |            | :heavy_check_mark: | 32     | `LIVE_SSP`
 | msnssp   | MSN Security Package                  | ?          | :heavy_check_mark: | 18     | `MSN`
 | msv1_0   | Microsoft Authentication Package v1.0 | NTLM       | :heavy_check_mark: | 10     | `WINNT`
-| negoexts | Negotiate Extender                    |            | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
+| negoexts | Negotiate Extender                    | NEGOEX     | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
 | pku2u    | Public Key User to User               | ?          | :heavy_check_mark: | 31     | `NEGO_PKU2U`
 | schannel | Secure Channel                        | SSL/TLS    | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
 | tspkg    | Terminal Services                     |            | :heavy_check_mark: | 22     | ?
