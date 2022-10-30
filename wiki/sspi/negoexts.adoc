@@ -9,7 +9,7 @@ NegoExtender is the security package (SP) for SPNEGO Extended Negotiation (NEGOE
 NEGOEX was added in NT 6.1 to allow the Negotiate SSP to support more than just NTLM and Keberos (e.g., PKU2U) and to extend the GSS-API with additional features.
 Microsoft provides documentation for NegoExtender's https://learn.microsoft.com/en-us/previous-versions/ff468736(v=msdn.10)[backgound and design] as well as a technical document for https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-negoex/0ad7a003-ab56-4839-a204-b555ca6759a2[NEGOEX].
 Due to its design, NegoExtender also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
-The only NegoExtender compatable SSP that could be identified on any verion of NT is PKU2U, although others may exist.
+The only NegoExtender compatable SSP that could be identified on any version of NT is pku2u, although others may exist.
 
 toc::[]
 
