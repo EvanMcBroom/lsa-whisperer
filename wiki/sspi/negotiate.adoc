@@ -1,0 +1,27 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Negotiate
+:toc: macro
+
+Negotiate is the security package (SP) for Simple and Protected GSSAPI Negotiation (SPNEGO).
+Negotiate is compiled into lsasrv.dll and supports NTLM, Keberos, and as of NT 6.1, NEGOEX.
+Microsoft provides a technical document for https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-spng/f377a379-c24f-4a0f-a3eb-0d835389e28a[SPNEGO].
+Due to its design, Negotiate also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
+
+== Functions
+
+The protocol messages that negotiate supports is not documented by Microsoft but is provided here.
+Supporting negotiate commands is currently not a priority for Lsa Whisperer.
+
+[%header]
+|===
+| Id    | Message Type          | NT Version | Internal Function
+| `0x0` | `EnumPackagePrefixes` | _All_      | `NegEnumPackagePrefixesCall`
+| `0x1` | `GetCallerName`       | _All_      | `NegGetCallerNameCall`
+| `0x2` | `TransferCred`        | ?          | `NegTransferCredCall`
+| `0x3` | `EnumPackageNames`    | ?          | `NetEnumPackageNamesCall` [sic]
+|===
+
+NOTE: The `EnumPackageNames` function prefix is likely a typo by a Microsoft developer and meant to be `Neg`.
