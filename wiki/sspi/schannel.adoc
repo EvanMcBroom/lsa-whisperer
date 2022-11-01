@@ -1,0 +1,32 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Schannel
+:toc: macro
+
+Schannel is the security package (SP) and authentication package (AP) for SSL 2.0 and 3.0, TLS 1.0, 1.1, and 1.2, and Private Communication Technology (PCT) 1.
+
+toc::[]
+
+== Functions
+
+Microsoft provides lots of documentation on MSDN for using schannel for authenticating client and server applications; though, they do not provide any documentation on the message types for package calls.
+The message types that schannel supports is provided here.
+Lsa Whisperer currently provides experimental support for some of these as schannel commands.
+
+[%header]
+|===
+| Id    | Message Type          | NT Version | Internal Function
+| `0x2` | `LookupCert`*         | _All_      | `SslDoClientRequest`
+| `0x3` | `PurgeCache`          | _All_      | `SslPurgeSessionCache`
+| `0x4` | `CacheInfo`           | _All_      | `SslSessionCacheInfo`
+| `0x5` | `PerfmonInfo`         | `5.2<?`    | `SslGetPerfmonInfo`
+| `0x6` | `LookupExternalCert`* | _All_      | `SslMapExternalCredential`
+| `0x7` | `LookupEncodedCert`*  | ?          | `SslMapEncodedCredential`
+| `0x8` | `StreamSizes`         | ?          | `SslGetStreamSizes`
+|===
+
+Commands marked with an asterisk require the client to be trusted.
+The `LookupCert` command may also be alternatively called through the `SpCallPackagePassthrough` function.
+Oddly, the `PurgeCache` command was only available to untrusted callers and was removed from schannel after originally being available since at least NT 5.2.
