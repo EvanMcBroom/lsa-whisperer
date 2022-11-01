@@ -5,7 +5,12 @@ endif::[]
 = Schannel
 :toc: macro
 
-Schannel is the security package (SP) and authentication package (AP) for SSL 2.0 and 3.0, TLS 1.0, 1.1, and 1.2, and Private Communication Technology (PCT) 1.
+Schannel is the security package (SP) and authentication package (AP) for the following protocols:
+
+* DTLS 1.0 and 2.0
+* Private Communication Technology (PCT) 1
+* SSL 2.0 and 3.0
+* TLS 1.0, 1.1, 1.2, and 1.3
 
 toc::[]
 
