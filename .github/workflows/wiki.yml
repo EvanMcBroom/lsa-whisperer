@@ -1,5 +1,6 @@
 name: Deploy wiki
 on:
+  workflow_dispatch: null
   push:
     paths:
       - 'wiki/**'
