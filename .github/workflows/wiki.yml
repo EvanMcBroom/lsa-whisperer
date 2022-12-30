@@ -1,0 +1,19 @@
+name: Deploy wiki
+on:
+  push:
+    paths:
+      - 'wiki/**'
+    branches:
+      - master
+jobs:
+  deploy-wiki:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Push wiki changes
+      uses: Andrew-Chen-Wang/github-wiki-action@v3
+      env:
+        WIKI_DIR: wiki/
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_MAIL: ${{ secrets.YOUR_EMAIL }}
+        GH_NAME: ${{ github.repository_owner }}
