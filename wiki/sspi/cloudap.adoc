@@ -185,6 +185,25 @@ Reverse engineering some structures were key in understanding the internal messa
 A description and partial definition for each of these structures is provided here for others to use and research further.
 These may not be completely accurate and contributions are appreciated.
 
+=== _ApPluginPkg
+
+=== _CLOUDAP_CREDKEY_INFO
+
+Cloudap may store the DPAPI "Cred Key" for a user profile on the file system.
+If it does, information about the CredKey will be stored under `C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\AppData\Local\Microsoft\Windows\CloudAPCache` under a subfolder (`AzureAD` or `MicrosoftAccount`) in a file named `[User Profile Id]\Keys\CredKeyInfo` in the `_CLOUDAP_CREDKEY_INFO` format.
+
+._CLOUDAP_CREDKEY_INFO
+[%header]
+|===
+| Offset (x64) | Definition       | NT Build | Remarks
+| `0x00`       | `DWORD Version;` | 19041    | Currently, should always be 1
+| `0x04`       | `GUID Id;`       | 19041    | The CredKey Id
+| `0x14`       | `DWORD Pad;`     | 19041    |
+| `0x18`       | `DWORD Unknown;` | 19041    |
+|===
+
+=== _CREDENTIAL_KEY
+
 === _LOGON_SESSION
 
 Cloudap maintains a linked list of `_LOGON_SESSION` structures for each cloudap provided user logon session.
@@ -212,7 +231,7 @@ Cloudap maintains a `_USER_CACHE_ENTRY` structure for each cloudap user logon se
 | `0x010`      | `LPVOID UpdateCounter;`               | 19041    | A counter for how many times the cloudap updated this structure
 | `0x01C`      | `LPCRITICAL_SECTION CriticalSection;` | 19041    | A synchronization primitive for accessing the structure
 | `0x04C`      | `LPDWORD Counter;`                    | 19041    | Microsoft's synonym for a CloudAP plugin
-| `0x108`      | `LPVOID ProtectedMemory1;`            | 19041    | The data's purpose is unknown
+| `0x108`      | `LPVOID CredKey;`                     | 19041    | DPAPI masterkey for the user, protected by LSA's DPAPI masterkey
 | `0x110`      | `LPVOID ProtectedMemory2;`            | 19041    | The data's purpose is unknown
 | `0x118`      | `ULONG ProtectedTokenBlobSize;`       | 19041    |
 | `0x120`      | `LPVOID ProtectedTokenBlob;`          | 19041    | The TokenBlob or "CloudTGT"
