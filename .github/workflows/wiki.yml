@@ -10,7 +10,7 @@ jobs:
   deploy-wiki:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
     - name: Push wiki changes
       uses: Andrew-Chen-Wang/github-wiki-action@v3
       env:
@@ -18,3 +18,4 @@ jobs:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
         GH_MAIL: ${{ secrets.GH_MAIL }}
         GH_NAME: ${{ github.repository_owner }}
+        REPO: https://github.com/EvanMcBroom/lsa-whisperer.wiki.git
