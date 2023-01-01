@@ -1,17 +1,21 @@
-name: Deploy wiki
+name: Deploy GitHub wiki
 on:
-  workflow_dispatch: null
+  workflow_dispatch: # Allows you to manually run the workflow
   push:
-    paths:
-      - 'wiki/**'
-    branches:
-      - master
+    branches: ['master']
+    paths: ['wiki/**']
+concurrency: # Do not allow concurrent deployments
+  group: wiki
 jobs:
-  deploy-wiki:
+  deploy:
+    environment:
+      name: github-wiki
+      url: https://github.com/EvanMcBroom/lsa-whisperer/wiki
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Push wiki changes
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Deploy to GitHub wiki
       uses: Andrew-Chen-Wang/github-wiki-action@v3
       env:
         WIKI_DIR: wiki/
