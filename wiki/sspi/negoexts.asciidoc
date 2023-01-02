@@ -5,9 +5,14 @@ endif::[]
 = NegoExtender Security Package
 :toc: macro
 
-NegoExtender is the security package (SP) for SPNEGO Extended Negotiation (NEGOEX).
+NegoExtender is the security package (SP) for the SPNEGO Extended Negotiation (NEGOEX) protocol.
 NEGOEX was added in NT 6.1 to allow the Negotiate SSP to support more than just NTLM and Keberos (ex. PKU2U) and to extend the GSS-API with additional features.
-Microsoft provides documentation for NegoExtender's https://learn.microsoft.com/en-us/previous-versions/ff468736(v=msdn.10)[backgound and design] as well as a technical document for https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-negoex/0ad7a003-ab56-4839-a204-b555ca6759a2[NEGOEX].
+Microsoft provides documentation for NegoExtender's https://learn.microsoft.com/en-us/previous-versions/ff468736(v=msdn.10)[backgound and design on MSDN].
+
+Microsoft waited until 2020 to publish a technical document on https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-negoex/0ad7a003-ab56-4839-a204-b555ca6759a2[NEGOEX], which was 11 years after the release of NT 6.1.
+They did however apply for a US patent in 2008 on the https://patents.google.com/patent/US20090328140["Advanced Security Negotiation Protocol"] which was the original name for NEGOEX.
+The patent defined the Windows Security Type (WST) Library message which is not documented on MSDN but is the basis of the NEGOEX message and is referenced in all versions of the NegoExtender SSP.
+
 Due to its design, NegoExtender also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
 The NegoExtender compatable SSPs include CloudAP, LiveSSP, and PKU2U.
 
@@ -26,5 +31,3 @@ Supporting negoexts commands is currently not a priority for Lsa Whisperer.
 | `0x3` | `WSTLookupContext`     | `>=6.1`
 | `0x4` | `WSTFlushContext`      | `>=6.1`
 |===
-
-NOTE: The significance of the acronym WST could not be identified.

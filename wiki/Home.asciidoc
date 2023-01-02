@@ -11,6 +11,8 @@ LSA runs within the LSA Subsystem Service (LSASS) Windows service executable but
 
 The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process as of NT 10.
 
+.LSA RPC Interfaces
+[[interfaces]]
 [%header]
 |===
 | Description            | UUID (Version)                               | File
@@ -29,7 +31,7 @@ The components of LSA may be categorized in different ways but are presented her
 | Ngc Pop Key Service    | `8fb74744-b2ff-4c00-be0d-9ef9a191fe1b` (1.0) | keyiso.dll
 | Policy Lookup          | `fb8a0729-2d04-4658-be93-27b4ad553fac` (1.0) | lsass.exe
 | Private Data           | `ace1c026-8b3f-4711-8918-f345d17f5bff` (1.0) | lsasrv.dll
-| Sspi                   | `4f32adc8-6052-4a04-8701-293ccf2096f0` (1.0) | SspiSrv.dll
+| [.underline]#Sspi#     | `4f32adc8-6052-4a04-8701-293ccf2096f0` (1.0) | [.underline]#SspiSrv.dll#
 | Vault                  | `bb8b98e8-84dd-45e7-9f34-c3fb6155eeed` (1.0) | vaultsvc.dll
 |===
 
@@ -37,7 +39,7 @@ The components of LSA may be categorized in different ways but are presented her
 
 The LSA Whisperer project focuses on interacting with security support provider (SSP) DLLs.
 Microsoft provides https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of functions] (ex. `LsaCallAuthenticationPackage`) for interacting with SSPs.
-These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
+These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface (underlined in <<interfaces>>) which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
 
 .SSPI Operations
 [%header]

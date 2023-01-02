@@ -13,7 +13,7 @@ jobs:
       url: https://github.com/EvanMcBroom/lsa-whisperer/wiki
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v2
     - name: Deploy to GitHub wiki
       uses: Andrew-Chen-Wang/github-wiki-action@v3
