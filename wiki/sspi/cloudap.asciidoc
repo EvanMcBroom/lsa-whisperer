@@ -230,7 +230,7 @@ Cloudap maintains a `_USER_CACHE_ENTRY` structure for each cloudap user logon se
 | Offset (x64) | Definition                            | NT Build | Remarks
 | `0x010`      | `LPVOID UpdateCounter;`               | 19041    | A counter for how many times the cloudap updated this structure
 | `0x01C`      | `LPCRITICAL_SECTION CriticalSection;` | 19041    | A synchronization primitive for accessing the structure
-| `0x04C`      | `LPDWORD Counter;`                    | 19041    | Microsoft's synonym for a CloudAP plugin
+| `0x04C`      | `LPDWORD Counter;`                    | 19041    | 
 | `0x108`      | `LPVOID CredKey;`                     | 19041    | DPAPI masterkey for the user, protected by LSA's DPAPI masterkey
 | `0x110`      | `LPVOID ProtectedMemory2;`            | 19041    | The data's purpose is unknown
 | `0x118`      | `ULONG ProtectedTokenBlobSize;`       | 19041    |

@@ -10,7 +10,7 @@ NEGOEX was added in NT 6.1 to allow the Negotiate SSP to support more than just 
 Microsoft provides documentation for NegoExtender's https://learn.microsoft.com/en-us/previous-versions/ff468736(v=msdn.10)[backgound and design on MSDN].
 
 Microsoft waited until 2020 to publish a technical document on https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-negoex/0ad7a003-ab56-4839-a204-b555ca6759a2[NEGOEX], which was 11 years after the release of NT 6.1.
-They did however apply for a US patent in 2008 on the https://patents.google.com/patent/US20090328140["Advanced Security Negotiation Protocol"] which was the original name for NEGOEX.
+They did however apply for a US patent in 2008 on the https://patents.google.com/patent/US20090328140["Advanced Security Negotiation Protocol"] which was the original name for NEGOEX and an https://datatracker.ietf.org/doc/draft-zhu-negoex/[RFC draft] for NEGOEX in 2011.
 The patent defined the Windows Security Type (WST) Library message which is not documented on MSDN but is the basis of the NEGOEX message and is referenced in all versions of the NegoExtender SSP.
 
 Due to its design, NegoExtender also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
