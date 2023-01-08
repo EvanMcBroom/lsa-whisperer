@@ -1,12 +1,36 @@
+#define _NTDEF_ // Required to include both Ntsecapi and Winternl
+#include <Winternl.h>
+#include <iostream>
+#include <lsa.hpp>
+#include <string>
 #include <cxxopts.hpp>
 #include <codecvt>
 #include <crypt.hpp>
 #include <magic_enum.hpp>
-#include <pku2u/args.hpp>
-#include <pku2u/messages.hpp>
-#include <pku2u/proxy.hpp>
+#include <pku2u.hpp>
 
 namespace Pku2u {
+    bool Proxy::PurgeTicketEx() const {
+        return false;
+    }
+
+    bool Proxy::QueryTicketCacheEx2(PLUID luid) const {
+        QUERY_TICKET_CACHE_EX2_REQUEST request;
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
+        void* response;
+        return CallPackage(request, &response);
+    }
+
+    template<typename _Request, typename _Response>
+    bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
+        if (lsa->Connected()) {
+            std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
+            return lsa->CallPackage(PKU2U_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
+        }
+        return false;
+    }
+    
     bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:

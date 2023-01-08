@@ -1,5 +1,5 @@
 #include <winnt.h>
-#include <msv1_0/stubs.hpp>
+#include <msv1_0.hpp>
 #include <pybind11/pybind11.h>
 
 namespace {

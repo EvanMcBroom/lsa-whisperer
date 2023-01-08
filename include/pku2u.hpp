@@ -1,5 +1,9 @@
 #pragma once
 #include <Winternl.h>
+#include <cxxopts.hpp>
+#include <lsa.hpp>
+
+#define PKU2U_NAME_A "pku2u"
 
 namespace Pku2u {
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
@@ -26,4 +30,20 @@ namespace Pku2u {
         PROTOCOL_MESSAGE_TYPE MessageType;
         // unknown
     } QUERY_TICKET_CACHE_EX2_RESPONSE, * PQUERY_TICKET_CACHE_EX2_RESPONSE;
+
+    class Proxy : public SspiProxy {
+    public:
+        // A subset of the supported functions in pku2u
+        bool PurgeTicketEx() const;
+        bool QueryTicketCacheEx2(PLUID luid) const;
+
+    private:
+        // You must free all returnBuffer outputs with LsaFreeReturnBuffer
+        template<typename _Request, typename _Response>
+        bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const;
+    };
+    
+	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result);
+    
+	void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

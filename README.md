@@ -21,9 +21,6 @@ cmake ..
 cmake --build .
 ```
 
-You may optionally install [pybind11](https://github.com/pybind/pybind11) for `pymsv1_0` to be built as well.
-If you choose to build `pymsv1_0`, you will need to ensure that the Python debug binaries have been installed on your host.
-
 The `lsa-whisperer` utility will link against the static version of the runtime library which allows the tool to run as a standalone program on other hosts.
 
 ## Open Source
@@ -31,11 +28,11 @@ The `lsa-whisperer` utility will link against the static version of the runtime 
 Thank you to the following packages that are used in LSA Whisperer directly or indirectly:
 
 - Cli
-    - [daniele77/cli](https://github.com/daniele77/cli) (license - [BSL-1.0](https://github.com/daniele77/cli/blob/master/LICENSE))
-    - [jarro2783/cxxopts](https://github.com/jarro2783/cxxopts) (license - [MIT](https://github.com/jarro2783/cxxopts/blob/master/LICENSE))
+    - [AmokHuginnsson/replxx](https://github.com/AmokHuginnsson/replxx) (license - [Multiple](https://github.com/AmokHuginnsson/replxx/blob/master/LICENSE.md))
     - [Neargye/magic_enum](https://github.com/Neargye/magic_enum) (license - [MIT](https://github.com/Neargye/magic_enum/blob/master/LICENSE))
+    - [jarro2783/cxxopts](https://github.com/jarro2783/cxxopts) (license - [MIT](https://github.com/jarro2783/cxxopts/blob/master/LICENSE))
 - Wiki
-    - TBD
+    - [Andrew-Chen-Wang/github-wiki-action](https://github.com/Andrew-Chen-Wang/github-wiki-action) (license - [Apache 2.0](https://github.com/Andrew-Chen-Wang/github-wiki-action/blob/master/LICENSE))
 
 Thank you to the following related projects that greatly helped in the development of LSA Whisperer:
 

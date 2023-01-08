@@ -3,6 +3,7 @@
 #include <Winternl.h>
 #include <iostream>
 #include <string>
+#include <vector>
 
 class UnicodeString : public UNICODE_STRING {
 public:
@@ -28,7 +29,10 @@ public:
 
     Lsa(std::ostream& out = NullStream());
     ~Lsa();
-    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer);
+    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const;
+    // Uses the GenericPassthrough message implemented by msv1_0
+    // Data will be used as an input and output argument. It's original values will be cleared if the call is successful
+    bool CallPackagePassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;
     auto Connected() { return connected; };
 
 private:
@@ -44,6 +48,5 @@ protected:
     std::shared_ptr<Lsa> lsa;
 };
 
-PSID MakeDomainRelativeSid(PSID DomainId, ULONG RelativeId);
 void OutputHex(std::ostream& out, const std::string& data);
 void OutputHex(std::ostream& out, const std::string& prompt, const std::string& data);

@@ -1,29 +1,15 @@
-target_include_directories(core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_sources(core PRIVATE
+target_include_directories(sspi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_sources(sspi PRIVATE
     crypt.hpp
+    dpapi.hpp
     lsa.hpp
+    msv1_0.hpp
     netlogon.hpp
+    pku2u.hpp
+    schannel.hpp
+    wdigest.hpp
 )
-target_precompile_headers(core PUBLIC <windows.h>)
-
-target_sources(msv1_0 PRIVATE
-    msv1_0/args.hpp
-    msv1_0/cache.hpp
-    msv1_0/messages.hpp
-    msv1_0/proxy.hpp
-)
-
-target_sources(pku2u PRIVATE
-    pku2u/args.hpp
-    pku2u/messages.hpp
-    pku2u/proxy.hpp
-)
-
-target_sources(schannel PRIVATE
-    schannel/args.hpp
-    schannel/messages.hpp
-    schannel/proxy.hpp
-)
+target_precompile_headers(sspi PUBLIC <windows.h>)
 
 target_sources(lsa-whisperer PRIVATE
     cli.hpp
