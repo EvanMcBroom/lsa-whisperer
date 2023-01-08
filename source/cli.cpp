@@ -11,14 +11,16 @@
 using Replxx = replxx::Replxx;
 
 namespace {
-	int ContextLength(char const* prefix) {
-		int length{ 0 };
-		for (size_t index{ std::strlen(prefix) - 1 }; index >= 0; index--, length++) {
-			if (std::strchr(Ifs, prefix[length]) != NULL) {
-				break;
+	size_t CodepointCount(const uint8_t* bytes, size_t byteCount) {
+		size_t codepointCount{ 0 };
+		for (size_t index{ 0 }; index < byteCount; index++, codepointCount++) {
+			auto codepoint{ bytes + index };
+			auto firstByte{ *codepoint };
+			if (firstByte & 0x80) {
+				index += ((firstByte & 0xF0) >> 6) - 1;
 			}
 		}
-		return length;
+		return codepointCount;
 	}
 
 	bool Equal(std::string const& l, std::string const& r, int s) {
@@ -35,24 +37,14 @@ namespace {
 		return same;
 	}
 
-	int Utf8CodepointLength(char const* s, int utf8len) {
-		int codepointLen = 0;
-		unsigned char m4{ 128 + 64 + 32 + 16 };
-		unsigned char m3{ 128 + 64 + 32 };
-		unsigned char m2{ 128 + 64 };
-		for (int i{ 0 }; i < utf8len; ++i, ++codepointLen) {
-			char c = s[i];
-			if ((c & m4) == m4) {
-				i += 3;
-			}
-			else if ((c & m3) == m3) {
-				i += 2;
-			}
-			else if ((c & m2) == m2) {
-				i += 1;
+	size_t LastWordLength(const char* string) {
+		size_t length{ 0 };
+		for (size_t index{ std::strlen(string) - 1 }; index >= 0; index--, length++) {
+			if (std::strchr(Ifs, string[index])) {
+				break;
 			}
 		}
-		return codepointLen;
+		return length;
 	}
 }
 
@@ -164,20 +156,17 @@ void Cli::Start() {
 }
 
 Replxx::completions_t Cli::CompleteContext(const std::string& context, int& contextLength) {
-	Replxx::completions_t completions;
-	int utf8ContextLen(ContextLength(context.c_str()));
-	int prefixLen(static_cast<int>(context.length()) - utf8ContextLen);
-	if ((prefixLen > 0) && (context[prefixLen - 1] == '\\')) {
-		--prefixLen;
-		++utf8ContextLen;
+	auto lastWordLength{ LastWordLength(context.data()) };
+	auto prefixLength{ context.length() - lastWordLength };
+	if ((prefixLength > 0) && (context[prefixLength - 1] == '\\')) {
+		--prefixLength;
+		++lastWordLength;
 	}
-	contextLength = Utf8CodepointLength(context.c_str() + prefixLen, utf8ContextLen);
-
-	std::string prefix{ context.substr(0, prefixLen) };
+	std::string prefix{ context.substr(prefixLength) };
+	Replxx::completions_t completions;
 	for (auto const& command : commands) {
 		auto& name{ command.first };
-		bool lowerCasePrefix(std::none_of(prefix.begin(), prefix.end(), iswupper));
-		if (Equal(command.first, prefix, static_cast<int>(prefix.size()))) {
+		if (Equal(name, prefix, lastWordLength)) {
 			Replxx::Color c(Replxx::Color::DEFAULT);
 			if (name.find("brightred") != std::string::npos) {
 				c = Replxx::Color::BRIGHTRED;
@@ -188,29 +177,27 @@ Replxx::completions_t Cli::CompleteContext(const std::string& context, int& cont
 			completions.emplace_back(name.c_str(), c);
 		}
 	}
+	contextLength = CodepointCount(reinterpret_cast<const uint8_t*>(context.data() + prefixLength), lastWordLength);
 	return completions;
 }
 
 Replxx::hints_t Cli::Hint(const std::string& context, int& contextLength, Replxx::Color& color) {
-	int utf8ContextLength(ContextLength(context.data()));
-	auto prefixLen{ context.length() - utf8ContextLength };
-	contextLength = Utf8CodepointLength(context.data() + prefixLen, utf8ContextLength);
-	std::string prefix{ context.substr(0, prefixLen) };
-	// Only show hint if prefix is at least 'n' chars long
-	// or if prefix begins with a specific character
+	auto lastWordLength{ LastWordLength(context.data()) };
+	auto prefixLength{ context.length() - lastWordLength };
+	std::string lastWord{ context.substr(prefixLength, lastWordLength) };
 	Replxx::hints_t hints;
-	if (prefix.size() >= 2 || (!prefix.empty() && prefix.at(0) == '.')) {
+	if (!lastWord.empty()) {
 		for (auto const& command : commands) {
 			auto& name{ command.first };
-			if (Equal(name, prefix, prefix.size())) {
+			if (Equal(name, lastWord, lastWord.size())) {
 				hints.emplace_back(name.c_str());
 			}
 		}
 	}
-	// Set hint color to green if single match found
+	// Set hint color to green if only a single match was found
 	if (hints.size() == 1) {
 		color = Replxx::Color::GREEN;
 	}
-
+	contextLength = CodepointCount(reinterpret_cast<const uint8_t*>(context.data() + prefixLength), lastWordLength);
 	return hints;
 }

@@ -2,7 +2,7 @@
 #include <replxx.hxx>
 
 // Internal field separator for word boundaries
-char const Ifs[]{ " \t\n\r\v\f-=+*&^%$#@!,./?<>;:`~'\"[]{}()\\|" };
+char const Ifs[]{ " \t\n\r\v\f=+*&^%$#@!,/?<>;:`~'\"[]{}()|" };
 
 class Cli : public replxx::Replxx {
 public:
