@@ -39,8 +39,8 @@ namespace {
 
 	size_t LastWordLength(const char* string) {
 		size_t length{ 0 };
-		for (size_t index{ std::strlen(string) - 1 }; index >= 0; index--, length++) {
-			if (std::strchr(Ifs, string[index])) {
+		for (size_t index{ std::strlen(string) }; index >= 0; index--, length++) {
+			if (std::strchr(Ifs, string[index - 1])) {
 				break;
 			}
 		}
