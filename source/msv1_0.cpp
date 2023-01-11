@@ -145,16 +145,16 @@ namespace Msv1_0 {
         ENUMUSERS_REQUEST request;
         ENUMUSERS_RESPONSE* response;
         bool result;
-        if (passthrough) {
-            std::vector<byte> data{ sizeof(decltype(request)), 0 };
-            std::memcpy(data.data(), &request, sizeof(decltype(request)));
-            GenericPassthrough(L"", MSV1_0_PACKAGE_NAMEW, data);
-            response = reinterpret_cast<decltype(response)>(malloc(sizeof(ENUMUSERS_RESPONSE)));
-            std::memcpy(response, data.data(), sizeof(decltype(response)));
-        }
-        else {
+        //if (passthrough) {
+        //    std::vector<byte> data{ sizeof(decltype(request)), 0 };
+        //    std::memcpy(data.data(), &request, sizeof(decltype(request)));
+        //    GenericPassthrough(L"", MSV1_0_PACKAGE_NAMEW, data);
+        //    response = reinterpret_cast<decltype(response)>(malloc(sizeof(ENUMUSERS_RESPONSE)));
+        //    std::memcpy(response, data.data(), sizeof(decltype(response)));
+        //}
+        //else {
             result = CallPackage(request, &response);
-        }
+        //}
         if (result) {
             auto count{ response->NumberOfLoggedOnUsers };
             lsa->out << "NumberOfLoggedOnUsers: " << count << std::endl;

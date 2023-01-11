@@ -1,0 +1,28 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Public Key User 2 User (PKU2U)
+:toc: macro
+
+Schannel is the security package (SP) and authentication package (AP) for the following protocols:
+
+* DTLS 1.0 and 2.0
+* SSL 2.0 and 3.0
+* TLS 1.0, 1.1, 1.2, and 1.3
+
+Schannel previously supported the https://datatracker.ietf.org/doc/html/draft-benaloh-pct-00.txt[Private Communication Technology (PCT)] protocol version 1, but it appears that Microsoft has removed support for PCT 1 at some point.
+The use of PCT 1 may still be found in other Microsoft technologies such as the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-mqds/460c070d-8115-4361-95f5-e92df34c5bf8[Microsoft Message Queuing (MSMQ) Directory Service Protocol].
+
+toc::[]
+
+== Functions
+
+The protocol messages that pku2u supports is not documented by Microsoft but is provided here.
+Lsa Whisperer currently provides experimental support for some of these as pku2u commands.
+
+[%header]
+|===
+| Id     | Message Type     | NT Version | Internal Function
+| `0x0f` | PurgeTicket      |            | Pku2uPurgeTicketEx
+| `0x14` | QueryTicketCache |            | Pku2uQueryTicketCacheEx2

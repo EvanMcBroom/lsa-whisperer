@@ -7,14 +7,15 @@ char const Ifs[]{ " \t\n\r\v\f=+*&^%$#@!,/?<>;:`~'\"[]{}()|" };
 class Cli : public replxx::Replxx {
 public:
 	using Command = std::function<void(Cli& cli, const std::string& arg)>;
-	using CommandWithResult = std::function<bool(Cli& cli, const std::string& arg)>;
 
 	Cli(const std::string& historyFile = "");
 	void AddCommand(const std::string name, Command command);
-	void AddCommand(const std::string name, CommandWithResult command);
+	void AddExitCommand(const std::string name);
 	void Start();
 
 private:
+	using CommandWithResult = std::function<bool(Cli& cli, const std::string& arg)>;
+
 	std::string historyFile;
 	std::string prompt{ "lsa> " };
 	std::vector<std::pair<std::string, CommandWithResult>> commands;

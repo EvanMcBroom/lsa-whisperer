@@ -18,10 +18,10 @@ Supporting negotiate commands is currently not a priority for Lsa Whisperer.
 [%header]
 |===
 | Id    | Message Type          | NT Version | Internal Function
-| `0x0` | `EnumPackagePrefixes` | _All_      | `NegEnumPackagePrefixesCall`
-| `0x1` | `GetCallerName`       | _All_      | `NegGetCallerNameCall`
-| `0x2` | `TransferCred`        | ?          | `NegTransferCredCall`
-| `0x3` | `EnumPackageNames`    | ?          | `NetEnumPackageNamesCall` [sic]
+| `0x0` | `EnumPackagePrefixes` | `>=5.1`    | `NegEnumPackagePrefixesCall`
+| `0x1` | `GetCallerName`       | `>=5.1`    | `NegGetCallerNameCall`
+| `0x2` | `TransferCred`        | `>=?`      | `NegTransferCredCall`
+| `0x3` | `EnumPackageNames`    | `>=?`      | `NetEnumPackageNamesCall` [sic]
 |===
 
 NOTE: The `EnumPackageNames` function prefix is likely a typo by a Microsoft developer and meant to be `Neg`.

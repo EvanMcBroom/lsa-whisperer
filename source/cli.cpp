@@ -118,8 +118,10 @@ void Cli::AddCommand(const std::string name, Command command) {
 	});
 }
 
-void Cli::AddCommand(const std::string name, CommandWithResult command) {
-	this->commands.emplace_back(name, command);
+void Cli::AddExitCommand(const std::string name) {
+	this->commands.emplace_back(name, [](Cli& cli, const std::string& arg) {
+		return false;
+	});
 }
 
 void Cli::Start() {
@@ -145,7 +147,7 @@ void Cli::Start() {
 			std::cout << "Command not found" << std::endl;
 		}
 		else if(!item->second(*this, input)) {
-			// Handle if the command was not successful or it notified to end the repl
+			// Handle if the command notified to end the repl
 			break;
 		}
 		history_add(input);

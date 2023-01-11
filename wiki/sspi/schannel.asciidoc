@@ -25,11 +25,11 @@ Lsa Whisperer currently provides experimental support for some of these as schan
 [%header]
 |===
 | Id    | Message Type          | NT Version | Internal Function
-| `0x2` | `LookupCert`*         | _All_      | `SslDoClientRequest`
-| `0x3` | `PurgeCache`          | _All_      | `SslPurgeSessionCache`
-| `0x4` | `CacheInfo`           | _All_      | `SslSessionCacheInfo`
-| `0x5` | `PerfmonInfo`         | `5.2<?`    | `SslGetPerfmonInfo`
-| `0x6` | `LookupExternalCert`* | _All_      | `SslMapExternalCredential`
+| `0x2` | `LookupCert`*         | `>=5.1`    | `SslDoClientRequest`
+| `0x3` | `PurgeCache`          | `>=5.1`    | `SslPurgeSessionCache`
+| `0x4` | `CacheInfo`           | `>=5.1`    | `SslSessionCacheInfo`
+| `0x5` | `PerfmonInfo`         | `?>x>=5.1` | `SslGetPerfmonInfo`
+| `0x6` | `LookupExternalCert`* | `>=5.1`    | `SslMapExternalCredential`
 | `0x7` | `LookupEncodedCert`*  | ?          | `SslMapEncodedCredential`
 | `0x8` | `StreamSizes`         | ?          | `SslGetStreamSizes`
 |===

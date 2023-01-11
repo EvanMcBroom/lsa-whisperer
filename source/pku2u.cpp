@@ -50,12 +50,7 @@ namespace Pku2u {
         char* command{ "pku2u" };
         cxxopts::Options options{ command };
 
-        options.add_options("Pku2u Function")
-            ("f,function", "Function name", cxxopts::value<std::string>())
-            ;
-
-        // Arguments for functions that require additional inputs
-        options.add_options("Function arguments")
+        options.add_options("Command arguments")
             ("luid", "Logon session", cxxopts::value<long long>())
             ;
 
