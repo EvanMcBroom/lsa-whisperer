@@ -66,49 +66,7 @@ Cli::Cli(const std::string& historyFile)
 		std::ifstream fileStream{ historyFile.c_str() };
 		history_load(fileStream);
 	}
-	history_add(""); // Added to fix issues #137
-	// Deletion keybindings
-	bind_key_internal(Replxx::KEY::BACKSPACE, "delete_character_left_of_cursor");
-	bind_key_internal(Replxx::KEY::DELETE, "delete_character_under_cursor");
-	bind_key_internal(Replxx::KEY::control('W'), "kill_to_begining_of_word");
-	bind_key_internal(Replxx::KEY::control('U'), "kill_to_begining_of_line");
-	bind_key_internal(Replxx::KEY::control('K'), "kill_to_end_of_line");
-	bind_key_internal(Replxx::KEY::meta(Replxx::KEY::BACKSPACE), "kill_to_whitespace_on_left");
-	bind_key_internal(Replxx::KEY::meta('d'), "kill_to_end_of_word");
-	// Navigation keybindings
-	bind_key_internal(Replxx::KEY::LEFT, "move_cursor_left");
-	bind_key_internal(Replxx::KEY::RIGHT, "move_cursor_right");
-	bind_key_internal(Replxx::KEY::HOME, "move_cursor_to_begining_of_line");
-	bind_key_internal(Replxx::KEY::END, "move_cursor_to_end_of_line");
-	bind_key_internal(Replxx::KEY::control(Replxx::KEY::LEFT), "move_cursor_one_word_left");
-	bind_key_internal(Replxx::KEY::control(Replxx::KEY::RIGHT), "move_cursor_one_word_right");
-	bind_key_internal(Replxx::KEY::control(Replxx::KEY::ENTER), "commit_line");
-	bind_key_internal(Replxx::KEY::INSERT, "toggle_overwrite_mode");
-	// History keybindings
-	// bind_key_internal(Replxx::KEY::UP, "line_previous");
-	// bind_key_internal(Replxx::KEY::DOWN, "line_next");
-	// bind_key_internal(Replxx::KEY::meta(Replxx::KEY::UP), "history_previous");
-	// bind_key_internal(Replxx::KEY::meta(Replxx::KEY::DOWN), "history_next");
-	// bind_key_internal(Replxx::KEY::PAGE_UP, "history_first");
-	// bind_key_internal(Replxx::KEY::PAGE_DOWN, "history_last");
-	// bind_key_internal(Replxx::KEY::control('R'), "history_incremental_search");
-	// bind_key_internal(Replxx::KEY::meta('p'), "history_common_prefix_search");
-	// bind_key_internal(Replxx::KEY::meta('n'), "history_common_prefix_search");
-	// Completion keybindings
-	bind_key_internal(Replxx::KEY::TAB, "complete_line");
-	bind_key_internal(Replxx::KEY::control(Replxx::KEY::UP), "hint_previous");
-	bind_key_internal(Replxx::KEY::control(Replxx::KEY::DOWN), "hint_next");
-	// Vim keybindings
-	bind_key_internal(Replxx::KEY::control('Y'), "yank");
-	bind_key_internal(Replxx::KEY::meta('y'), "yank_cycle");
-	bind_key_internal(Replxx::KEY::control('L'), "clear_screen");
-	bind_key_internal(Replxx::KEY::control('D'), "send_eof");
-	bind_key_internal(Replxx::KEY::control('C'), "abort_line");
-	bind_key_internal(Replxx::KEY::control('T'), "transpose_characters");
-	bind_key_internal(Replxx::KEY::meta('u'), "uppercase_word");
-	bind_key_internal(Replxx::KEY::meta('l'), "lowercase_word");
-	bind_key_internal(Replxx::KEY::meta('c'), "capitalize_word");
-	bind_key_internal('a', "insert_character");
+	history_add(""); // Added to fix issue #137
 }
 
 void Cli::AddCommand(const std::string name, Command command) {
