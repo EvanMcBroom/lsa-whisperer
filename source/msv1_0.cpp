@@ -48,6 +48,10 @@ namespace {
 }
 
 namespace Msv1_0 {
+    Proxy::Proxy(const std::shared_ptr<Lsa>&lsa)
+        : lsa(lsa) {
+    }
+
     bool Proxy::CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) const {
         CACHE_LOGON_REQUEST request;
         request.LogonInformation = logonInfo;

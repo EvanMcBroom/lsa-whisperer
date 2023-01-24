@@ -31,11 +31,16 @@ namespace Pku2u {
         // unknown
     } QUERY_TICKET_CACHE_EX2_RESPONSE, * PQUERY_TICKET_CACHE_EX2_RESPONSE;
 
-    class Proxy : public Sspi {
+    class Proxy {
     public:
+        Proxy(const std::shared_ptr<Lsa>& lsa);
+
         // A subset of the supported functions in pku2u
         bool PurgeTicketEx() const;
         bool QueryTicketCacheEx2(PLUID luid) const;
+
+    protected:
+        std::shared_ptr<Lsa> lsa;
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer

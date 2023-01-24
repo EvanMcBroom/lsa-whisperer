@@ -10,6 +10,10 @@
 #include <pku2u.hpp>
 
 namespace Pku2u {
+    Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
+        : lsa(lsa) {
+    }
+
     bool Proxy::PurgeTicketEx() const {
         return false;
     }

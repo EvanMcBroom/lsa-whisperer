@@ -12,6 +12,10 @@
 #include <vector>
 
 namespace Schannel {
+    Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
+        : lsa(lsa) {
+    }
+
     bool Proxy::CacheInfo(PLUID logonId, const std::wstring & serverName, ULONG flags) const {
         SESSION_CACHE_INFO_REQUEST request;
         request.LogonId.LowPart = logonId->LowPart;

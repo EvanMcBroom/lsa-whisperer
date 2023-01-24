@@ -115,26 +115,21 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
     return false;
 }
 
-Sspi::Sspi(const std::shared_ptr<Lsa>& lsa)
-    : lsa(lsa) {
-
-}
-
-NTSTATUS LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
-    return 0;
-}
-
-NTSTATUS Sspi::LsaConnectUntrusted(HANDLE* LsaHandle) {
-    long PackageCount{ 0 };
+Sspi::Sspi() {
     LSA_OPERATIONAL_MODE OperationalMode{ 0 };
-    return SspirConnectRpc(nullptr, 0, &PackageCount, &OperationalMode, LsaHandle);
+    auto status{ SspirConnectRpc(nullptr, 0, &this->packageCount, &OperationalMode, &this->lsaHandle) };
+    this->connected = NT_SUCCESS(status);
 }
 
-NTSTATUS Sspi::LsaDeregisterLogonProcess(HANDLE* LsaHandle) {
-    return SspirDisconnectRpc(LsaHandle);
+Sspi::~Sspi() {
+    SspirDisconnectRpc(&this->lsaHandle);
 }
 
-NTSTATUS Sspi::LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
+bool Sspi::Connected() {
+    return this->connected;
+}
+
+NTSTATUS Sspi::LsaCallAuthenticationPackage(ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
     //ret = Proc3_SspirCallRpc(out3, packetLen, rpcPacket, &out2, (unsigned char**)&out3, &out4);
     return 0;
 }

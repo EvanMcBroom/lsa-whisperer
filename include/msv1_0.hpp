@@ -268,8 +268,10 @@ namespace Msv1_0 {
         LUID DestinationLuid;
     } TRANSFER_CRED_REQUEST, * PTRANSFER_CRED_REQUEST;
 
-    class Proxy : public Sspi {
+    class Proxy {
     public:
+        Proxy(const std::shared_ptr<Lsa>& lsa);
+
         // A subset of the supported functions in msv1_0
         bool CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) const;
         bool CacheLookupEx(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const;
@@ -287,6 +289,9 @@ namespace Msv1_0 {
         bool ProvisionTbal(PLUID luid) const;
         bool SetProcessOption(ProcessOption options, bool disable) const;
         bool TransferCred(PLUID sourceLuid, PLUID destinationLuid) const;
+
+    protected:
+        std::shared_ptr<Lsa> lsa;
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer

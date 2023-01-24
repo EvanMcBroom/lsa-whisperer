@@ -1,7 +1,6 @@
 target_include_directories(sspi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_sources(sspi PRIVATE
     crypt.hpp
-    dpapi.hpp
     lsa.hpp
     msv1_0.hpp
     netlogon.hpp

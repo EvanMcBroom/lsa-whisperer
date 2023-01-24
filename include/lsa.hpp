@@ -23,6 +23,23 @@ private:
     } nullBuffer;
 };
 
+// Reimplements Windows functions that use the SSPI RPC interface
+class Sspi {
+public:
+    // Will call LsaConnectUntrusted/SspirConnectRpc
+    Sspi();
+    // Will call LsaDeregisterLogonProcess/SspirDisconnectRpc
+    ~Sspi();
+
+    bool Connected();
+    NTSTATUS LsaCallAuthenticationPackage(ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus);
+
+private:
+    bool connected;
+    HANDLE lsaHandle;
+    long packageCount{ 0 };
+};
+
 class Lsa {
 public:
     std::ostream& out;
@@ -38,18 +55,6 @@ public:
 private:
     bool connected{ false };
     HANDLE lsaHandle;
-};
-
-// Reimplements Windows functions that use the SSPI RPC interface
-class Sspi {
-public:
-    Sspi(const std::shared_ptr<Lsa>& lsa);
-    NTSTATUS LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus);
-    NTSTATUS LsaConnectUntrusted(HANDLE* LsaHandle);
-    NTSTATUS LsaDeregisterLogonProcess(HANDLE* LsaHandle);
-
-protected:
-    std::shared_ptr<Lsa> lsa;
 };
 
 void OutputHex(std::ostream& out, const std::string& data);

@@ -125,8 +125,10 @@ namespace Schannel {
         DWORD unknown[3];
     } STREAM_SIZES_RESPONSE, * PSTREAM_SIZES_RESPONSE;
     
-    class Proxy : public Sspi {
+    class Proxy {
     public:
+        Proxy(const std::shared_ptr<Lsa>& lsa);
+
         // A subset of the supported functions in pku2u
         bool CacheInfo(PLUID logonId, const std::wstring& serverName, ULONG flags) const;
         bool LookupCert(const std::vector<byte>& certificate, ULONG flags, std::vector<std::vector<byte>> issuers) const;
@@ -134,6 +136,9 @@ namespace Schannel {
         bool PerfmonInfo(ULONG flags) const;
         bool PurgeCache(PLUID logonId, const std::wstring& serverName, ULONG flags) const;
         bool StreamSizes() const;
+
+    protected:
+        std::shared_ptr<Lsa> lsa;
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer

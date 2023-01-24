@@ -13,6 +13,10 @@
 #include <wdigest.hpp>
 
 namespace Wdigest {
+    Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
+        : lsa(lsa) {
+    }
+
     bool Proxy::VerifyDigest() const {
         VERIFY_DIGEST_REQUEST request;
         VERIFY_DIGEST_RESPONSE* response;

@@ -59,8 +59,13 @@ namespace Wdigest {
 
     class Proxy : public Sspi {
     public:
+        Proxy(const std::shared_ptr<Lsa>& lsa);
+
         // A subset of the supported functions in pku2u
         bool VerifyDigest() const;
+
+    protected:
+        std::shared_ptr<Lsa> lsa;
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer
