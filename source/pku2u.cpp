@@ -31,13 +31,13 @@ namespace Pku2u {
         return false;
     }
     
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:
             return proxy.PurgeTicketEx();
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.QueryTicketCacheEx2(&luid);
         }
         default:
@@ -55,15 +55,15 @@ namespace Pku2u {
             ;
 
         try {
-            std::vector<char*> argv{ command };
+            std::vector<char*> argv;
             std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
                 argv.push_back(const_cast<char*>(arg.data()));
                 });
-            auto result{ options.parse(argv.size(), argv.data()) };
-            if (result.count("function")) {
-                auto lsa{ std::make_shared<Lsa>(out) };
-                Proxy proxy{ lsa };
-                HandleFunction(out, proxy, result);
+            if (argv.size() > 1) {
+                auto function{ argv[1] };
+                auto result{ options.parse(argv.size(), argv.data()) };
+                Proxy proxy{ std::make_shared<Lsa>(out) };
+                HandleFunction(out, proxy, function, result);
             }
             else {
                 out << options.help() << std::endl;

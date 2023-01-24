@@ -297,7 +297,7 @@ namespace Msv1_0 {
         bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
 
-	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result);
+	bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
 	void Parse(std::ostream& out, const std::vector<std::string>& args);
 
     namespace Cache {

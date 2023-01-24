@@ -5,6 +5,7 @@
 #include <msv1_0.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
+#include <magic_enum.hpp>
 #include <memory>
 #include <thread>
 
@@ -15,7 +16,7 @@ namespace {
 	}
 
 	template<typename Function>
-	auto HandlerFactory(Function function) {
+	auto CommandFactory(Function function) {
 		return [function](Cli& cli, const std::string& args) {
 			std::istringstream argStream{ args };
 			std::vector<std::string> tokens;
@@ -30,6 +31,12 @@ namespace {
 			std::cout << std::setw(4) << i << ": " << scan.get().text() << std::endl;
 		}
 	}
+
+	template<typename ProtocolMessageType>
+	std::vector<std::string> SubCommands() {
+		auto names{ magic_enum::enum_names<ProtocolMessageType>() };
+		return std::vector<std::string>{ names.begin(), names.end() };
+	}
 }
 
 int main(int argc_, char** argv_) {
@@ -39,14 +46,14 @@ int main(int argc_, char** argv_) {
 	});
 	cli.AddCommand(".help", Help);
 	cli.AddCommand(".history", History);
-	cli.AddCommand("msv1_0", HandlerFactory(Msv1_0::Parse));
-	cli.AddCommand("pku2u", HandlerFactory(Pku2u::Parse));
-	cli.AddCommand("schannel", HandlerFactory(Schannel::Parse));
+	cli.AddCommand("msv1_0", CommandFactory(Msv1_0::Parse));
+	cli.AddCommand("pku2u", CommandFactory(Pku2u::Parse));
+	cli.AddCommand("schannel", CommandFactory(Schannel::Parse));
 	cli.AddExitCommand(".exit");
 	cli.AddExitCommand(".quit");
+	cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
+	cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());
+	cli.AddSubCommandCompletions("schannel", SubCommands<Schannel::PROTOCOL_MESSAGE_TYPE>());
 	cli.Start();
-
-
-
 	return 0;
 }

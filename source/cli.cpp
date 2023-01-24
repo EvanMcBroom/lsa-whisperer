@@ -11,18 +11,6 @@
 using Replxx = replxx::Replxx;
 
 namespace {
-	size_t CodepointCount(const uint8_t* bytes, size_t byteCount) {
-		size_t codepointCount{ 0 };
-		for (size_t index{ 0 }; index < byteCount; index++, codepointCount++) {
-			auto codepoint{ bytes + index };
-			auto firstByte{ *codepoint };
-			if (firstByte & 0x80) {
-				index += ((firstByte & 0xF0) >> 6) - 1;
-			}
-		}
-		return codepointCount;
-	}
-
 	bool Equal(std::string const& l, std::string const& r, int s) {
 		if (static_cast<int>(l.length()) < s) {
 			return false;
@@ -37,10 +25,12 @@ namespace {
 		return same;
 	}
 
-	size_t LastWordLength(const char* string) {
+	size_t WordBoundary(const char* string, bool endOffset = true) {
 		size_t length{ 0 };
-		for (size_t index{ std::strlen(string) }; index >= 0; index--, length++) {
-			if (std::strchr(Ifs, string[index - 1])) {
+		for (size_t index{ 0 }; index < std::strlen(string); index++, length++) {
+			if ((!endOffset && !std::strchr(Ifs, string[index])) ||
+				(endOffset && std::strchr(Ifs, string[index]))
+			) {
 				break;
 			}
 		}
@@ -69,17 +59,21 @@ Cli::Cli(const std::string& historyFile)
 	history_add(""); // Added to fix issue #137
 }
 
-void Cli::AddCommand(const std::string name, Command command) {
+void Cli::AddCommand(const std::string& name, Command command) {
 	this->commands.emplace_back(name, [command](Cli& cli, const std::string& arg) {
 		command(cli, arg);
 		return true;
 	});
 }
 
-void Cli::AddExitCommand(const std::string name) {
+void Cli::AddExitCommand(const std::string& name) {
 	this->commands.emplace_back(name, [](Cli& cli, const std::string& arg) {
 		return false;
 	});
+}
+
+void Cli::AddSubCommandCompletions(const std::string& command, const std::vector<std::string>& subCommands) {
+	this->subCommandCompletions[command] = subCommands;
 }
 
 void Cli::Start() {
@@ -115,49 +109,50 @@ void Cli::Start() {
 	}
 }
 
-Replxx::completions_t Cli::CompleteContext(const std::string& context, int& contextLength) {
-	auto lastWordLength{ LastWordLength(context.data()) };
-	auto prefixLength{ context.length() - lastWordLength };
-	if ((prefixLength > 0) && (context[prefixLength - 1] == '\\')) {
-		--prefixLength;
-		++lastWordLength;
-	}
-	std::string prefix{ context.substr(prefixLength) };
+Replxx::completions_t Cli::CompleteContext(const std::string& line, int& lastWordLength) {
 	Replxx::completions_t completions;
-	for (auto const& command : commands) {
-		auto& name{ command.first };
-		if (Equal(name, prefix, lastWordLength)) {
-			Replxx::Color c(Replxx::Color::DEFAULT);
-			if (name.find("brightred") != std::string::npos) {
-				c = Replxx::Color::BRIGHTRED;
-			}
-			else if (name.find("red") != std::string::npos) {
-				c = Replxx::Color::RED;
-			}
-			completions.emplace_back(name.c_str(), c);
-		}
+	for (auto& match : this->Matches(line)) {
+		completions.emplace_back(match.data(), Replxx::Color::DEFAULT);
 	}
-	contextLength = CodepointCount(reinterpret_cast<const uint8_t*>(context.data() + prefixLength), lastWordLength);
 	return completions;
 }
 
-Replxx::hints_t Cli::Hint(const std::string& context, int& contextLength, Replxx::Color& color) {
-	auto lastWordLength{ LastWordLength(context.data()) };
-	auto prefixLength{ context.length() - lastWordLength };
-	std::string lastWord{ context.substr(prefixLength, lastWordLength) };
+Replxx::hints_t Cli::Hint(const std::string& line, int& lastWordLength, Replxx::Color& color) {
 	Replxx::hints_t hints;
-	if (!lastWord.empty()) {
-		for (auto const& command : commands) {
-			auto& name{ command.first };
-			if (Equal(name, lastWord, lastWord.size())) {
-				hints.emplace_back(name.c_str());
-			}
-		}
+	if (lastWordLength) {
+		hints = this->Matches(line);
 	}
 	// Set hint color to green if only a single match was found
 	if (hints.size() == 1) {
 		color = Replxx::Color::GREEN;
 	}
-	contextLength = CodepointCount(reinterpret_cast<const uint8_t*>(context.data() + prefixLength), lastWordLength);
 	return hints;
+}
+
+std::vector<std::string> Cli::Matches(const std::string& line) {
+	std::vector<std::string> matches;
+	std::string firstWord{ line.substr(0, WordBoundary(line.data())) };
+	if (firstWord.length() == line.length()) {
+		// Gather completions for a command
+		for (auto const& command : this->commands) {
+			auto& name{ command.first };
+			if (Equal(name, firstWord, firstWord.length())) {
+				matches.emplace_back(name.data());
+			}
+		}
+	}
+	else {
+		std::string remaining{ line.substr(firstWord.length(), line.length() - firstWord.length()) };
+		auto secondWordStart{ WordBoundary(remaining.data(), false) };
+		std::string secondWord{ remaining.substr(secondWordStart, WordBoundary(remaining.data() + secondWordStart)) };
+		if ((secondWordStart + secondWord.length()) == remaining.length()) {
+			// Gather completions for a sub-command
+			for (auto const& subCommand : this->subCommandCompletions[firstWord]) {
+				if (Equal(subCommand, secondWord, secondWord.length())) {
+					matches.emplace_back(subCommand.data());
+				}
+			}
+		}
+	}
+	return matches;
 }

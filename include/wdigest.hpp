@@ -68,6 +68,6 @@ namespace Wdigest {
         bool CallPackagePassthrough(const _Request& submitBuffer, _Response** returnBuffer) const;
     };
     
-	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result);
+	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options);
 	void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

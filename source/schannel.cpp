@@ -100,8 +100,8 @@ namespace Schannel {
         return false;
     }
     
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheInfo: {
             return false;// CacheInfo();
         }
@@ -116,15 +116,15 @@ namespace Schannel {
         }
         case PROTOCOL_MESSAGE_TYPE::PurgeCache: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            auto server{ converter.from_bytes(result["server"].as<std::string>()) };
+            auto server{ converter.from_bytes(options["server"].as<std::string>()) };
             DWORD flags{ 0 };
-            flags |= (result.count("client-entry")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::Client) : 0;
-            flags |= (result.count("server-entry")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::Server) : 0;
-            flags |= (result.count("clients")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ClientAll) : 0;
-            flags |= (result.count("servers")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ServerAll) : 0;
-            flags |= (result.count("locators")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ServerEntriesDisardLocators) : 0;
+            flags |= (options.count("client-entry")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::Client) : 0;
+            flags |= (options.count("server-entry")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::Server) : 0;
+            flags |= (options.count("clients")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ClientAll) : 0;
+            flags |= (options.count("servers")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ServerAll) : 0;
+            flags |= (options.count("locators")) ? static_cast<ULONG>(Schannel::PurgeEntriesType::ServerEntriesDisardLocators) : 0;
             return proxy.PurgeCache(&luid, server, flags);
         }
         case PROTOCOL_MESSAGE_TYPE::StreamSizes:
@@ -155,15 +155,15 @@ namespace Schannel {
             ;
 
         try {
-            std::vector<char*> argv{ command };
+            std::vector<char*> argv;
             std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
                 argv.push_back(const_cast<char*>(arg.data()));
-            });
-            auto result{ options.parse(argv.size(), argv.data()) };
-            if (result.count("function")) {
-                auto lsa{ std::make_shared<Lsa>() };
-                Proxy proxy{ lsa };
-                HandleFunction(out, proxy, result);
+                });
+            if (argv.size() > 1) {
+                auto function{ argv[1] };
+                auto result{ options.parse(argv.size(), argv.data()) };
+                Proxy proxy{ std::make_shared<Lsa>(out) };
+                HandleFunction(out, proxy, function, result);
             }
             else {
                 out << options.help() << std::endl;

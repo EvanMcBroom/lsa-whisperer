@@ -290,20 +290,20 @@ namespace Msv1_0 {
     //    return CallPackage(std::forward<_Request>(submitBuffer), 0, returnBuffer);
     //}
 
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
             // Populate the logon info
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            auto domain{ converter.from_bytes(result["domain"].as<std::string>()) };
-            auto account{ converter.from_bytes(result["account"].as<std::string>()) };
-            auto computer{ std::wstring((result.count("computer")) ? converter.from_bytes(result["computer"].as<std::string>()) : L"") };
+            auto domain{ converter.from_bytes(options["domain"].as<std::string>()) };
+            auto account{ converter.from_bytes(options["account"].as<std::string>()) };
+            auto computer{ std::wstring((options.count("computer")) ? converter.from_bytes(options["computer"].as<std::string>()) : L"") };
             std::vector<byte> hash;
-            if (result.count("hash")) {
-                hash = HexDecode(out, converter.from_bytes(result["hash"].as<std::string>()));
+            if (options.count("hash")) {
+                hash = HexDecode(out, converter.from_bytes(options["hash"].as<std::string>()));
             }
             else {
-                hash = CalculateNtOwfPassword(result["pass"].as<std::string>());
+                hash = CalculateNtOwfPassword(options["pass"].as<std::string>());
             }
             auto logonInfo{ Cache::GetLogonInfo(domain, account, computer, hash) };
             // Populate the validation info and supplemental creds
@@ -311,28 +311,28 @@ namespace Msv1_0 {
             Netlogon::VALIDATION_SAM_INFO4 validationInfo4;
             std::memset(&validationInfo4, 0, sizeof(Netlogon::VALIDATION_SAM_INFO4));
             std::vector<byte> supplementalCreds;
-            if (result.count("mitlogon")) {
+            if (options.count("mitlogon")) {
                 requestFlags |= static_cast<ULONG>(CacheLogonFlags::RequestMitLogon);
-                auto upn{ converter.from_bytes(result["mitlogon"].as<std::string>()) };
+                auto upn{ converter.from_bytes(options["mitlogon"].as<std::string>()) };
                 supplementalCreds = Cache::GetSupplementalMitCreds(domain, upn);
             }
-            if (result.count("suppcreds")) {
-                supplementalCreds = HexDecode(out, converter.from_bytes(result["suppcreds"].as<std::string>()));
+            if (options.count("suppcreds")) {
+                supplementalCreds = HexDecode(out, converter.from_bytes(options["suppcreds"].as<std::string>()));
             }
             // Set any additional flags that may have been specified
-            requestFlags |= (result.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
-            requestFlags |= (result.count("smartcard")) ? static_cast<ULONG>(CacheLogonFlags::RequestSmartcardOnly) : 0;
+            requestFlags |= (options.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
+            requestFlags |= (options.count("smartcard")) ? static_cast<ULONG>(CacheLogonFlags::RequestSmartcardOnly) : 0;
             void* response{ nullptr };
             return proxy.CacheLogon(logonInfo.get(), &validationInfo4, supplementalCreds, requestFlags);
         }
         case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
             break;
         case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
-            //auto domain{ result["domain"].as<std::string>() };
-            //auto account{ result["account"].as<std::string>() };
-            //auto oldpass{ result["oldpass"].as<std::string>() };
-            //auto newpass{ result["newpass"].as<std::string>() };
-            //return ChangeCachedPassword(domain, account, oldpass, newpass, result["imp"].as<bool>());
+            //auto domain{ options["domain"].as<std::string>() };
+            //auto account{ options["account"].as<std::string>() };
+            //auto oldpass{ options["oldpass"].as<std::string>() };
+            //auto newpass{ options["newpass"].as<std::string>() };
+            //return ChangeCachedPassword(domain, account, oldpass, newpass, options["imp"].as<bool>());
         }
         case PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials:
             return proxy.ClearCachedCredentials();
@@ -342,40 +342,40 @@ namespace Msv1_0 {
             return proxy.DeleteTbalSecrets();
         case PROTOCOL_MESSAGE_TYPE::DeriveCredential: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
-            auto credType{ (result.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            auto credType{ (options.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             std::vector<byte> mixingBits;
-            mixingBits = HexDecode(out, converter.from_bytes(result["mixingbits"].as<std::string>()));
+            mixingBits = HexDecode(out, converter.from_bytes(options["mixingbits"].as<std::string>()));
             return proxy.DeriveCredential(&luid, credType, mixingBits);
         }
         case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
-            return proxy.EnumerateUsers((result.count("dc")));
+            return proxy.EnumerateUsers((options.count("dc")));
         case PROTOCOL_MESSAGE_TYPE::GetCredentialKey: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetCredentialKey(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey:
             return false;
         case PROTOCOL_MESSAGE_TYPE::GetUserInfo: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetUserInfo(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
             return proxy.Lm20ChallengeRequest();
         case PROTOCOL_MESSAGE_TYPE::ProvisionTbal: {
             LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = result["luid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.ProvisionTbal(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::SetProcessOption:
-            return proxy.SetProcessOption(magic_enum::enum_cast<ProcessOption>(result["option"].as<std::string>()).value(), result["disable"].as<bool>());
+            return proxy.SetProcessOption(magic_enum::enum_cast<ProcessOption>(options["option"].as<std::string>()).value(), options["disable"].as<bool>());
         case PROTOCOL_MESSAGE_TYPE::TransferCred: {
             LUID sourceLuid, destinationLuid;
-            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = result["sluid"].as<long long>();
-            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = result["dluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
             return proxy.TransferCred(&sourceLuid, &destinationLuid);
         }
         default:
@@ -389,10 +389,10 @@ namespace Msv1_0 {
         char* command{ "msv1_0" };
         cxxopts::Options options{ command };
 
-        options.add_options("MSV1_0 Function")
+        options.add_options()
             ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"))
-            ("f,function", "Function name", cxxopts::value<std::string>())
             ;
+        options.allow_unrecognised_options();
 
         // Arguments for functions that require additional inputs
         options.add_options("Function arguments")
@@ -418,15 +418,15 @@ namespace Msv1_0 {
             ;
 
         try {
-            std::vector<char*> argv{ command };
+            std::vector<char*> argv;
             std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
                 argv.push_back(const_cast<char*>(arg.data()));
             });
-            auto result{ options.parse(argv.size(), argv.data()) };
-            if (result.count("function")) {
-                auto lsa{ std::make_shared<Lsa>(out) };
-                Proxy proxy{ lsa };
-                HandleFunction(out, proxy, result);
+            if (argv.size() > 1) {
+                auto function{ argv[1] };
+                auto result{ options.parse(argv.size(), argv.data()) };
+                Proxy proxy{ std::make_shared<Lsa>(out) };
+                HandleFunction(out, proxy, function, result);
             }
             else {
                 out << options.help() << std::endl;

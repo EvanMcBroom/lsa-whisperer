@@ -28,8 +28,8 @@ namespace Wdigest {
         return false;
     }
     
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& result) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(result["function"].as<std::string>()).value()) {
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options) {
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(options["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::VerifyDigest:
             return false;
         default:
