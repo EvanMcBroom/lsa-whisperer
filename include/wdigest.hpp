@@ -57,7 +57,7 @@ namespace Wdigest {
         // Place group info here for LogonUser
     } VERIFY_DIGEST_RESPONSE, *PVERIFY_DIGEST_RESPONSE;
 
-    class Proxy : public SspiProxy {
+    class Proxy : public Sspi {
     public:
         // A subset of the supported functions in pku2u
         bool VerifyDigest() const;

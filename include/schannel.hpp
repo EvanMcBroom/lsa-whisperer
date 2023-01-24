@@ -125,7 +125,7 @@ namespace Schannel {
         DWORD unknown[3];
     } STREAM_SIZES_RESPONSE, * PSTREAM_SIZES_RESPONSE;
     
-    class Proxy : public SspiProxy {
+    class Proxy : public Sspi {
     public:
         // A subset of the supported functions in pku2u
         bool CacheInfo(PLUID logonId, const std::wstring& serverName, ULONG flags) const;

@@ -6,4 +6,5 @@ target_sources(sspi PRIVATE
     schannel.cpp
     wdigest.cpp
 )
-target_link_libraries(sspi PUBLIC Bcrypt.lib Crypt32.lib Ntdll.lib Secur32.lib)
+target_link_libraries(sspi PUBLIC Bcrypt.lib Crypt32.lib Ntdll.lib Rpcrt4.dll Secur32.lib)
+target_idl_sources(sspi CLIENT SOURCES ms-sspir.idl)

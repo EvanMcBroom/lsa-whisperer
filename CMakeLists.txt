@@ -8,6 +8,7 @@ project(lsa-whisperer
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+include(cmake/midl.cmake)
 include(cmake/requirements.cmake)
 
 string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")

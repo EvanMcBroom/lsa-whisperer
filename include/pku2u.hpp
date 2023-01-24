@@ -31,7 +31,7 @@ namespace Pku2u {
         // unknown
     } QUERY_TICKET_CACHE_EX2_RESPONSE, * PQUERY_TICKET_CACHE_EX2_RESPONSE;
 
-    class Proxy : public SspiProxy {
+    class Proxy : public Sspi {
     public:
         // A subset of the supported functions in pku2u
         bool PurgeTicketEx() const;

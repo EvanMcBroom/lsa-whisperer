@@ -268,7 +268,7 @@ namespace Msv1_0 {
         LUID DestinationLuid;
     } TRANSFER_CRED_REQUEST, * PTRANSFER_CRED_REQUEST;
 
-    class Proxy : public SspiProxy {
+    class Proxy : public Sspi {
     public:
         // A subset of the supported functions in msv1_0
         bool CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) const;

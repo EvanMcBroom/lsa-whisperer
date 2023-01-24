@@ -6,6 +6,17 @@
 #include <lsa.hpp>
 #include <msv1_0.hpp>
 #include <string>
+#include <ms-sspir_c.h>
+
+extern "C" {
+    void __RPC_FAR* __RPC_USER midl_user_allocate(size_t cBytes) {
+        return std::malloc(cBytes);
+    }
+
+    void __RPC_USER midl_user_free(void* pBuffer) {
+        return std::free(pBuffer);
+    }
+}
 
 UnicodeString::UnicodeString(std::wstring data) {
     RtlInitUnicodeString(this, data.c_str());
@@ -104,9 +115,28 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
     return false;
 }
 
-SspiProxy::SspiProxy(const std::shared_ptr<Lsa>& lsa)
+Sspi::Sspi(const std::shared_ptr<Lsa>& lsa)
     : lsa(lsa) {
 
+}
+
+NTSTATUS LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
+    return 0;
+}
+
+NTSTATUS Sspi::LsaConnectUntrusted(HANDLE* LsaHandle) {
+    long PackageCount{ 0 };
+    LSA_OPERATIONAL_MODE OperationalMode{ 0 };
+    return SspirConnectRpc(nullptr, 0, &PackageCount, &OperationalMode, LsaHandle);
+}
+
+NTSTATUS Sspi::LsaDeregisterLogonProcess(HANDLE* LsaHandle) {
+    return SspirDisconnectRpc(LsaHandle);
+}
+
+NTSTATUS Sspi::LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
+    //ret = Proc3_SspirCallRpc(out3, packetLen, rpcPacket, &out2, (unsigned char**)&out3, &out4);
+    return 0;
 }
 
 void OutputHex(std::ostream& out, const std::string& data) {

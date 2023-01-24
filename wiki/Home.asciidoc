@@ -45,21 +45,21 @@ These functions originally communicated with LSASS over LPC in NT 5.2 but are no
 [%header]
 |===
 | Opnum | Operation                          | Notes
-| `0x0` | SspirConnectRpc                    |
-| `0x1` | SspirDisconnectRpc                 | `lsasrv!SspiExRpcRundown`
-| `0x2` | SspirDisconnectRpc                 | `lsasrv!SspiExRpcRundown`
-| `0x3` | SspirCallRpc                       |
-| `0x4` | SspirAcquireCredentialsHandle      |
-| `0x5` | SspirFreeCredentialsHandle         |
-| `0x6` | SspirProcessSecurityContext        |
-| `0x7` | SspirDeleteSecurityContext         |
-| `0x8` | SspirSslQueryCredentialsAttributes |
-| `0x9` | SspirNegQueryContextAttributes     |
-| `0xA` | SspirSslSetCredentialsAttributes   |
-| `0xB` | SspirApplyControlToken             |
-| `0xC` | SspirLogonUser                     |
+| `0x0` | SspirConnectRpc                    | `LsaConnectUntrusted`
+| `0x1` | SspirDisconnectRpc                 | `LsaDeregisterLogonProcess`
+| `0x2` | SspirDisconnectRpc                 | Calls the same server function as procnum `0x1`
+| `0x3` | SspirCallRpc                       | `LsaCallAuthenticationPackage` and `LsaLookupAuthenticationPackage`
+| `0x4` | SspirAcquireCredentialsHandle      | `LsaAcquireCredentialsHandle`
+| `0x5` | SspirFreeCredentialsHandle         | `LsaFreeCredentialsHandle`
+| `0x6` | SspirProcessSecurityContext        | `LsaInitializeSecurityContext` and `LsaAcceptSecurityContext`
+| `0x7` | SspirDeleteSecurityContext         | `LsaDeleteSecurityContext`
+| `0x8` | SspirSslQueryCredentialsAttributes | `QueryCredentialsAttributes (Schannel)`
+| `0x9` | SspirNegQueryContextAttributes     | `QueryContextAttributes (Negotiate)`
+| `0xA` | SspirSslSetCredentialsAttributes   | `SetCredentialsAttributes (Schannel)`
+| `0xB` | SspirApplyControlToken             | `LsaApplyControlToken`
+| `0xC` | SspirLogonUser                     | `LsaLogonUser`
 | `0xD` | SspirLookupAccountSid              | Verifies that the provided SID is valid
-| `0xE` | SspirGetUserName                   |
+| `0xE` | SspirGetUserName                   | `GetUserNameExW`
 | `0xF` | SspirGetInprocDispatchTable        | Returns `&SspiInprocFunctions` if local
 |===
 

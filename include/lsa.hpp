@@ -40,9 +40,13 @@ private:
     HANDLE lsaHandle;
 };
 
-class SspiProxy {
+// Reimplements Windows functions that use the SSPI RPC interface
+class Sspi {
 public:
-    SspiProxy(const std::shared_ptr<Lsa>& lsa);
+    Sspi(const std::shared_ptr<Lsa>& lsa);
+    NTSTATUS LsaCallAuthenticationPackage(HANDLE LsaHandle, ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus);
+    NTSTATUS LsaConnectUntrusted(HANDLE* LsaHandle);
+    NTSTATUS LsaDeregisterLogonProcess(HANDLE* LsaHandle);
 
 protected:
     std::shared_ptr<Lsa> lsa;
