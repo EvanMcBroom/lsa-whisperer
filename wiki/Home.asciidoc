@@ -48,7 +48,7 @@ These functions originally communicated with LSASS over LPC in NT 5.2 but are no
 | `0x0` | SspirConnectRpc                    | `LsaConnectUntrusted`
 | `0x1` | SspirDisconnectRpc                 | `LsaDeregisterLogonProcess`
 | `0x2` | SspirDisconnectRpc                 | Calls the same server function as procnum `0x1`
-| `0x3` | SspirCallRpc                       | `LsaCallAuthenticationPackage` and `LsaLookupAuthenticationPackage`
+| `0x3` | SspirCallRpc                       | `LsaCallAuthenticationPackage` and `LsaLookupAuthenticationPackage`. Handled by `lsasrv.dll!DispatchAPI`
 | `0x4` | SspirAcquireCredentialsHandle      | `LsaAcquireCredentialsHandle`
 | `0x5` | SspirFreeCredentialsHandle         | `LsaFreeCredentialsHandle`
 | `0x6` | SspirProcessSecurityContext        | `LsaInitializeSecurityContext` and `LsaAcceptSecurityContext`

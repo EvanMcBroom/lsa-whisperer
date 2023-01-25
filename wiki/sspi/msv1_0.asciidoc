@@ -54,7 +54,7 @@ This dispatch routine caches logon information in the logon cache.
 MSV1_0 will check to make sure the client request came from the same process.
 
 ```
-msv1_0 -f CacheLogon --domain {name} --account {name} [--computer name] {--hash {value} | --pass {value}} [--mitlogon {upn}] [--suppcreds {data}] [--delete] [--smartcard]
+msv1_0 CacheLogon --domain {name} --account {name} [--computer name] {--hash {value} | --pass {value}} [--mitlogon {upn}] [--suppcreds {data}] [--delete] [--smartcard]
 ```
 
 === CacheLookup
@@ -63,7 +63,7 @@ msv1_0 -f CacheLogon --domain {name} --account {name} [--computer name] {--hash 
 For a cached smart card logon the issuer and subject name will be used as the user name and domain name, the credential type will be raw, and the credential data will be the SHA1 hash of the certificate.
 
 ```
-msv1_0 -f CacheLookup --account {name} [--domain name] --credtype {name} --cred {ascii hex}
+msv1_0 CacheLookup --account {name} [--domain name] --credtype {name} --cred {ascii hex}
 ```
 
 === CacheLookupEx
@@ -72,7 +72,7 @@ This dispatch routine looks up the local logon in the cache.
 The `SeTcbPrivilege` is required.
 
 ```
-msv1_0 -f CacheLookupEx ...
+msv1_0 CacheLookupEx ...
 ```
 
 === ChangeCachedPassword
@@ -83,7 +83,7 @@ For example, RAS handles changing the passwords on the domain but then needs to 
 The `SeTcbPrivilege` is required if you are changing the cached entry for someone else.
 
 ```
-msv1_0 -f ChangeCachedPassword --domain {name} --account {name} --oldpass {password} --newpass {password}
+msv1_0 ChangeCachedPassword --domain {name} --account {name} --oldpass {password} --newpass {password}
 ```
 
 === ChangePassword
@@ -97,7 +97,7 @@ Clear the credentials in the local NTLM logon cache.
 The `SeTcbPrivilege` is required.
 
 ```
-msv1_0 -f ClearCachedCredentials
+msv1_0 ClearCachedCredentials
 ```
 
 === DecryptDpapiMasterKey
@@ -105,7 +105,7 @@ msv1_0 -f ClearCachedCredentials
 ...
 
 ```
-msv1_0 -f DecryptDpapiMasterKey ...
+msv1_0 DecryptDpapiMasterKey ...
 ```
 
 === DeleteTbalSecrets
@@ -113,7 +113,7 @@ msv1_0 -f DecryptDpapiMasterKey ...
 Clear the Trusted Boot Auto-Logon (TBAL) secrets in the System vault.<sup>2</sup>
 
 ```
-msv1_0 -f DeleteTbalSecrets
+msv1_0 DeleteTbalSecrets
 ```
 
 === DeriveCredential
@@ -123,7 +123,7 @@ The `--sha1v2` argument specifies to use the SHA1 OWF password instead of the NT
 The `SeTcbPrivilege` may be required when specifying an id for another logon session but still need to verify that.
 
 ```
-msv1_0 -f DeriveCredential --luid {session id} [--sha1v2] --message {ascii hex}
+msv1_0 DeriveCredential --luid {session id} [--sha1v2] --message {ascii hex}
 ```
 
 === EnumerateUsers
@@ -132,7 +132,7 @@ Enumerates all interactive, service, and batch logons managed by MSV1_0.
 The machine account logon will not be included in the list.
 
 ```
-msv1_0 -f EnumerateUsers
+msv1_0 EnumerateUsers
 ```
 
 === GenericPassthrough
@@ -141,7 +141,7 @@ This dispatch routine passes any of the other dispatch routines to the domain co
 The authentication package on the domain controller may choose to reject certain dispatch requests.
 
 ```
-msv1_0 -d -f {function name} [function arguments]...
+msv1_0 -d {function name} [function arguments]...
 ```
 
 === GetCredentialKey
@@ -151,7 +151,7 @@ The keys will either be the NT and SHA OWF hashes or the SHA hash and the DPAPI 
 The `SeTcbPrivilege` is required and credential isolation must also not be enabled.
 
 ```
-msv1_0 -f GetCredentialKey --luid {session id}
+msv1_0 GetCredentialKey --luid {session id}
 ```
 
 === GetStrongCredentialKey
@@ -159,7 +159,7 @@ msv1_0 -f GetCredentialKey --luid {session id}
 ...
 
 ```
-msv1_0 -f GetStrongCredentialKey ...
+msv1_0 GetStrongCredentialKey ...
 ```
 
 === GetUserInfo
@@ -167,7 +167,7 @@ msv1_0 -f GetStrongCredentialKey ...
 Get information about a session id.
 
 ```
-msv1_0 -f GetUserInfo --luid {session id}
+msv1_0 GetUserInfo --luid {session id}
 ```
 
 === Lm20ChallengeRequest
@@ -176,7 +176,7 @@ Get a challenge that may be delivered to a host that initiated an NTLMv2 logon.
 Once a challenge response is received, it may be passed to `LsaLogonUser` with a `LogonType` of `MsV1_0Lm20Logon` to complete the logon.
 
 ```
-msv1_0 -f Lm20ChallengeRequest
+msv1_0 Lm20ChallengeRequest
 ```
 
 === ProvisionTbal
@@ -185,7 +185,7 @@ Provision the Trusted Boot Auto-Logon (TBAL) LSA secrets for a logon session.foo
 The host is required to be actively kernel debugged for the function to succeed.
 
 ```
-msv1_0 -f ProvisionTbal --luid {session id}
+msv1_0 ProvisionTbal --luid {session id}
 ```
 
 === SetProcessOption
@@ -203,7 +203,7 @@ The currently known set of process options include:
 MSV1_0 may internally check for one these options using `NtLmCheckProcessOption`.
 
 ```
-msv1_0 -f SetProcessOption --option {process option} [--disable]
+msv1_0 SetProcessOption --option {process option} [--disable]
 ```
 
 === SetThreadOption
@@ -213,7 +213,7 @@ The set of options are the same as with the `SetProcessOption` command but they 
 The `SeTcbPrivilege` is required.
 
 ```
-msv1_0 -f SetThreadOption --option {thread option} [--disable]
+msv1_0 SetThreadOption --option {thread option} [--disable]
 ```
 
 === TransferCred
@@ -222,7 +222,7 @@ Transfer data from one logon session to another logon session.
 The specific data that is transferred and privileges that may be required are still being determined.
 
 ```
-msv1_0 -f TransferCred --sluid {session id} --dluid {session id}
+msv1_0 TransferCred --sluid {session id} --dluid {session id}
 ```
 
 == Sub-authentication Packages

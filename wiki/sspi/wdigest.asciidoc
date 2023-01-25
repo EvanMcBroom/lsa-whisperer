@@ -30,5 +30,5 @@ If the provided data is valid the response will contain a session key and PAC fo
 Request data is marshalled as a `DIGEST_BLOB_REQUEST` with responses sent as `DIGEST_BLOB_RESPONSE`.
 
 ```
-wdigest -f VerifyDigest ...
+wdigest VerifyDigest ...
 ```
