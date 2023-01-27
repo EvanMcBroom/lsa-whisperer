@@ -57,7 +57,7 @@ namespace Wdigest {
         // Place group info here for LogonUser
     } VERIFY_DIGEST_RESPONSE, *PVERIFY_DIGEST_RESPONSE;
 
-    class Proxy : public Sspi {
+    class Proxy {
     public:
         Proxy(const std::shared_ptr<Lsa>& lsa);
 

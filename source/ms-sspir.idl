@@ -4,22 +4,43 @@ version(1.0),
 ]
 interface sspirpc {
 
-typedef unsigned long LSA_OPERATIONAL_MODE;
-typedef unsigned long* PLSA_OPERATIONAL_MODE;
+typedef long LSA_OPERATIONAL_MODE_LPC;
+typedef long* PLSA_OPERATIONAL_MODE_LPC;
 
-typedef struct Struct_128_t {
-	long StructMember0;
-	long StructMember1;
-	[unique][size_is(StructMember0)] char* StructMember2;
-} Struct_128_t;
+// Security buffer types
+#define SECBUFFER_EMPTY             0   // Undefined, replaced by provider
+#define SECBUFFER_DATA              1   // Packet data
+#define SECBUFFER_TOKEN             2   // Security token
+#define SECBUFFER_PKG_PARAMS        3   // Package specific parameters
+#define SECBUFFER_MISSING           4   // Missing Data indicator
+#define SECBUFFER_EXTRA             5   // Extra data
+#define SECBUFFER_STREAM_TRAILER    6   // Security Trailer
+#define SECBUFFER_STREAM_HEADER     7   // Security Header
+#define SECBUFFER_NEGOTIATION_INFO  8   // Hints from the negotiation pkg
+#define SECBUFFER_PADDING           9   // non-data padding
+#define SECBUFFER_STREAM            10  // whole encrypted message
+#define SECBUFFER_MECHLIST          11  
+#define SECBUFFER_MECHLIST_SIGNATURE 12 
+#define SECBUFFER_TARGET            13
+#define SECBUFFER_CHANNEL_BINDINGS  14
+#define SECBUFFER_ATTRMASK          		0xF0000000
+#define SECBUFFER_READONLY          		0x80000000  // Buffer is read-only, no checksum
+#define SECBUFFER_READONLY_WITH_CHECKSUM	0x10000000  // Buffer is read-only, and checksummed
+#define SECBUFFER_RESERVED          		0x60000000  // Flags reserved to security system
 
-typedef struct Struct_144_t {
-	long StructMember0;
-	unsigned __int3264 StructMember1;
-	unsigned __int3264 StructMember2;
-	struct Struct_128_t StructMember3;
+typedef struct _SEC_BUFFER_LPC {
+    unsigned long cbBuffer;
+    unsigned long BufferType;
+	[unique][size_is(cbBuffer)] char* pvBuffer;
+} SEC_BUFFER_LPC;
+
+typedef struct _SPMCallbackAPI {
+	unsigned long Type;
+	unsigned __int3264 CallbackFunction;
+	unsigned __int3264 Argument1;
+	SEC_BUFFER_LPC Argument2;
 	char StructMember4;
-} Struct_144_t;
+} SPMCallbackAPI;
 
 typedef struct Struct_172_t {
 	hyper StructMember0;
@@ -55,7 +76,7 @@ typedef struct Struct_316_t {
 typedef struct Struct_446_t {
 	long StructMember0;
 	long StructMember1;
-	[unique] [size_is(StructMember1)] struct Struct_128_t* StructMember2;
+	[unique] [size_is(StructMember1)] SEC_BUFFER_LPC* StructMember2;
 } Struct_446_t;
 
 typedef struct Struct_466_t {
@@ -187,14 +208,17 @@ typedef struct Struct_1206_t {
 // procnum 0:
 // Creates a connection record to the Security Package Manager (SPM or SPMGR)
 // LogonProcessName: optional. May be anything
-// ClientMode: optional. 0, 1, and 2 are valid
+// ClientMode: optional
+//   - 0: not specified
+//   - 1: kernel client
+//   - 2: user client
 // LsaConnectUntrusted -> CreateRpcConnection
 long SspirConnectRpc(
-    [in][unique][string] char* LogonProcessName, 
+    [in][unique][string] unsigned char* LogonProcessName, 
     [in]long ClientMode, 
     [out]long *PackageCount, 
-    [out]PLSA_OPERATIONAL_MODE OperationalMode, 
-    [out][context_handle] void** phConnect);
+    [out]PLSA_OPERATIONAL_MODE_LPC OperationalMode, 
+    [out][context_handle] void** LsaHandle);
 
 // procnum 1:
 // LsaDeregisterLogonProcess -> DisconnectRpcConnection
@@ -212,10 +236,10 @@ long SspirDisconnectRpc2(
 long SspirCallRpc(
     [in][context_handle] void* LsaHandle, 
     [in]long SubmitBufferLength, 
-    [in][size_is(SubmitBufferLength)] char *ProtocolSubmitBuffer, 
-    [out]long *ReturnBufferLength, 
-    [out][ref][size_is(, *ReturnBufferLength)] char **ProtocolReturnBuffer, 
-    [out]struct Struct_144_t* arg_5);
+    [in][size_is(SubmitBufferLength)] char* ProtocolSubmitBuffer, 
+    [out]long* ReturnBufferLength, 
+    [out][ref][size_is(, *ReturnBufferLength)] char** ProtocolReturnBuffer, 
+    [out]SPMCallbackAPI* Args);
 
 // procnum 4:
 // LsaAcquireCredentialsHandle -> SspipAcquireCredentialsHandle
@@ -232,8 +256,8 @@ long SspirAcquireCredentialsHandle(
     [in]long arg_9, 
     [out]struct Struct_304_t* arg_10, 
     [out]struct Struct_316_t* arg_11, 
-    [in]struct Struct_144_t* arg_12, 
-    [out]struct Struct_144_t* arg_13);
+    [in]SPMCallbackAPI* arg_12, 
+    [out]SPMCallbackAPI* arg_13);
 
 // procnum 5:
 // LsaFreeCredentialsHandle -> SspipFreeCredentialsHandle
@@ -241,7 +265,7 @@ long SspirFreeCredentialsHandle(
     [in][context_handle] void* LsaHandle, 
     [in]struct Struct_172_t* arg_1, 
     [in]struct Struct_304_t* arg_2, 
-    [out]struct Struct_144_t* arg_3);
+    [out]SPMCallbackAPI* arg_3);
 
 // procnum 6:
 // LsaInitializeSecurityContext -> SspipProcessSecurityContext
@@ -249,25 +273,25 @@ long SspirFreeCredentialsHandle(
 long SspirProcessSecurityContext(
     [in][context_handle] void* LsaHandle, 
     [in]struct Struct_172_t* arg_1, 
-    [in][out]long *arg_2, 
+    [in][out]long* arg_2, 
     [in][unique]struct Struct_222_t* arg_3, 
     [in]struct Struct_304_t* arg_4, 
     [in]struct Struct_304_t* arg_5, 
     [in]long arg_6, 
     [in]long arg_7, 
-    [in][unique][size_is(32)] char *arg_8, 
+    [in][unique][size_is(32)] char* arg_8, 
     [in][unique][string] wchar_t* arg_9, 
     [in]struct Struct_446_t* arg_10, 
     [in][ref]struct Struct_516_t* arg_11, 
     [out]struct Struct_446_t* arg_12, 
     [out][ref]struct Struct_516_t** arg_13, 
-    [out]struct Struct_128_t* arg_14, 
+    [out] SEC_BUFFER_LPC* arg_14, 
     [out]struct Struct_304_t* arg_15, 
-    [out]long *arg_16, 
+    [out]long* arg_16, 
     [out]struct Struct_316_t* arg_17, 
-    [out]long *arg_18, 
-    [in]struct Struct_144_t* arg_19, 
-    [out]struct Struct_144_t* arg_20);
+    [out]long* arg_18, 
+    [in]SPMCallbackAPI* arg_19, 
+    [out]SPMCallbackAPI* arg_20);
 
 // procnum 7:
 // LsaDeleteSecurityContext -> SspipDeleteSecurityContext
@@ -275,7 +299,7 @@ long SspirDeleteSecurityContext(
     [in][context_handle] void* LsaHandle, 
     [in]struct Struct_172_t* arg_1, 
     [in]struct Struct_304_t* arg_2, 
-    [out]struct Struct_144_t* arg_3);
+    [out]SPMCallbackAPI* arg_3);
 
 // procnum 8:
 // I believe: QueryCredentialsAttributes (Schannel) -> SspirNegQueryContextAttributes
@@ -323,12 +347,12 @@ long SspirLogonUser(
     [in]struct Struct_1016_t* arg_6, 
     [in][unique]struct Struct_1144_t* arg_7, 
     [in]long arg_8, 
-    [in][unique][size_is(32)] char *arg_9, 
-    [out]long *arg_10, 
-    [out]hyper *arg_11, 
-    [out]long *arg_12, 
+    [in][unique][size_is(32)] char* arg_9, 
+    [out]long* arg_10, 
+    [out]hyper* arg_11, 
+    [out]long* arg_12, 
     [in][out]struct Struct_248_t* arg_13, 
-    [out]hyper *arg_14, 
+    [out]hyper* arg_14, 
     [out]struct Struct_1206_t* arg_15);
 
 // procnum d:
@@ -338,7 +362,7 @@ long SspirLookupAccountSid(
     [in]struct Struct_1072_t* arg_2, 
     [out]struct Struct_222_t* arg_3, 
     [out]struct Struct_222_t* arg_4, 
-    [out][ref]/* enum_16 */ short *arg_5);
+    [out][ref]/* enum_16 */ short* arg_5);
 
 // procnum e:
 // GetUserNameExW -> SspipGetUserName
@@ -347,11 +371,11 @@ long SspirGetUserName(
     [in]struct Struct_172_t* arg_1, 
     [in]long arg_2, 
     [out]struct Struct_222_t* arg_3, 
-    [out]long *arg_4);
+    [out]long* arg_4);
 
 // procnum f:
 // InitState
 long SspirGetInprocDispatchTable(
     [in][context_handle] void* LsaHandle, 
-    [out]unsigned __int3264 *arg_1);
+    [out]unsigned __int3264* arg_1);
 } 

@@ -1,0 +1,6 @@
+[
+    implicit_handle(handle_t SspiRpcImplicitHandle)
+]
+interface sspirpc
+{
+}

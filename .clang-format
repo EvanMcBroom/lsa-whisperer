@@ -2,7 +2,7 @@
 # Built using:
 # https://zed0.co.uk/clang-format-configurator/
 AccessModifierOffset: '0'
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: DontAlign
 AlignConsecutiveMacros: 'true'
 AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
@@ -33,6 +33,7 @@ BreakStringLiterals: 'false'
 ColumnLimit: '0'
 CompactNamespaces: 'false'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+ContinuationIndentWidth: '4'
 Cpp11BracedListStyle: 'false'
 FixNamespaceComments: 'false'
 IncludeBlocks: Preserve

@@ -17,7 +17,7 @@ The project does not rely on any library manager to allow it to be easily built 
 ```
 git clone --recurse-submodules https://github.com/EvanMcBroom/lsa-whisperer.git
 cd lsa-whisperer/builds
-cmake .. -A x64
+cmake .. -A {Win32 | x64}
 cmake --build .
 ```
 

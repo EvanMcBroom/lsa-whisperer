@@ -78,7 +78,7 @@ function(target_idl_sources)
             # https://docs.microsoft.com/en-us/windows/win32/midl/midl-command-line-reference
             # Note: These RPC stubs use a C extension. Your CMake project or target MUST include the C
             # language for these stubs to participate builds
-            "\"${MIDL_PATH}\" /env ${MIDL_ENV} /W1 /char signed /target \"NT61\" ${MIDL_STUB_OPTIONS} /nologo "
+            "\"${MIDL_PATH}\" /app_config /env ${MIDL_ENV} /W1 /char signed /target \"NT61\" ${MIDL_STUB_OPTIONS} /nologo "
             "/cstub \"${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.c\" "
             "/sstub \"${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.c\" "
             "/h \"${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.h\" "

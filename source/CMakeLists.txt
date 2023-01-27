@@ -3,6 +3,7 @@ target_sources(sspi PRIVATE
     lsa.cpp
     msv1_0.cpp
     pku2u.cpp
+    rpc.cpp
     schannel.cpp
     wdigest.cpp
 )
