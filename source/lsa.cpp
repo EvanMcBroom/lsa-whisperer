@@ -56,7 +56,7 @@ Lsa::Lsa(std::ostream& out, bool useRpc)
     auto version{ NtVersion() };
     // The SSPI RPC interface is only supported on Windows 7 and above
     if (useRpc && version.first >= 6 && !(version.first == 6 && version.second == 0)) {
-        this->sspi = std::make_unique<Sspi>(L"127.0.0.1");
+        this->sspi = std::make_unique<Sspi>(L"");
         this->connected = this->sspi->Connected();
     }
     // Use LSA APIs to connect if connecting via RPC failed or the host is older than Windows 7
@@ -166,8 +166,13 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
 }
 
 Sspi::Sspi(const std::wstring& server) {
-    // this->rpcUuid = Rpc::String(static_cast<RPC_CLIENT_INTERFACE*>(sspirpc_v1_0_c_ifspec)->InterfaceId.SyntaxGUID);
-    this->rpcClient = std::make_unique<Rpc::Client>(alpcPort);
+    this->rpcUuid = Rpc::String(static_cast<RPC_CLIENT_INTERFACE*>(sspirpc_v1_0_c_ifspec)->InterfaceId.SyntaxGUID);
+    if (server.length()) {
+        this->rpcClient = std::make_unique<Rpc::Client>(server, this->rpcProtoSeq, this->rpcPipe, this->rpcUuid);
+    }
+    else {
+        this->rpcClient = std::make_unique<Rpc::Client>(alpcPort);
+    }
     this->rpcClient->Bind(&SspiRpcImplicitHandle);
     if (this->rpcClient->IsBound()) {
         auto status{ SspirConnectRpc(nullptr, static_cast<long>(ApApi::ClientMode::Usermode), &this->packageCount, &this->operationalMode, &this->lsaHandle) };

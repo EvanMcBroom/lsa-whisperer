@@ -52,6 +52,9 @@ private:
     long operationalMode{ 0 };
     long packageCount{ 0 };
     std::unique_ptr<Rpc::Client> rpcClient{ nullptr };
+    RPC_WSTR rpcPipe{ reinterpret_cast<RPC_WSTR>(L"\\PIPE\\LSASS") };
+    RPC_WSTR rpcProtoSeq{ reinterpret_cast<RPC_WSTR>(L"ncacn_np") };
+    RPC_WSTR rpcUuid{ nullptr };
 
     // Call a security package manager (SPM) API
     NTSTATUS CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output);
