@@ -102,9 +102,12 @@ NOTE: The only meaningful functions that vmwsu_v1_0 implements is `SpGetInfo` an
 
 === SSPI Security
 
-Windows does not register any security callback function when registering the interface. It does however make a low box security descriptor that it applies when registering the endpoint and the interface. The RPC server only does verification for if the client is local for operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandle`).
+Windows does not register any security callback function when registering the interface. It does however make a low box security descriptor that it applies when registering the endpoint and the interface.
+Unfortunately, the interface is also registered with the flag `RPC_IF_ALLOW_LOCAL_ONLY` which prevents LSA whisperer from using it remotely.
 
-It is also worth noting that the RPC runtime has a hardcoded list of interfaces that are exempt from many of the mitigations that have existed since NT 5.2 to prevent anonymous RPC calls from remote clients.
+The RPC server will additionally check if the client is local before issuing operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done by the server and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandler`).
+
+It is also worth noting that the RPC runtime has a hardcoded list of interfaces that are exempt from multiple security mitigations that have existed since NT 5.2.
 The list is named `RpcVerifierExemptInterfaces` and may be found by viewing its use in the `rpcrt4.dll!IsInterfaceExempt` function.
 The list includes multiple RPC servers that have been previously abused such as https://github.com/Wh04m1001/DFSCoerce[MS-DFSNM], https://github.com/topotam/PetitPotam[MS-EFSR], https://learn.microsoft.com/en-us/security-updates/securitybulletins/2008/ms08-067[MS-SRVS], and https://www.akamai.com/blog/security-research/cold-hard-cache-bypassing-rpc-with-cache-abuse[MS-WKST].
 

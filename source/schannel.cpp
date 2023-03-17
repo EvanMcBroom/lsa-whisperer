@@ -16,7 +16,7 @@ namespace Schannel {
         : lsa(lsa) {
     }
 
-    bool Proxy::CacheInfo(PLUID logonId, const std::wstring & serverName, ULONG flags) const {
+    bool Proxy::CacheInfo(PLUID logonId, const std::wstring& serverName, ULONG flags) const {
         SESSION_CACHE_INFO_REQUEST request;
         request.LogonId.LowPart = logonId->LowPart;
         request.LogonId.HighPart = logonId->HighPart;
@@ -103,16 +103,16 @@ namespace Schannel {
         }
         return false;
     }
-    
+
     bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheInfo: {
-            return false;// CacheInfo();
+            return false; // CacheInfo();
         }
         case PROTOCOL_MESSAGE_TYPE::LookupCert:
-            return false;// LookupCert();
+            return false; // LookupCert();
         case PROTOCOL_MESSAGE_TYPE::LookupExternalCert: {
-            return false;// return LookupExternalCert();
+            return false; // return LookupExternalCert();
         }
         case PROTOCOL_MESSAGE_TYPE::PerfmonInfo: {
             DWORD flags{ 0 }; // The flags are ignored by the dispatch function
@@ -143,37 +143,25 @@ namespace Schannel {
         char* command{ "schannel" };
         cxxopts::Options options{ command };
 
-        options.add_options("Schannel Function")
-            ("f,function", "Function name", cxxopts::value<std::string>())
-            ;
+        options.add_options("Schannel Function")("f,function", "Function name", cxxopts::value<std::string>());
 
         // Arguments for functions that require additional inputs
-        options.add_options("Function arguments")
-            ("server", "Server name", cxxopts::value<std::string>())
-            ("luid", "Logon session", cxxopts::value<long long>())
-            ("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))
-            ("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))
-            ("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))
-            ("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))
-            ("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"))
-            ;
+        options.add_options("Function arguments")("server", "Server name", cxxopts::value<std::string>())("luid", "Logon session", cxxopts::value<long long>())("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"));
 
         try {
             std::vector<char*> argv;
             std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
                 argv.push_back(const_cast<char*>(arg.data()));
-                });
+            });
             if (argv.size() > 1) {
                 auto function{ argv[1] };
                 auto result{ options.parse(argv.size(), argv.data()) };
                 Proxy proxy{ std::make_shared<Lsa>(out) };
                 HandleFunction(out, proxy, function, result);
-            }
-            else {
+            } else {
                 out << options.help() << std::endl;
             }
-        }
-        catch (const std::exception& exception) {
+        } catch (const std::exception& exception) {
             out << exception.what() << std::endl;
         }
     }

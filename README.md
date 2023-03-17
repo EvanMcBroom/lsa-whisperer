@@ -21,7 +21,11 @@ cmake .. -A {Win32 | x64}
 cmake --build .
 ```
 
-The `lsa-whisperer` utility will link against the static version of the runtime library which allows the tool to run as a standalone program on other hosts.
+By default CMake will build both the `lsa-whisperer` utility and the `sspi` static library it uses.
+The `lsa-whisperer` utility will be linked against the static version of the runtime library which will allow the tool to run as a standalone program on other hosts.
+
+If [Doxygen](https://www.doxygen.nl/) and the Python modules in the `docs/requirements.txt` file are installed, then CMake will build the documentation for the `sspi` static library as well.
+
 
 ## Open Source
 
@@ -31,8 +35,14 @@ Thank you to the following packages that are used in LSA Whisperer directly or i
     - [AmokHuginnsson/replxx](https://github.com/AmokHuginnsson/replxx) (license - [Multiple](https://github.com/AmokHuginnsson/replxx/blob/master/LICENSE.md))
     - [Neargye/magic_enum](https://github.com/Neargye/magic_enum) (license - [MIT](https://github.com/Neargye/magic_enum/blob/master/LICENSE))
     - [jarro2783/cxxopts](https://github.com/jarro2783/cxxopts) (license - [MIT](https://github.com/jarro2783/cxxopts/blob/master/LICENSE))
-- Wiki
+- Docs
     - [Andrew-Chen-Wang/github-wiki-action](https://github.com/Andrew-Chen-Wang/github-wiki-action) (license - [Apache 2.0](https://github.com/Andrew-Chen-Wang/github-wiki-action/blob/master/LICENSE))
+    - [breathe-doc/breathe](https://github.com/breathe-doc/breathe) (license - [BSD](https://github.com/breathe-doc/breathe/blob/master/LICENSE))
+    - [doxygen/doxygen](https://github.com/doxygen/doxygen) (license - [GPL 2.0](https://github.com/doxygen/doxygen/blob/master/LICENSE))
+    - [sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx) (license - [BSD](https://github.com/sphinx-doc/sphinx/blob/master/LICENSE))
+    - [readthedocs/sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) (license - [MIT](https://github.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE))
+- Python Module
+    - [pybind/pybind11](https://github.com/pybind/pybind11) (license - [BSD](https://github.com/pybind/pybind11/blob/master/LICENSE))
 
 Thank you to the following related projects that greatly helped in the development of LSA Whisperer:
 

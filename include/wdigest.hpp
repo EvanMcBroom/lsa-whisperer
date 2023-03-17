@@ -9,7 +9,7 @@ namespace Wdigest {
         VerifyDigest = 0x1a,
         VerifyDigestResponse = 0x0a,
     };
-    
+
     enum class Flags : USHORT {
         CracknameOnDc = 0x01, // The username and realm needs to be cracked
         AuthzidProvided = 0x02,
@@ -72,7 +72,7 @@ namespace Wdigest {
         template<typename _Request, typename _Response>
         bool CallPackagePassthrough(const _Request& submitBuffer, _Response** returnBuffer) const;
     };
-    
-	bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options);
-	void Parse(std::ostream& out, const std::vector<std::string>& args);
+
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options);
+    void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

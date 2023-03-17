@@ -12,8 +12,8 @@
 #pragma warning(disable : 28252)
 
 extern "C" {
-    void* __RPC_USER midl_user_allocate(_In_ size_t size);
-    void __RPC_USER midl_user_free(void* pBuffer);
+void* __RPC_USER midl_user_allocate(_In_ size_t size);
+void __RPC_USER midl_user_free(void* pBuffer);
 }
 
 namespace Rpc {
@@ -26,16 +26,20 @@ namespace Rpc {
         bool Bind(RPC_BINDING_HANDLE* binding);
         template<class Func, class... Args>
         error_status_t Call(Func function, Args... arguments) const {
-            RpcTryExcept
-                return function(arguments...);
+            RpcTryExcept return function(arguments...);
             RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-                std::wcerr << L"Exception during RPC function call for binding: " << reinterpret_cast<LPWSTR>(this->stringBinding) << std::endl;
-                std::wcerr << GetExceptionCode() << std::endl;
-                return GetExceptionCode();
+                    std::wcerr
+                << L"Exception during RPC function call for binding: " << reinterpret_cast<LPWSTR>(this->stringBinding) << std::endl;
+            std::wcerr << GetExceptionCode() << std::endl;
+            return GetExceptionCode();
             RpcEndExcept
         }
-        auto IsBound() const { return bound; }
-        auto RpcString() const { return stringBinding; }
+        auto IsBound() const {
+            return bound;
+        }
+        auto RpcString() const {
+            return stringBinding;
+        }
 
     private:
         RPC_BINDING_HANDLE* binding{ nullptr };

@@ -37,7 +37,7 @@ namespace Schannel {
     typedef struct _CERT_NAME_INFO {
         ULONG IssuerOffset; // ASN1 encoded
         ULONG IssuerLength;
-    } CERT_NAME_INFO, * PCERT_NAME_INFO;
+    } CERT_NAME_INFO, *PCERT_NAME_INFO;
 
     typedef struct _CERT_LOGON_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::LookupCert };
@@ -47,7 +47,7 @@ namespace Schannel {
         ULONG Flags;
         ULONG CertCount;
         CERT_NAME_INFO NameInfo[1];
-    } CERT_LOGON_REQUEST, * PCERT_LOGON_REQUEST;
+    } CERT_LOGON_REQUEST, *PCERT_LOGON_REQUEST;
 
     typedef struct _CERT_LOGON_RESPONSE {
         ULONG MessageType;
@@ -58,7 +58,7 @@ namespace Schannel {
         ULONG OffsetDomain;
         ULONG DomainLength;
         ULONG Align;
-    } CERT_LOGON_RESPONSE, * PCERT_LOGON_RESPONSE;
+    } CERT_LOGON_RESPONSE, *PCERT_LOGON_RESPONSE;
 
     typedef struct _EXTERNAL_CERT_LOGON_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::LookupExternalCert };
@@ -66,19 +66,19 @@ namespace Schannel {
         ULONG CredentialType;
         PVOID Credential;
         ULONG Flags;
-    } EXTERNAL_CERT_LOGON_REQUEST, * PEXTERNAL_CERT_LOGON_REQUEST;
+    } EXTERNAL_CERT_LOGON_REQUEST, *PEXTERNAL_CERT_LOGON_REQUEST;
 
     typedef struct _EXTERNAL_CERT_LOGON_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         ULONG Length;
         HANDLE UserToken;
         ULONG Flags;
-    } EXTERNAL_CERT_LOGON_RESPONSE, * PEXTERNAL_CERT_LOGON_RESPONSE;
+    } EXTERNAL_CERT_LOGON_RESPONSE, *PEXTERNAL_CERT_LOGON_RESPONSE;
 
     typedef struct _PERFMON_INFO_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::PerfmonInfo };
         DWORD Flags;
-    } PERFMON_INFO_REQUEST, * PPERFMON_INFO_REQUEST;
+    } PERFMON_INFO_REQUEST, *PPERFMON_INFO_REQUEST;
 
     typedef struct _PERFMON_INFO_RESPONSE {
         DWORD ClientCacheEntries;
@@ -89,21 +89,21 @@ namespace Schannel {
         DWORD ServerHandshakesPerSecond;
         DWORD ClientReconnectsPerSecond;
         DWORD ServerReconnectsPerSecond;
-    } PERFMON_INFO_RESPONSE, * PPERFMON_INFO_RESPONSE;
+    } PERFMON_INFO_RESPONSE, *PPERFMON_INFO_RESPONSE;
 
     typedef struct _PURGE_SESSION_CACHE_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::PurgeCache };
         LUID LogonId;
         UNICODE_STRING ServerName;
         DWORD Flags;
-    } PURGE_SESSION_CACHE_REQUEST, * PPURGE_SESSION_CACHE_REQUEST;
+    } PURGE_SESSION_CACHE_REQUEST, *PPURGE_SESSION_CACHE_REQUEST;
 
     typedef struct _SESSION_CACHE_INFO_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::CacheInfo };
         LUID LogonId;
         UNICODE_STRING ServerName;
         DWORD Flags;
-    } SESSION_CACHE_INFO_REQUEST, * PSESSION_CACHE_INFO_REQUEST;
+    } SESSION_CACHE_INFO_REQUEST, *PSESSION_CACHE_INFO_REQUEST;
 
     typedef struct _SESSION_CACHE_INFO_RESPONSE {
         DWORD CacheSize;
@@ -113,18 +113,17 @@ namespace Schannel {
         DWORD ExpiredZombies;
         DWORD AbortedZombies;
         DWORD DeletedZombies;
-    } SESSION_CACHE_INFO_RESPONSE, * PSESSION_CACHE_INFO_RESPONSE;
-
+    } SESSION_CACHE_INFO_RESPONSE, *PSESSION_CACHE_INFO_RESPONSE;
 
     typedef struct _STREAM_SIZES_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::StreamSizes };
-    } STREAM_SIZES_REQUEST, * PSTREAM_SIZES_REQUEST;
+    } STREAM_SIZES_REQUEST, *PSTREAM_SIZES_REQUEST;
 
     typedef struct _STREAM_SIZES_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         DWORD unknown[3];
-    } STREAM_SIZES_RESPONSE, * PSTREAM_SIZES_RESPONSE;
-    
+    } STREAM_SIZES_RESPONSE, *PSTREAM_SIZES_RESPONSE;
+
     class Proxy {
     public:
         Proxy(const std::shared_ptr<Lsa>& lsa);
@@ -145,7 +144,7 @@ namespace Schannel {
         template<typename _Request, typename _Response>
         bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const;
     };
-    
-	bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
-	void Parse(std::ostream& out, const std::vector<std::string>& args);
+
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
+    void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

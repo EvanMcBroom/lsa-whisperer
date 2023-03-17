@@ -1,18 +1,20 @@
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h> // Must be included before Ntsecapi
+
 #include <Ntsecapi.h>
-#include <spm.hpp>
 #include <iomanip>
 #include <iostream>
 #include <lsa.hpp>
 #include <msv1_0.hpp>
-#include <string>
 #include <ntstatus.h>
+#include <spm.hpp>
+#include <string>
 
 namespace {
     typedef enum _THREAD_INFORMATION_CLASS {
         ThreadBasicInformation,
-    } THREAD_INFORMATION_CLASS, * PTHREAD_INFORMATION_CLASS;
+    } THREAD_INFORMATION_CLASS,
+        *PTHREAD_INFORMATION_CLASS;
 
     typedef struct _THREAD_BASIC_INFORMATION {
         NTSTATUS ExitStatus;
@@ -21,7 +23,25 @@ namespace {
         KAFFINITY AffinityMask;
         KPRIORITY Priority;
         KPRIORITY BasePriority;
-    } THREAD_BASIC_INFORMATION, * PTHREAD_BASIC_INFORMATION;
+    } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
+
+    // Based off of:
+    // http://support.microsoft.com/kb/259693
+    std::string FormatNtStatus(NTSTATUS status) {
+        HMODULE library{ LoadLibraryW(L"NTDLL.DLL") };
+        if (library) {
+            LPSTR message{ nullptr };
+            auto error { RtlNtStatusToDosError(status) };
+            if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, library, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&message), 0, nullptr)) {
+                std::string messageString{ message };
+                LocalFree(message);
+                return messageString;
+            }
+            // Free loaded dll module and decrease its reference count.
+            FreeLibrary(library);
+        }
+        return {};
+    }
 
     std::pair<DWORD, DWORD> NtVersion() {
         auto GetDword{
@@ -84,8 +104,7 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
         NTSTATUS status;
         if (useRpc) {
             status = this->sspi->LsaLookupAuthenticationPackage(&packageName, &authPackage);
-        }
-        else {
+        } else {
             status = LsaLookupAuthenticationPackage(this->lsaHandle, &packageName, &authPackage);
         }
         if (SUCCEEDED(status)) {
@@ -97,8 +116,7 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
             NTSTATUS status;
             if (useRpc) {
                 status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
-            }
-            else {
+            } else {
                 status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
             }
             if (SUCCEEDED(status)) {
@@ -106,19 +124,17 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
                     OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
                     *returnBuffer = returnBuffer2;
                     result = true;
-                }
-                else {
+                } else {
                     out << "OutputData[0]: nullptr" << std::endl;
                     *returnBuffer = nullptr;
                     LsaFreeReturnBuffer(returnBuffer);
                 }
-                out << "ProtocolStatus: 0x" << protocolStatus << std::endl << std::endl;
+                out << "ProtocolStatus: 0x" << protocolStatus << std::endl
+                    << std::endl;
+            } else {
+                out << "Error: 0x" << status << " - " << FormatNtStatus(status) << std::endl;
             }
-            else {
-                out << "Error: 0x" << status << std::endl;
-            }
-        }
-        else {
+        } else {
             out << "Error: Could not find authentication package " << package << std::endl;
         }
     }
@@ -126,11 +142,7 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
 }
 
 bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const {
-    auto requestSize{ sizeof(MSV1_0_PASSTHROUGH_REQUEST)
-        + (domainName.size() + 1) * sizeof(wchar_t)
-        + (packageName.size() + 1) * sizeof(wchar_t)
-        + data.size()
-    };
+    auto requestSize{ sizeof(MSV1_0_PASSTHROUGH_REQUEST) + (domainName.size() + 1) * sizeof(wchar_t) + (packageName.size() + 1) * sizeof(wchar_t) + data.size() };
 
     auto request{ reinterpret_cast<Msv1_0::PASSTHROUGH_REQUEST*>(malloc(requestSize)) };
     std::memset(request, '\0', requestSize);
@@ -165,23 +177,17 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
     return false;
 }
 
-Sspi::Sspi(const std::wstring& server) {
-    this->rpcUuid = Rpc::String(static_cast<RPC_CLIENT_INTERFACE*>(sspirpc_v1_0_c_ifspec)->InterfaceId.SyntaxGUID);
-    if (server.length()) {
-        this->rpcClient = std::make_unique<Rpc::Client>(server, this->rpcProtoSeq, this->rpcPipe, this->rpcUuid);
-    }
-    else {
-        this->rpcClient = std::make_unique<Rpc::Client>(alpcPort);
-    }
-    this->rpcClient->Bind(&SspiRpcImplicitHandle);
+Sspi::Sspi(const std::wstring& portName) {
+    this->RpcBind(portName);
     if (this->rpcClient->IsBound()) {
         auto status{ SspirConnectRpc(nullptr, static_cast<long>(ApApi::ClientMode::Usermode), &this->packageCount, &this->operationalMode, &this->lsaHandle) };
         this->connected = NT_SUCCESS(status);
     }
 }
 
-Sspi::Sspi(const std::wstring& server, const std::string& logonProcessName) {
-    if (logonProcessName.length() <= ApApi::MaxLogonProcNameLength()) {
+Sspi::Sspi(const std::wstring& portName, const std::string& logonProcessName) {
+    this->RpcBind(portName);
+    if (this->rpcClient->IsBound() && logonProcessName.length() <= ApApi::MaxLogonProcNameLength()) {
         unsigned char message[ApApi::MaxLogonProcNameLength() + 1] = { 0 };
         std::memcpy(message, logonProcessName.data(), logonProcessName.size());
         auto status{ SspirConnectRpc(message, 0, &this->packageCount, &this->operationalMode, &this->lsaHandle) };
@@ -230,10 +236,12 @@ NTSTATUS Sspi::LsaLookupAuthenticationPackage(PSTRING PackageName, PULONG Authen
         size_t outputMessageSize{ 0 };
         SpmApi::MESSAGE* output{ nullptr };
         auto status{ this->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
-        *AuthenticationPackage = output->ApiCallRequest.Args.ApArguments.LookupPackage.AuthenticationPackage;
-        auto result{ NT_SUCCESS(status) ? output->ApiCallRequest.scRet : status };
-        MIDL_user_free(output);
-        return result;
+        if (NT_SUCCESS(status)) {
+            *AuthenticationPackage = output->ApiCallRequest.Args.ApArguments.LookupPackage.AuthenticationPackage;
+            status = output->ApiCallRequest.scRet;
+            MIDL_user_free(output);
+        }
+        return status;
     }
     return 0xC0000106; // STATUS_NAME_TOO_LONG
 }
@@ -242,6 +250,8 @@ NTSTATUS Sspi::CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** outp
     THREAD_BASIC_INFORMATION basicInformation = { 0 };
     auto status{ NtQueryInformationThread(GetCurrentThread(), static_cast<THREADINFOCLASS>(ThreadBasicInformation), &basicInformation, sizeof(basicInformation), nullptr) };
     if (NT_SUCCESS(status)) {
+        // Only the process id is checked in lsasrv!SspiExCallRpc
+        // The thread id is not actually checked, but we set it anyway to match the normal Win32 APIs
         message->ClientId.UniqueProcess = basicInformation.ClientId.UniqueProcess;
         message->ClientId.UniqueThread = basicInformation.ClientId.UniqueThread;
         *outputSize = 0;
@@ -251,6 +261,14 @@ NTSTATUS Sspi::CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** outp
         status = SspirCallRpc(this->lsaHandle, message->u1.s1.TotalLength, reinterpret_cast<unsigned char*>(message), reinterpret_cast<long*>(outputSize), reinterpret_cast<unsigned char**>(output), &args);
     }
     return status;
+}
+
+void Sspi::RpcBind(const std::wstring& portName) {
+    if (portName.length()) {
+        this->alpcPort = portName;
+    }
+    this->rpcClient = std::make_unique<Rpc::Client>(reinterpret_cast<RPC_WSTR>(this->alpcPort.data()));
+    this->rpcClient->Bind(&SspiRpcImplicitHandle);
 }
 
 void OutputHex(std::ostream& out, const std::string& data) {

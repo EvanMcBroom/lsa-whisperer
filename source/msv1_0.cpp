@@ -19,13 +19,13 @@ namespace {
         PSID result{ nullptr };
         auto library{ LoadLibraryW(L"ntdll.dll") };
         if (library) {
-            using PRtlCopySid = NTSTATUS(*)(ULONG DestinationSidLength, PSID DestinationSid, PSID SourceSid);
+            using PRtlCopySid = NTSTATUS (*)(ULONG DestinationSidLength, PSID DestinationSid, PSID SourceSid);
             auto RtlCopySid{ reinterpret_cast<PRtlCopySid>(GetProcAddress(library, "RtlCopySid")) };
-            using PRtlLengthRequiredSid = ULONG(*)(ULONG SubAuthorityCount);
+            using PRtlLengthRequiredSid = ULONG (*)(ULONG SubAuthorityCount);
             auto RtlLengthRequiredSid{ reinterpret_cast<PRtlLengthRequiredSid>(GetProcAddress(library, "RtlLengthRequiredSid")) };
-            using PRtlSubAuthorityCountSid = PUCHAR(*)(PSID pSid);
+            using PRtlSubAuthorityCountSid = PUCHAR (*)(PSID pSid);
             auto RtlSubAuthorityCountSid{ reinterpret_cast<PRtlSubAuthorityCountSid>(GetProcAddress(library, "RtlSubAuthorityCountSid")) };
-            using PRtlSubAuthoritySid = LPDWORD(*)(PSID pSid, DWORD nSubAuthority);
+            using PRtlSubAuthoritySid = LPDWORD (*)(PSID pSid, DWORD nSubAuthority);
             auto RtlSubAuthoritySid{ reinterpret_cast<PRtlSubAuthoritySid>(GetProcAddress(library, "RtlSubAuthoritySid")) };
             if (RtlCopySid && RtlLengthRequiredSid && RtlSubAuthorityCountSid && RtlSubAuthoritySid) {
                 auto subAuthorityCount{ *(RtlSubAuthorityCountSid(DomainId)) }; // Should not fail
@@ -48,7 +48,7 @@ namespace {
 }
 
 namespace Msv1_0 {
-    Proxy::Proxy(const std::shared_ptr<Lsa>&lsa)
+    Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
@@ -157,7 +157,7 @@ namespace Msv1_0 {
         //    std::memcpy(response, data.data(), sizeof(decltype(response)));
         //}
         //else {
-            result = CallPackage(request, &response);
+        result = CallPackage(request, &response);
         //}
         if (result) {
             auto count{ response->NumberOfLoggedOnUsers };
@@ -166,7 +166,8 @@ namespace Msv1_0 {
             for (size_t index{ 0 }; index < count; index++) {
                 lsa->out << "0x" << reinterpret_cast<LARGE_INTEGER*>(response->LogonSessions)[index].QuadPart << ((index < (count - 1)) ? ", " : "");
             }
-            lsa->out << std::endl << "EnumHandles          : ";
+            lsa->out << std::endl
+                     << "EnumHandles          : ";
             for (size_t index{ 0 }; index < count; index++) {
                 lsa->out << "0x" << reinterpret_cast<ULONG*>(response->EnumHandles)[index] << ((index < (count - 1)) ? ", " : "");
             }
@@ -189,8 +190,7 @@ namespace Msv1_0 {
             if (*reinterpret_cast<DWORD*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH + MSV1_0_OWF_PASSWORD_LENGTH])) {
                 std::string dpapiKey(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_CREDENTIAL_KEY_LENGTH);
                 OutputHex(lsa->out, "DpapiKey", dpapiKey);
-            }
-            else {
+            } else {
                 std::string ntOwf(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_OWF_PASSWORD_LENGTH);
                 OutputHex(lsa->out, "NtOwf", ntOwf);
             }
@@ -289,11 +289,6 @@ namespace Msv1_0 {
         return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
     }
 
-    //template<typename _Request, typename _Response>
-    //bool Proxy::CallPackage(const _Request&& submitBuffer, _Response** returnBuffer) {
-    //    return CallPackage(std::forward<_Request>(submitBuffer), 0, returnBuffer);
-    //}
-
     bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
@@ -305,8 +300,7 @@ namespace Msv1_0 {
             std::vector<byte> hash;
             if (options.count("hash")) {
                 hash = HexDecode(out, converter.from_bytes(options["hash"].as<std::string>()));
-            }
-            else {
+            } else {
                 hash = CalculateNtOwfPassword(options["pass"].as<std::string>());
             }
             auto logonInfo{ Cache::GetLogonInfo(domain, account, computer, hash) };
@@ -392,34 +386,9 @@ namespace Msv1_0 {
     void Parse(std::ostream& out, const std::vector<std::string>& args) {
         char* command{ "msv1_0" };
         cxxopts::Options options{ command };
-
-        options.add_options()
-            ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"))
-            ;
         options.allow_unrecognised_options();
-
-        // Arguments for functions that require additional inputs
-        options.add_options("Function arguments")
-            ("account", "Account name", cxxopts::value<std::string>())
-            ("computer", "Computer name", cxxopts::value<std::string>())
-            ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
-            ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
-            ("dluid", "Destination logon session", cxxopts::value<long long>())
-            ("domain", "Domain name", cxxopts::value<std::string>())
-            ("hash", "Asciihex hash", cxxopts::value<std::string>())
-            ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
-            ("luid", "Logon session", cxxopts::value<long long>())
-            ("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())
-            ("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())
-            ("newpass", "New password", cxxopts::value<std::string>())
-            ("oldpass", "Old password", cxxopts::value<std::string>())
-            ("option", "Process option", cxxopts::value<std::string>())
-            ("pass", "Password", cxxopts::value<std::string>())
-            ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
-            ("sluid", "Source logon session", cxxopts::value<long long>())
-            ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
-            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
-            ;
+        options.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
+        options.add_options("Function arguments")("account", "Account name", cxxopts::value<std::string>())("computer", "Computer name", cxxopts::value<std::string>())("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<long long>())("domain", "Domain name", cxxopts::value<std::string>())("hash", "Asciihex hash", cxxopts::value<std::string>())("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))("luid", "Logon session", cxxopts::value<long long>())("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())("newpass", "New password", cxxopts::value<std::string>())("oldpass", "Old password", cxxopts::value<std::string>())("option", "Process option", cxxopts::value<std::string>())("pass", "Password", cxxopts::value<std::string>())("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<long long>())("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
 
         try {
             std::vector<char*> argv;
@@ -431,16 +400,14 @@ namespace Msv1_0 {
                 auto result{ options.parse(argv.size(), argv.data()) };
                 Proxy proxy{ std::make_shared<Lsa>(out) };
                 HandleFunction(out, proxy, function, result);
-            }
-            else {
+            } else {
                 out << options.help() << std::endl;
             }
-        }
-        catch (const std::exception& exception) {
+        } catch (const std::exception& exception) {
             out << exception.what() << std::endl;
         }
     }
-    
+
     namespace Cache {
         std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::wstring& computerName, const std::vector<byte>& hash, ULONG logonType) {
             auto logonInfo{ std::make_unique<Netlogon::INTERACTIVE_INFO>() };
@@ -473,8 +440,7 @@ namespace Msv1_0 {
             if (unicodeString.Length > 0) {
                 std::memcpy(dataPtr, upn.data(), upn.length() * sizeof(wchar_t));
                 unicodeString.Buffer = (PWSTR)(reinterpret_cast<byte*>(supplementalCreds.data()) - reinterpret_cast<byte*>(dataPtr));
-            }
-            else {
+            } else {
                 unicodeString.Buffer = nullptr;
             }
             std::memcpy(supplementalCreds.data(), &unicodeString, sizeof(UNICODE_STRING));
@@ -485,8 +451,7 @@ namespace Msv1_0 {
             if (unicodeString.Length > 0) {
                 std::memcpy(dataPtr, domainName.data(), domainName.length() * sizeof(wchar_t));
                 unicodeString.Buffer = (PWSTR)(reinterpret_cast<byte*>(supplementalCreds.data()) - reinterpret_cast<byte*>(dataPtr));
-            }
-            else {
+            } else {
                 unicodeString.Buffer = nullptr;
             }
             std::memcpy(dataPtr - sizeof(UNICODE_STRING), &unicodeString, sizeof(UNICODE_STRING));

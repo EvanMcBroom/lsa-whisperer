@@ -1,6 +1,7 @@
 #pragma once
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
+
 #include <Ntsecapi.h>
 #include <cxxopts.hpp>
 #include <lsa.hpp>
@@ -36,7 +37,7 @@ namespace Msv1_0 {
         TryCacheFirst = 0x10
     };
 
-    // Redefine MSV1_0_PROTOCOL_MESSAGE_TYPE to ensure all members are included
+    // Redefines MSV1_0_PROTOCOL_MESSAGE_TYPE to ensure all members are included
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
         Lm20ChallengeRequest = 0,
         Lm20GetChallengeResponse,
@@ -72,7 +73,7 @@ namespace Msv1_0 {
         PVOID SupplementalCacheData;
         ULONG SupplementalCacheDataLength;
         ULONG RequestFlags{ 0 };
-    } CACHE_LOGON_REQUEST, * PCACHE_LOGON_REQUEST;
+    } CACHE_LOGON_REQUEST, *PCACHE_LOGON_REQUEST;
 
     typedef struct _CACHE_LOOKUP_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::CacheLookup };
@@ -81,23 +82,23 @@ namespace Msv1_0 {
         CacheLookupCredType CredentialType;
         ULONG CredentialInfoLength;
         UCHAR CredentialSubmitBuffer[1]; // in-place array of length CredentialInfoLength
-    } CACHE_LOOKUP_REQUEST, * PCACHE_LOOKUP_REQUEST;
+    } CACHE_LOOKUP_REQUEST, *PCACHE_LOOKUP_REQUEST;
 
     typedef struct _CACHE_LOOKUP_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         PVOID ValidationInformation;
         PVOID SupplementalCacheData;
         ULONG SupplementalCacheDataLength;
-    } CACHE_LOOKUP_RESPONSE, * PCACHE_LOOKUP_RESPONSE;
+    } CACHE_LOOKUP_RESPONSE, *PCACHE_LOOKUP_RESPONSE;
 
     typedef struct _CACHE_LOOKUP_EX_REQUEST : public CACHE_LOOKUP_REQUEST {
         _CACHE_LOOKUP_EX_REQUEST() {
             this->MessageType = PROTOCOL_MESSAGE_TYPE::CacheLookupEx;
         }
-    } CACHE_LOOKUP_EX_REQUEST, * PCACHE_LOOKUP_EX_REQUEST;
+    } CACHE_LOOKUP_EX_REQUEST, *PCACHE_LOOKUP_EX_REQUEST;
 
     typedef struct _CACHE_LOOKUP_EX_RESPONSE : CACHE_LOOKUP_RESPONSE {
-    } CACHE_LOOKUP_EX_RESPONSE, * PCACHE_LOOKUP_EX_RESPONSE;
+    } CACHE_LOOKUP_EX_RESPONSE, *PCACHE_LOOKUP_EX_RESPONSE;
 
     typedef struct _CHANGE_PASSWORD_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ChangePassword };
@@ -106,27 +107,27 @@ namespace Msv1_0 {
         UNICODE_STRING OldPassword;
         UNICODE_STRING NewPassword;
         BOOLEAN Impersonating;
-    } CHANGE_PASSWORD_REQUEST, * PCHANGE_PASSWORD_REQUEST;
+    } CHANGE_PASSWORD_REQUEST, *PCHANGE_PASSWORD_REQUEST;
 
     typedef struct _CHANGE_PASSWORD_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         BOOLEAN PasswordInfoValid;
         DOMAIN_PASSWORD_INFORMATION DomainPasswordInfo;
-    } CHANGE_PASSWORD_RESPONSE, * PCHANGE_PASSWORD_RESPONSE;
+    } CHANGE_PASSWORD_RESPONSE, *PCHANGE_PASSWORD_RESPONSE;
 
     typedef struct _CHANGE_CACHED_PASSWORD_REQUEST : public CHANGE_PASSWORD_REQUEST {
         _CHANGE_CACHED_PASSWORD_REQUEST() {
             this->MessageType = PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword;
         }
-    } CHANGE_CACHED_PASSWORD_REQUEST, * PCHANGE_CACHED_PASSWORD_REQUEST;
+    } CHANGE_CACHED_PASSWORD_REQUEST, *PCHANGE_CACHED_PASSWORD_REQUEST;
 
     typedef struct _CHANGE_CACHED_PASSWORD_RESPONSE : CHANGE_PASSWORD_RESPONSE {
-    } CHANGE_CACHED_PASSWORD_RESPONSE, * PCHANGE_CACHED_PASSWORD_RESPONSE;
+    } CHANGE_CACHED_PASSWORD_RESPONSE, *PCHANGE_CACHED_PASSWORD_RESPONSE;
 
     typedef struct _CLEAR_CACHED_CREDENTIALS_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials };
-    } CLEAR_CACHED_CREDENTIALS_REQUEST, * PCLEAR_CACHED_CREDENTIALS_REQUEST;
-    
+    } CLEAR_CACHED_CREDENTIALS_REQUEST, *PCLEAR_CACHED_CREDENTIALS_REQUEST;
+
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey };
         // OWF password type. 0 for NtOwf, 1 for ShaOwf
@@ -137,17 +138,17 @@ namespace Msv1_0 {
         DWORD unknown3;
         DWORD unknown4; // used for something
         DWORD unknown5[7];
-    } DECRYPT_DPAPI_MASTER_KEY_REQUEST, * PDECRYPT_DPAPI_MASTER_KEY_REQUEST;
+    } DECRYPT_DPAPI_MASTER_KEY_REQUEST, *PDECRYPT_DPAPI_MASTER_KEY_REQUEST;
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         DWORD Reserved;
         UCHAR Key[];
-    } DECRYPT_DPAPI_MASTER_KEY_RESPONSE, * PDECRYPT_DPAPI_MASTER_KEY_RESPONSE;
+    } DECRYPT_DPAPI_MASTER_KEY_RESPONSE, *PDECRYPT_DPAPI_MASTER_KEY_RESPONSE;
 
     typedef struct _DELETE_TBAL_SECRETS_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DeleteTbalSecrets };
-    } DELETE_TBAL_SECRETS_REQUEST, * PDELETE_TBAL_SECRETS_REQUEST;
+    } DELETE_TBAL_SECRETS_REQUEST, *PDELETE_TBAL_SECRETS_REQUEST;
 
     typedef struct _DERIVECRED_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DeriveCredential };
@@ -155,30 +156,30 @@ namespace Msv1_0 {
         ULONG DeriveCredType;
         ULONG DeriveCredInfoLength;
         UCHAR DeriveCredSubmitBuffer[1];
-    } DERIVECRED_REQUEST, * PDERIVECRED_REQUEST;
+    } DERIVECRED_REQUEST, *PDERIVECRED_REQUEST;
 
     typedef struct _DERIVECRED_RESPONSE {
         MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
         ULONG DeriveCredInfoLength;
         UCHAR DeriveCredReturnBuffer[1];
-    } DERIVECRED_RESPONSE, * PDERIVECRED_RESPONSE;
+    } DERIVECRED_RESPONSE, *PDERIVECRED_RESPONSE;
 
     typedef struct _ENUMUSERS_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::EnumerateUsers };
-    } ENUMUSERS_REQUEST, * PENUMUSERS_REQUEST;
+    } ENUMUSERS_REQUEST, *PENUMUSERS_REQUEST;
 
     typedef struct _ENUMUSERS_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         ULONG NumberOfLoggedOnUsers;
         PLUID LogonSessions;
         PULONG EnumHandles;
-    } ENUMUSERS_RESPONSE, * PENUMUSERS_RESPONSE;
+    } ENUMUSERS_RESPONSE, *PENUMUSERS_RESPONSE;
 
     typedef struct _GET_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetCredentialKey };
         LUID LogonSession;
         UCHAR Reserved[16] = { 0 };
-    } GET_CREDENTIAL_KEY_REQUEST, * PGET_CREDENTIAL_KEY_REQUEST;
+    } GET_CREDENTIAL_KEY_REQUEST, *PGET_CREDENTIAL_KEY_REQUEST;
 
     typedef struct _GET_CREDENTIAL_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
@@ -187,12 +188,12 @@ namespace Msv1_0 {
         DWORD DataLength;
         // The NT and SHA OWF passwords or the DPAPI key
         UCHAR CredentialData[1];
-    } GET_CREDENTIAL_KEY_RESPONSE, * PGET_CREDENTIAL_KEY_RESPONSE;
+    } GET_CREDENTIAL_KEY_RESPONSE, *PGET_CREDENTIAL_KEY_RESPONSE;
 
     typedef struct _GETUSERINFO_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetUserInfo  };
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetUserInfo };
         LUID LogonSession;
-    } GETUSERINFO_REQUEST, * PGETUSERINFO_REQUEST;
+    } GETUSERINFO_REQUEST, *PGETUSERINFO_REQUEST;
 
     typedef struct _GETUSERINFO_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
@@ -201,7 +202,7 @@ namespace Msv1_0 {
         UNICODE_STRING LogonDomainName;
         UNICODE_STRING LogonServer;
         SECURITY_LOGON_TYPE LogonType;
-    } GETUSERINFO_RESPONSE, * PGETUSERINFO_RESPONSE;
+    } GETUSERINFO_RESPONSE, *PGETUSERINFO_RESPONSE;
 
     typedef struct _GET_STRONG_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey };
@@ -212,21 +213,21 @@ namespace Msv1_0 {
         DWORD unknown5; // 0x38
         DWORD unknown6; // 0x40
         GUID unknown7; // 0x48
-    } GET_STRONG_CREDENTIAL_KEY_REQUEST, * PGET_STRONG_CREDENTIAL_KEY_REQUEST;
+    } GET_STRONG_CREDENTIAL_KEY_REQUEST, *PGET_STRONG_CREDENTIAL_KEY_REQUEST;
 
     typedef struct _GET_STRONG_CREDENTIAL_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         // ...
-    } GET_STRONG_CREDENTIAL_KEY_RESPONSE, * PGET_STRONG_CREDENTIAL_KEY_RESPONSE;
+    } GET_STRONG_CREDENTIAL_KEY_RESPONSE, *PGET_STRONG_CREDENTIAL_KEY_RESPONSE;
 
     typedef struct _LM20_CHALLENGE_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest };
-    } LM20_CHALLENGE_REQUEST, * PLM20_CHALLENGE_REQUEST;
+    } LM20_CHALLENGE_REQUEST, *PLM20_CHALLENGE_REQUEST;
 
     typedef struct _LM20_CHALLENGE_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         UCHAR ChallengeToClient[8]; // challenge length
-    } LM20_CHALLENGE_RESPONSE, * PLM20_CHALLENGE_RESPONSE;
+    } LM20_CHALLENGE_RESPONSE, *PLM20_CHALLENGE_RESPONSE;
 
     typedef struct _PASSTHROUGH_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GenericPassthrough };
@@ -235,38 +236,38 @@ namespace Msv1_0 {
         ULONG DataLength;
         PUCHAR LogonData;
         ULONG Pad{ 0 };
-    } PASSTHROUGH_REQUEST, * PPASSTHROUGH_REQUEST;
+    } PASSTHROUGH_REQUEST, *PPASSTHROUGH_REQUEST;
 
     typedef struct _PASSTHROUGH_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         ULONG Pad{ 0 };
         ULONG DataLength;
         PUCHAR ValidationData; // The response data
-    } PASSTHROUGH_RESPONSE, * PPASSTHROUGH_RESPONSE;
+    } PASSTHROUGH_RESPONSE, *PPASSTHROUGH_RESPONSE;
 
     typedef struct _PROVISION_TBAL_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ProvisionTbal };
         LUID LogonSession;
-    } PROVISION_TBAL_REQUEST, * PPROVISION_TBAL_REQUEST;
+    } PROVISION_TBAL_REQUEST, *PPROVISION_TBAL_REQUEST;
 
     typedef struct _SETPROCESSOPTION_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::SetProcessOption };
         ULONG ProcessOptions{ 0 };
         BOOLEAN DisableOptions;
-    } SETPROCESSOPTION_REQUEST, * PSETPROCESSOPTION_REQUEST;
+    } SETPROCESSOPTION_REQUEST, *PSETPROCESSOPTION_REQUEST;
 
     typedef struct _SETTHREADOPTION_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::SetProcessOption };
         ULONG ThreadOptions{ 0 };
         BOOLEAN DisableOptions; // correct
         BOOLEAN unknown; // something else
-    } SETTHREADOPTION_REQUEST, * PSETTHREADOPTION_REQUEST;
+    } SETTHREADOPTION_REQUEST, *PSETTHREADOPTION_REQUEST;
 
     typedef struct _TRANSFER_CRED_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::TransferCred };
         LUID SourceLuid;
         LUID DestinationLuid;
-    } TRANSFER_CRED_REQUEST, * PTRANSFER_CRED_REQUEST;
+    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {
     public:
@@ -302,8 +303,8 @@ namespace Msv1_0 {
         bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
 
-	bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
-	void Parse(std::ostream& out, const std::vector<std::string>& args);
+    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
+    void Parse(std::ostream& out, const std::vector<std::string>& args);
 
     namespace Cache {
         std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::wstring& computerName, const std::vector<byte>& hash, ULONG logonType = RPC_C_AUTHN_GSS_KERBEROS);

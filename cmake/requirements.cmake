@@ -1,25 +1,18 @@
-set(CMAKE_SKIP_INSTALL_RULES ON)
-
 include(FetchContent)
 
-FetchContent_Declare(
-  cxxopts
-  GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/cxxopts
-  GIT_TAG v3.0.0
-)
+# Do not use FetchContent to pin repos to a specific version
+# The git submodules they reference are already pinned to a version
+FetchContent_Declare(cxxopts GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/cxxopts)
+FetchContent_Declare(magic_enum GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/magic_enum)
+FetchContent_Declare(replxx GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/replxx)
 
-FetchContent_Declare(
-  magic_enum
-  GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/magic_enum
-  GIT_TAG v0.8.1
-)
-
-FetchContent_Declare(
-  replxx
-  GIT_REPOSITORY ${PROJECT_SOURCE_DIR}/libraries/replxx
-  GIT_TAG release-0.0.4
-)
-
+# Set the build type for replxx to not output noisy messages
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release) 
+  set(BUILD_TYPE_SET TRUE) 
+endif()
 FetchContent_MakeAvailable(cxxopts magic_enum replxx)
-
-set(CMAKE_SKIP_INSTALL_RULES OFF)
+if(DEFINED BUILD_TYPE_SET)
+  unset(CMAKE_BUILD_TYPE)
+  unset(BUILD_TYPE_SET)
+endif()

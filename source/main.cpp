@@ -1,8 +1,10 @@
-﻿#include <cli.hpp>
+﻿#include <cloudap.hpp>
+#include <cli.hpp>
 #include <fstream>
 #include <iomanip>
 #include <replxx.hxx>
 #include <msv1_0.hpp>
+#include <negotiate.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
 #include <magic_enum.hpp>
@@ -46,12 +48,16 @@ int main(int argc_, char** argv_) {
 	});
 	cli.AddCommand(".help", Help);
 	cli.AddCommand(".history", History);
-	cli.AddCommand("msv1_0", CommandFactory(Msv1_0::Parse));
+	cli.AddCommand("cloudap", CommandFactory(Cloudap::Parse));
+    cli.AddCommand("msv1_0", CommandFactory(Msv1_0::Parse));
+    cli.AddCommand("negotiate", CommandFactory(Negotiate::Parse));
 	cli.AddCommand("pku2u", CommandFactory(Pku2u::Parse));
 	cli.AddCommand("schannel", CommandFactory(Schannel::Parse));
 	cli.AddExitCommand(".exit");
 	cli.AddExitCommand(".quit");
-	cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
+	cli.AddSubCommandCompletions("cloudap", SubCommands<Cloudap::PROTOCOL_MESSAGE_TYPE>());
+    cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
+    cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());
 	cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());
 	cli.AddSubCommandCompletions("schannel", SubCommands<Schannel::PROTOCOL_MESSAGE_TYPE>());
 	cli.Start();

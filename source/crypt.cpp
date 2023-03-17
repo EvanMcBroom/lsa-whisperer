@@ -26,8 +26,7 @@ std::vector<byte> HashMessage(const std::wstring& algoType, const std::vector<BY
                     auto dataToHash{ message };
                     if (
                         BCryptHashData(hashHandle, dataToHash.data(), dataToHash.size(), 0) == STATUS_SUCCESS &&
-                        BCryptFinishHash(hashHandle, hash, hashSize, 0) == STATUS_SUCCESS
-                        ) {
+                        BCryptFinishHash(hashHandle, hash, hashSize, 0) == STATUS_SUCCESS) {
                         result.resize(hashSize);
                         std::memcpy(result.data(), hash, hashSize);
                     }

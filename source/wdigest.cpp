@@ -31,7 +31,7 @@ namespace Wdigest {
         }
         return false;
     }
-    
+
     bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(options["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::VerifyDigest:
@@ -46,9 +46,6 @@ namespace Wdigest {
         char* command{ "wdigest" };
         cxxopts::Options options{ command };
 
-        options.add_options("Wdigest Function")
-            ("f,function", "Function name", cxxopts::value<std::string>())
-            ;
-
+        options.add_options("Wdigest Function")("f,function", "Function name", cxxopts::value<std::string>());
     }
 }

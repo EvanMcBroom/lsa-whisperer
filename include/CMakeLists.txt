@@ -2,17 +2,22 @@ target_include_directories(sspi PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/nt
 )
-target_sources(sspi PRIVATE
-    crypt.hpp
-    lsa.hpp
-    msv1_0.hpp
-    netlogon.hpp
-    pku2u.hpp
-    rpc.hpp
-    schannel.hpp
-    spm.hpp
-    wdigest.hpp
+# Absolute paths are used to allow the USE_STAMP_FILE option to be used with doxygen_add_docs
+set(SSPI_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/cloudap.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/crypt.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/lsa.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/netlogon.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pku2u.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rpc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/schannel.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/spm.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wdigest.hpp
 )
+set(SSPI_HEADERS ${SSPI_HEADERS} PARENT_SCOPE)
+target_sources(sspi PRIVATE ${SSPI_HEADERS})
 target_precompile_headers(sspi PUBLIC <windows.h>)
 
 target_sources(lsa-whisperer PRIVATE

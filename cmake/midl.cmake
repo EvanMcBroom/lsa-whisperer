@@ -104,7 +104,9 @@ function(target_idl_sources)
         execute_process(
             COMMAND "${MIDL_BATCH_FILE}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMAND_ECHO STDOUT
+            # Redirect the output and error to suppress them
+            OUTPUT_VARIABLE COMMAND_OUTPUT
+            ERROR_VARIABLE COMMAND_ERROR
         )
         # Overwrite the generated ms-dtyp.h file to prevent error due to the redefinition of Windows base types
         configure_file(${CMAKE_CURRENT_FUNCTION_LIST_DIR}/ms-dtyp.h.in ${CMAKE_CURRENT_BINARY_DIR}/ms-dtyp.h)

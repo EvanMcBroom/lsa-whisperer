@@ -136,10 +136,10 @@ Todo.
 
 == Plugins
 
-Cloudap currently only supports 2 plugins which facilitate logons to Azure AD (AAD) and a Microsoft Account (MSA).
-The internal names and IDs for interacting with the plugins are provided here.
+Cloudap currently only supports 2 plugins to facilitate user logons with Azure AD (AAD) and Microsoft Accounts (MSA).
+The internal names and IDs for interacting with these plugins may be found in the registry and are provided here for convenience.
 
-.Plugins
+.Plugins (HKLM\SOFTWARE\Microsoft\IdentityStore\Providers)
 [%header]
 |===
 | Plugin Name           | GUID                                   | File

@@ -1,7 +1,7 @@
 ---
 # Built using:
 # https://zed0.co.uk/clang-format-configurator/
-AccessModifierOffset: '0'
+AccessModifierOffset: '-4'
 AlignAfterOpenBracket: DontAlign
 AlignConsecutiveMacros: 'true'
 AlignConsecutiveAssignments: 'false'
