@@ -15,6 +15,8 @@ set(SSPI_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/schannel.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/spm.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wdigest.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/kerberos.hpp
+
 )
 set(SSPI_HEADERS ${SSPI_HEADERS} PARENT_SCOPE)
 target_sources(sspi PRIVATE ${SSPI_HEADERS})

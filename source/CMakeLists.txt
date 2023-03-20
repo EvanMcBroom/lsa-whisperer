@@ -9,6 +9,8 @@ set(SSPI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/rpc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/schannel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wdigest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/kerberos.cpp
+
 )
 set(SSPI_SOURCES ${SSPI_SOURCES} PARENT_SCOPE)
 target_sources(sspi PRIVATE ${SSPI_SOURCES})
