@@ -9,25 +9,16 @@
 #include <magic_enum.hpp>
 #include <kerberos.hpp>
 
-
-    //
-    // LogonId, ImpersonationLevel, Impersonating, Restricted
-    // are considered valid CachedTokenInfo is TRUE
-    //
-
-  
-
 namespace Kerberos {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
-    bool Proxy::KerbQueryTicketCache(PLUID luid) const {
-        KERB_QUERY_TKT_CACHE_REQUEST request;
+    bool Proxy::QueryTicketCache(PLUID luid) const {
+        QUERY_TKT_CACHE_REQUEST request;
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
         void* response{ nullptr };
-        //return CallPackage(request, &response);
         auto result{ CallPackage(request, &response) };
         if (result) {
             std::cout << "hehe";
@@ -46,10 +37,10 @@ namespace Kerberos {
 
      bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
-         case PROTOCOL_MESSAGE_TYPE::KerbQueryTicketCacheMessage:
+         case PROTOCOL_MESSAGE_TYPE::QueryTicketCache:
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.KerbQueryTicketCache(&luid);
+            return proxy.QueryTicketCache(&luid);
         
         default:
             out << "Unsupported function" << std::endl;
@@ -60,8 +51,6 @@ namespace Kerberos {
     void Parse(std::ostream& out, const std::vector<std::string>& args) {
         char* command{ "kerberos" };
         cxxopts::Options options{ command };
-
-        options.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
         options.allow_unrecognised_options();
 
         // Arguments for functions that require additional inputs

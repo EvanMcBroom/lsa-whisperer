@@ -9,66 +9,53 @@
 #include <string>
 #include <vector>
 
-
 namespace Kerberos {
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
-        KerbDebugRequestMessage = 0,
-        KerbQueryTicketCacheMessage,
-        KerbChangeMachinePasswordMessage,
-        KerbVerifyPacMessage,
-        KerbRetrieveTicketMessage,
-        KerbUpdateAddressesMessage,
-        KerbPurgeTicketCacheMessage,
-        KerbChangePasswordMessage,
-        KerbRetrieveEncodedTicketMessage,
-        KerbDecryptDataMessage,
-        KerbAddBindingCacheEntryMessage,
-        KerbSetPasswordMessage,
-        KerbSetPasswordExMessage,
-#if (_WIN32_WINNT == 0x0500)
-        KerbAddExtraCredentialsMessage = 17
-#endif
-#if (_WIN32_WINNT >= 0x0501)
-        KerbVerifyCredentialsMessage,
-        KerbQueryTicketCacheExMessage,
-        KerbPurgeTicketCacheExMessage,
-#endif
-#if (_WIN32_WINNT >= 0x0502)
-        KerbRefreshSmartcardCredentialsMessage,
-        KerbAddExtraCredentialsMessage,
-        KerbQuerySupplementalCredentialsMessage,
-#endif
-#if (_WIN32_WINNT >= 0x0600)
-        KerbTransferCredentialsMessage,
-        KerbQueryTicketCacheEx2Message,
-        KerbSubmitTicketMessage,
-        KerbAddExtraCredentialsExMessage,
-#endif
-#if (_WIN32_WINNT >= 0x0602)
-        KerbQueryKdcProxyCacheMessage,
-        KerbPurgeKdcProxyCacheMessage,
-        KerbQueryTicketCacheEx3Message,
-        KerbCleanupMachinePkinitCredsMessage,
-        KerbAddBindingCacheEntryExMessage,
-        KerbQueryBindingCacheMessage,
-        KerbPurgeBindingCacheMessage,
-        KerbPinKdcMessage,
-        KerbUnpinAllKdcsMessage,
-        KerbQueryDomainExtendedPoliciesMessage,
-        KerbQueryS4U2ProxyCacheMessage,
-#endif
-#if (_WIN32_WINNT >= 0x0A00)
-        KerbRetrieveKeyTabMessage,
-        KerbRefreshPolicyMessage,
-        KerbPrintCloudKerberosDebugMessage,
-#endif
+        DebugRequest = 0,
+        QueryTicketCache,
+        ChangeMachinePassword,
+        VerifyPac,
+        RetrieveTicket,
+        UpdateAddresses,
+        PurgeTicketCache,
+        ChangePassword,
+        RetrieveEncodedTicket,
+        DecryptData,
+        AddBindingCacheEntry,
+        SetPassword,
+        SetPasswordEx,
+        AddExtraCredentialsMessage = 17,
+        VerifyCredentials,
+        QueryTicketCacheEx,
+        PurgeTicketCacheEx,
+        RefreshSmartcardCredentials,
+        AddExtraCredentials,
+        QuerySupplementalCredentials,
+        TransferCredentials,
+        QueryTicketCacheEx2,
+        SubmitTicket,
+        AddExtraCredentialsEx,
+        QueryKdcProxyCache,
+        PurgeKdcProxyCache,
+        QueryTicketCacheEx3,
+        CleanupMachinePkinitCreds,
+        AddBindingCacheEntryEx,
+        QueryBindingCache,
+        PurgeBindingCache,
+        PinKdc,
+        UnpinAllKdcs,
+        QueryDomainExtendedPolicies,
+        QueryS4U2ProxyCache,
+        RetrieveKeyTab,
+        RefreshPolicy,
+        PrintCloudKerberosDebugMessage
     };
 
 
-    typedef struct _KERB_QUERY_TKT_CACHE_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::KerbQueryTicketCacheMessage };
+    typedef struct _QUERY_TKT_CACHE_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::QueryTicketCache };
         LUID LogonId;
-    } KERB_QUERY_TKT_CACHE_REQUEST, *PKERB_QUERY_TKT_CACHE_REQUEST;
+    } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
 
 
     class Proxy {
@@ -76,7 +63,7 @@ namespace Kerberos {
         Proxy(const std::shared_ptr<Lsa>& lsa);
             
         // A subset of the supported functions in Kerberos
-        bool KerbQueryTicketCache(PLUID luid) const;
+        bool QueryTicketCache(PLUID luid) const;
         // bool KerbChangeMachinePassword(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const;
     
         protected:
