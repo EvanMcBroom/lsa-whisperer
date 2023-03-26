@@ -1,9 +1,9 @@
-= DPA Security Package
+= DPA Client SSP
 
-The distributed password authentication (DPA) security package is a legacy SSP for NTLM.
+The distributed password authentication (DPA) client is a legacy SSP for NTLM.
 The package also makes references to the Remote Passphrase Authentication (RPA) scheme which was https://patents.google.com/patent/US6058480A/en[developed and used by CompuServe].
-It could not be identified when client versions of the security package were first released (e.g., `msapsspc.dll`), but they were removed in NT 6.0.
-The server version of the security package was not released with Windows (e.g., `msapssps.dll`), but it was bundled with the installation media for now discontinued Microsoft server products such as https://en.wikipedia.org/wiki/Microsoft_Site_Server[Site Server] and https://en.wikipedia.org/wiki/Microsoft_BackOffice_Server[BackOffice Server].
+It could not be identified when client versions of the package were first released (e.g., `msapsspc.dll`), but they were removed in NT 6.0.
+The server version of the package was not released with Windows (e.g., `msapssps.dll`), but it was bundled with the installation media for now discontinued Microsoft server products such as https://en.wikipedia.org/wiki/Microsoft_Site_Server[Site Server] and https://en.wikipedia.org/wiki/Microsoft_BackOffice_Server[BackOffice Server].
 
 The package was made to provide another option for users to authenticate over HTTP to the Microsoft Network (MSN), Site Server websites, BackOffice Servers, and other discontinued Microsoft solutions.
 

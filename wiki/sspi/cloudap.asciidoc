@@ -2,7 +2,7 @@ ifdef::env-github[]
 :note-caption: :pencil2:
 endif::[]
 
-= Cloud Authentication Package
+= Cloud AP
 :toc: macro
 
 The cloud authentication package (AP) supports logons with Azure and Microsoft accounts.

@@ -72,19 +72,19 @@ As such, the project will refer to SSPs that support both a security protocol an
 .Microsoft SSPs
 [%header]
 |===
-| Dll       | Name                                      | SP            | AP                 | RPC ID | RPC Authn
-| cloudap   | Cloud                                     | OAuth 2.0     | :heavy_check_mark: | 36     | `CLOUD_AP`
-| credssp   | Credential Delegation                     | TLS+SPNEGO    | :heavy_minus_sign: |        |
+| Dll       | Common Name                               | SP            | AP                 | RPC ID | RPC Authn
+| cloudap   | Cloud AP                                  | OAuth 2.0     | :heavy_check_mark: | 36     | `CLOUD_AP`
+| credssp   | Credential Delegation SSP                 | TLS+SPNEGO    | :heavy_minus_sign: |        |
 | kerberos  | Kerberos                                  | Kerberos      | :heavy_check_mark: | 16     | `GSS_KERBEROS`
-| livessp   | Live Security Package                     | ?             | :heavy_check_mark: | 32     | `LIVE_SSP`
-| msapsspc  | DPA Security Package                      | NTLM          | :heavy_minus_sign: | 17     | `DPA`
-| msnsspc   | MSN Security Package                      | NTLM          | :heavy_minus_sign: | 18     | `MSN`
+| livessp   | Live SSP                                  | ?             | :heavy_check_mark: | 32     | `LIVE_SSP`
+| msapsspc  | DPA Client                                | NTLM          | :heavy_minus_sign: | 17     | `DPA`
+| msnsspc   | MSN Client                                | NTLM          | :heavy_minus_sign: | 18     | `MSN`
 | msv1_0    | Microsoft Authentication Package v1.0     | NTLM          | :heavy_check_mark: | 10     | `WINNT`
 | negoexts  | Negotiate Extender                        | NEGOEX        | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
 | negotiate | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
 | pku2u     | Public Key User to User                   | PKU2U         | :heavy_check_mark: | 31     | `NEGO_PKU2U`
 | schannel  | Secure Channel                            | SSL/TLS       | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
-| tspkg     | Terminal Services                         |               | :heavy_check_mark: | 22     | ?
+| tspkg     | Terminal Services Package                 |               | :heavy_check_mark: | 22     | ?
 | wdigest   | Windows Digest                            | Digest Access | :heavy_check_mark: | 21     | `DIGEST`
 |===
 

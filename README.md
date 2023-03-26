@@ -5,8 +5,8 @@
 > Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for this tool and the research, support, and collaboration throughout its development.
 
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
-The initial release of LSA Whisperer includes support for the Microsoft Authentication Package v1.0 (msv1_0).
-Experimental support is also provided for Secure Channel (schannel) and Public Key Cryptography Based User-to-User (pku2u).
+The initial release of LSA Whisperer includes support for several msv1_0 messages.
+Initial support is also provided for cloudap, negotiate, pku2u, schannel, and kerberos messages as well.
 More authentication packages may be added in the future.
 
 ## Building
@@ -26,7 +26,6 @@ The `lsa-whisperer` utility will be linked against the static version of the run
 
 If [Doxygen](https://www.doxygen.nl/) and the Python modules in the `docs/requirements.txt` file are installed, then CMake will build the documentation for the `sspi` static library as well.
 
-
 ## Open Source
 
 Thank you to the following packages that are used in LSA Whisperer directly or indirectly:
@@ -41,8 +40,6 @@ Thank you to the following packages that are used in LSA Whisperer directly or i
     - [doxygen/doxygen](https://github.com/doxygen/doxygen) (license - [GPL 2.0](https://github.com/doxygen/doxygen/blob/master/LICENSE))
     - [sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx) (license - [BSD](https://github.com/sphinx-doc/sphinx/blob/master/LICENSE))
     - [readthedocs/sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) (license - [MIT](https://github.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE))
-- Python Module
-    - [pybind/pybind11](https://github.com/pybind/pybind11) (license - [BSD](https://github.com/pybind/pybind11/blob/master/LICENSE))
 
 Thank you to the following related projects that greatly helped in the development of LSA Whisperer:
 

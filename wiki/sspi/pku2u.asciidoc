@@ -26,3 +26,6 @@ Lsa Whisperer currently provides experimental support for some of these as pku2u
 | Id     | Message Type     | NT Version | Internal Function
 | `0x0f` | PurgeTicket      |            | Pku2uPurgeTicketEx
 | `0x14` | QueryTicketCache |            | Pku2uQueryTicketCacheEx2
+|===
+
+NOTE: The internal function will be located in `pku2u.dll`.

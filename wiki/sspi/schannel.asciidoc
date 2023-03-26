@@ -2,7 +2,7 @@ ifdef::env-github[]
 :note-caption: :pencil2:
 endif::[]
 
-= Schannel
+= Secure Channel
 :toc: macro
 
 Schannel is the security package (SP) and authentication package (AP) for the following protocols:
@@ -33,6 +33,8 @@ Lsa Whisperer currently provides experimental support for some of these as schan
 | `0x7` | `LookupEncodedCert`*  | ?          | `SslMapEncodedCredential`
 | `0x8` | `StreamSizes`         | ?          | `SslGetStreamSizes`
 |===
+
+NOTE: The internal function will be located in `schannel.dll`.
 
 Commands marked with an asterisk require the client to be trusted.
 The `LookupCert` command may also be alternatively called through the `SpCallPackagePassthrough` function.

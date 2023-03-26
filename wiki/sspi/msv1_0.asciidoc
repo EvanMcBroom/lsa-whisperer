@@ -46,8 +46,6 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 
 NOTE: The internal function for each message type will be located in `msv1_0.dll`.
 
-Each function may be called in Lsa Whisperer using `sspi msv1_0 --function <name>`.
-
 === CacheLogon
 
 This dispatch routine caches logon information in the logon cache.

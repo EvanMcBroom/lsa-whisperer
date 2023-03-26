@@ -2,9 +2,9 @@ ifdef::env-github[]
 :note-caption: :pencil2:
 endif::[]
 
-= Digest Authentication for Windows
+= Windows Digest
 
-Wdigest is an authentication package (AP) that was introduced in NT 5.1.
+Wdigest is an authentication package (AP) that was introduced in NT 5.1 to support digest authentication.
 It is also the security package (SP) for the https://en.wikipedia.org/wiki/Digest_access_authentication[Digest Access protocol].
 The package only supports a single protocol message which is only reachable using the `CallPackagePassthrough` function.
 Its `CallPackage` and `CallPackageUntrusted` functions are available but return `SEC_E_UNSUPPORTED_FUNCTION`.
@@ -20,8 +20,6 @@ The protocol messages that wdigest supports is not documented by Microsoft but i
 |===
 
 NOTE: The internal function will be located in `wdigest.dll`.
-
-The function may be called in Lsa Whisperer using `sspi wdigest --function <name>`.
 
 === VerifyDigest
 

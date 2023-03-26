@@ -24,4 +24,6 @@ Supporting negotiate commands is currently not a priority for Lsa Whisperer.
 | `0x3` | `EnumPackageNames`    | `>=?`      | `NetEnumPackageNamesCall` [sic]
 |===
 
-NOTE: The `EnumPackageNames` function prefix is likely a typo by a Microsoft developer and meant to be `Neg`.
+NOTE: The internal function will be located in `lsasrv.dll`.
+
+The `EnumPackageNames` function prefix is likely a typo by a Microsoft developer and meant to be `Neg`.

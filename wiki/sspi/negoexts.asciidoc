@@ -2,7 +2,7 @@ ifdef::env-github[]
 :note-caption: :pencil2:
 endif::[]
 
-= NegoExtender Security Package
+= Negotiate Extender (NegoExtender)
 :toc: macro
 
 NegoExtender is the security package (SP) for the SPNEGO Extended Negotiation (NEGOEX) protocol.

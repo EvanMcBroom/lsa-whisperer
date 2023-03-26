@@ -1,4 +1,4 @@
-= Credential Delegation Security Package
+= Credential Delegation SSP
 
 The credssp package implements a security protocol for delegating (e.g. transmitting) credentials from a client to a server for remote authentication.
 The client first establishes a TLS channel with the server.
