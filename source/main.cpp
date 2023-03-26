@@ -7,6 +7,7 @@
 #include <negotiate.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
+#include <kerberos.hpp>
 #include <magic_enum.hpp>
 #include <memory>
 #include <thread>
@@ -53,6 +54,7 @@ int main(int argc_, char** argv_) {
     cli.AddCommand("negotiate", CommandFactory(Negotiate::Parse));
 	cli.AddCommand("pku2u", CommandFactory(Pku2u::Parse));
 	cli.AddCommand("schannel", CommandFactory(Schannel::Parse));
+    cli.AddCommand("kerberos", CommandFactory(Kerberos::Parse));
 	cli.AddExitCommand(".exit");
 	cli.AddExitCommand(".quit");
 	cli.AddSubCommandCompletions("cloudap", SubCommands<Cloudap::PROTOCOL_MESSAGE_TYPE>());
@@ -60,6 +62,7 @@ int main(int argc_, char** argv_) {
     cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());
 	cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());
 	cli.AddSubCommandCompletions("schannel", SubCommands<Schannel::PROTOCOL_MESSAGE_TYPE>());
+    cli.AddSubCommandCompletions("kerberos", SubCommands<Kerberos::PROTOCOL_MESSAGE_TYPE>());
 	cli.Start();
 	return 0;
 }

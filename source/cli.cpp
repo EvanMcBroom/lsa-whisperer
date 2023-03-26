@@ -6,6 +6,7 @@
 #include <msv1_0.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
+#include <kerberos.hpp>
 #include <memory>
 
 using Replxx = replxx::Replxx;
