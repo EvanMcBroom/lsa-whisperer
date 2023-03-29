@@ -4,6 +4,7 @@
 #include <cxxopts.hpp>
 #include <lsa.hpp>
 #include <magic_enum.hpp>
+#include <msv1_0.hpp>
 #include <negotiate.hpp>
 #include <string>
 #include <security.h>
@@ -11,15 +12,6 @@
 namespace Negotiate {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
-    }
-    
-    bool Proxy::EnumPackageNames() const {
-        void* response;
-        auto result{ this->CallPackage(PROTOCOL_MESSAGE_TYPE::EnumPackageNames, &response) };
-        if (result) {
-            LsaFreeReturnBuffer(response);
-        }
-        return result;
     }
 
     bool Proxy::EnumPackagePrefixes() const {
@@ -31,7 +23,9 @@ namespace Negotiate {
             for (size_t count{ response->PrefixCount }; count > 0; count--) {
                 auto packagePrefix{ reinterpret_cast<PPACKAGE_PREFIX>(offset) };
                 lsa->out << std::to_string(packagePrefix->PackageId) + " Prefix[0x" << packagePrefix->PrefixLen << "]: ";
-                OutputHex(lsa->out, std::string(reinterpret_cast<char*>(packagePrefix->Prefix), MaxPrefix()));
+                OutputHex(lsa->out, std::string(reinterpret_cast<char*>(packagePrefix->Prefix), packagePrefix->PrefixLen));
+                lsa->out << std::endl << "         Leak: ";
+                OutputHex(lsa->out, std::string(reinterpret_cast<char*>(packagePrefix->Prefix) + packagePrefix->PrefixLen, MaxPrefix() - packagePrefix->PrefixLen));
                 lsa->out << std::endl;
                 offset += sizeof(PACKAGE_PREFIX);
             }
@@ -47,7 +41,7 @@ namespace Negotiate {
         PCALLER_NAME_RESPONSE response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::wcout << "CallerName: " << response->CallerName << std::endl;
+            std::wcout << "CallerName [" << response->CallerName << "]: " << std::wstring{ reinterpret_cast<PWSTR>(response + 1) } << std::endl;
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -71,8 +65,6 @@ namespace Negotiate {
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetCallerName(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::EnumPackageNames:
-            return proxy.EnumPackageNames();
         default:
             out << "Unsupported function" << std::endl;
             return false;

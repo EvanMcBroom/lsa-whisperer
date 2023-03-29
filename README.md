@@ -52,7 +52,7 @@ Thank you to the following related projects that greatly helped in the developme
 
 ## Acknowledgments
 
-Aside from the creators and maintainers of the above [open source](#open) projects, additional thanks are needed to following people who's research helped as well:
+Aside from the creators and maintainers of the above [open source](#open) projects, additional thanks are needed to the following people who's research helped as well:
 
 - [Adam Chester](https://twitter.com/_xpn_)
 - [Lee Christensen](https://twitter.com/tifkin_)

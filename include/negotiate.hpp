@@ -15,6 +15,11 @@ namespace Negotiate {
         EnumPackageNames
     };
 
+    typedef struct _PACKAGE_NAMES {
+        ULONG NamesCount;
+        UNICODE_STRING Names[1];
+    } PACKAGE_NAMES, *PPACKAGE_NAMES;
+
     typedef struct _PACKAGE_PREFIX {
         ULONG_PTR PackageId;
         PVOID PackageDataA; // Unused, set to nullptr by negotiate
@@ -47,7 +52,6 @@ namespace Negotiate {
         // A subset of the supported functions in negotiate
         bool EnumPackagePrefixes() const;
         bool GetCallerName(PLUID logonId) const;
-        bool EnumPackageNames() const;
 
     protected:
         std::shared_ptr<Lsa> lsa;

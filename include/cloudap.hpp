@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#define CLOUDAP_NAME_A "pku2u"
+#define CLOUDAP_NAME_A "cloudap"
 
 namespace Cloudap {
     // PluginFunctionTable is populated by two other tables,
@@ -36,7 +36,7 @@ namespace Cloudap {
         PostLogonProcessing
     };
 
-    enum class PROTOCOL_MESSAGE_TYPE : BYTE {
+    enum class PROTOCOL_MESSAGE_TYPE : ULONG {
         ReinitPlugin = 0,
         GetTokenBlob,
         CallPluginGeneric,
@@ -67,6 +67,16 @@ namespace Cloudap {
         UNICODE_STRING unknown;
     } GET_PWD_EXPIRY_INFO_RESPONSE, *PGET_PWD_EXPIRY_INFO_RESPONSE;
 
+    typedef struct _GET_AUTHENTICATION_PROVIDER_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider };
+        LUID Luid{ 0 };
+    } GET_AUTHENTICATION_PROVIDER_REQUEST, *PGET_AUTHENTICATION_PROVIDER_REQUEST;
+
+    typedef struct _GET_TOKEN_BLOB_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetTokenBlob };
+        LUID Luid{ 0 };
+    } GET_TOKEN_BLOB_REQUEST, *PGET_TOKEN_BLOB_REQUEST;
+
     typedef struct _GET_UNLOCK_KEY_TYPE_RESPONSE {
         DWORD Type;
     } GET_UNLOCK_KEY_TYPE_RESPONSE, *PGET_UNLOCK_KEY_TYPE_RESPONSE;
@@ -91,11 +101,11 @@ namespace Cloudap {
         bool DisableOptimizedLogon() const;
         bool GenARSOPwd() const;
         bool GetAccountInfo() const;
-        bool GetAuthenticatingProvider(GUID* authenticationProvider) const;
+        bool GetAuthenticatingProvider(PLUID luid) const;
         bool GetDpApiCredKeyDecryptStatus() const;
         bool GetPublicCachedInfo() const;
         bool GetPwdExpiryInfo(PFILETIME expiryTime, std::string* expiryTimeString) const;
-        bool GetTokenBlob(void** tokenBlob) const;
+        bool GetTokenBlob(PLUID luid) const;
         bool GetUnlockKeyType() const;
         bool IsCloudToOnPremTgtPresentInCache() const;
         bool ProfileDeleted() const;

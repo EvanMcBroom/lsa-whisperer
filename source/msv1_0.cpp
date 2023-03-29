@@ -145,20 +145,10 @@ namespace Msv1_0 {
         return result;
     }
 
-    bool Proxy::EnumerateUsers(bool passthrough) const {
+    bool Proxy::EnumerateUsers() const {
         ENUMUSERS_REQUEST request;
         ENUMUSERS_RESPONSE* response;
-        bool result;
-        //if (passthrough) {
-        //    std::vector<byte> data{ sizeof(decltype(request)), 0 };
-        //    std::memcpy(data.data(), &request, sizeof(decltype(request)));
-        //    GenericPassthrough(L"", MSV1_0_PACKAGE_NAMEW, data);
-        //    response = reinterpret_cast<decltype(response)>(malloc(sizeof(ENUMUSERS_RESPONSE)));
-        //    std::memcpy(response, data.data(), sizeof(decltype(response)));
-        //}
-        //else {
-        result = CallPackage(request, &response);
-        //}
+        auto result{ CallPackage(request, &response) };
         if (result) {
             auto count{ response->NumberOfLoggedOnUsers };
             lsa->out << "NumberOfLoggedOnUsers: " << count << std::endl;
@@ -172,6 +162,35 @@ namespace Msv1_0 {
                 lsa->out << "0x" << reinterpret_cast<ULONG*>(response->EnumHandles)[index] << ((index < (count - 1)) ? ", " : "");
             }
             lsa->out << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
+    
+    bool Proxy::GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const {
+        std::vector<byte> requestBytes(sizeof(PASSTHROUGH_REQUEST) + (domainName.size() + packageName.size()) * sizeof(wchar_t) + data.size(), 0);
+        auto request{ reinterpret_cast<PPASSTHROUGH_REQUEST>(requestBytes.data()) };
+        request->MessageType = PROTOCOL_MESSAGE_TYPE::GenericPassthrough;
+        request->DomainName.Length = domainName.size() * sizeof(wchar_t);
+        request->DomainName.MaximumLength = request->DomainName.Length;
+        auto buffer{ reinterpret_cast<wchar_t*>(request + 1) };
+        std::memcpy(buffer, domainName.data(), domainName.length() * sizeof(wchar_t));
+        request->DomainName.Buffer = buffer;
+        request->PackageName.Length = packageName.size() * sizeof(wchar_t);
+        request->PackageName.MaximumLength = request->PackageName.Length;
+        buffer = buffer + domainName.size();
+        std::memcpy(buffer, packageName.data(), packageName.length() * sizeof(wchar_t));
+        request->PackageName.Buffer = buffer;
+        request->DataLength = data.size();
+        buffer = buffer + packageName.size();
+        std::memcpy(buffer, data.data(), data.size());
+        request->LogonData = reinterpret_cast<PUCHAR>(buffer);
+        PASSTHROUGH_RESPONSE* response;
+        auto result{ CallPackage(*request, &response) };
+        if (result) {
+            data.resize(sizeof(response) + response->DataLength);
+            std::memcpy(data.data(), response, sizeof(response) + response->DataLength);
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -194,6 +213,7 @@ namespace Msv1_0 {
                 std::string ntOwf(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_OWF_PASSWORD_LENGTH);
                 OutputHex(lsa->out, "NtOwf", ntOwf);
             }
+            LsaFreeReturnBuffer(response);
         }
         return result;
     }
@@ -348,7 +368,7 @@ namespace Msv1_0 {
             return proxy.DeriveCredential(&luid, credType, mixingBits);
         }
         case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
-            return proxy.EnumerateUsers((options.count("dc")));
+            return proxy.EnumerateUsers();
         case PROTOCOL_MESSAGE_TYPE::GetCredentialKey: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();

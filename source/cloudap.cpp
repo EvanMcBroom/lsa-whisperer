@@ -26,8 +26,12 @@ namespace Cloudap {
         return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GetAccountInfo);
     }
 
-    bool Proxy::GetAuthenticatingProvider(GUID* authenticationProvider) const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider);
+    bool Proxy::GetAuthenticatingProvider(PLUID luid) const {
+        GET_TOKEN_BLOB_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        void* response;
+        return this->CallPackage(request, &response);
     }
 
     bool Proxy::GetDpApiCredKeyDecryptStatus() const {
@@ -45,11 +49,12 @@ namespace Cloudap {
         return status;
     }
 
-    bool Proxy::GetTokenBlob(void** tokenBlob) const {
-        auto request{ PROTOCOL_MESSAGE_TYPE::GetTokenBlob };
+    bool Proxy::GetTokenBlob(PLUID luid) const {
+        GET_TOKEN_BLOB_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
         void* response;
-        auto status{ CallPackage(request, &response) };
-        return status;
+        return CallPackage(request, &response);
     }
 
     bool Proxy::GetUnlockKeyType() const {
@@ -117,14 +122,20 @@ namespace Cloudap {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
         case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
             return proxy.ReinitPlugin();
-        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob:
-            return proxy.GetTokenBlob(nullptr);
+        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetTokenBlob(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
             return false;
         case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
             return proxy.ProfileDeleted();
-        case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider:
-            return proxy.GetAuthenticatingProvider(nullptr);
+        case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetAuthenticatingProvider(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::RenameAccount:
             return proxy.RenameAccount();
         case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
@@ -138,7 +149,7 @@ namespace Cloudap {
                 LUID source;
                 source.LowPart = options["sluid"].as<DWORD>();
                 LUID destination;
-                destination.LowPart = options["sluid"].as<DWORD>();
+                destination.LowPart = options["dluid"].as<DWORD>();
                 return proxy.TransferCreds(&source, &destination);
             } else {
                 std::cout << "A source or destination LUID was not specified." << std::endl;
@@ -170,7 +181,7 @@ namespace Cloudap {
     void Parse(std::ostream& out, const std::vector<std::string>& args) {
         char* command{ "cloudap" };
         cxxopts::Options options{ command };
-        options.allow_unrecognised_options();
+        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
         options.add_options("Function arguments")("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<unsigned int>())("disable", "Disable an option", cxxopts::value<std::string>())("enable", "Enable an option", cxxopts::value<std::string>())("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<unsigned int>());
         ;
 

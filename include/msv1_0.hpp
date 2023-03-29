@@ -281,7 +281,7 @@ namespace Msv1_0 {
         bool DecryptDpapiMasterKey() const;
         bool DeleteTbalSecrets() const;
         bool DeriveCredential(PLUID luid, DeriveCredType type, const std::vector<byte>& mixingBits) const;
-        bool EnumerateUsers(bool passthrough = false) const;
+        bool EnumerateUsers() const;
         bool GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;
         bool GetCredentialKey(PLUID luid) const;
         bool GetStrongCredentialKey() const;

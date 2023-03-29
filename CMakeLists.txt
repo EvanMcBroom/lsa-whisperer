@@ -7,20 +7,15 @@ project(lsa-whisperer
 )
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(cmake/midl.cmake)
 include(cmake/requirements.cmake)
 
-string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-string(REGEX REPLACE "/M[TD]d?" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-
 add_library(sspi STATIC)
 target_compile_definitions(sspi PUBLIC NOMINMAX)
 target_link_libraries(sspi PUBLIC cxxopts::cxxopts magic_enum::magic_enum)
-set_target_properties(sspi PROPERTIES VS_SCC_PROJECTNAME aaaaaaaa)
 
 add_executable(lsa-whisperer)
 target_sources(lsa-whisperer PRIVATE source/cli.cpp source/main.cpp)

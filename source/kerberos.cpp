@@ -21,10 +21,9 @@ namespace Kerberos {
         void* response{ nullptr };
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::cout << "hehe";
-
-            return result;
+            LsaFreeReturnBuffer(response);
         }
+        return result;
     }
     template<typename _Request, typename _Response>
     bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
