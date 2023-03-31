@@ -5,8 +5,20 @@
 #include <string>
 
 namespace Cloudap {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "cloudap" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
+        unparsedOptions.add_options("Function arguments")("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<unsigned int>())("disable", "Disable an option", cxxopts::value<std::string>())("enable", "Enable an option", cxxopts::value<std::string>())("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<unsigned int>());
+        ;
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
             return proxy.ReinitPlugin();
         case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
@@ -64,78 +76,51 @@ namespace Cloudap {
         }
         return false;
     }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "cloudap" };
-        cxxopts::Options options{ command };
-        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-        options.add_options("Function arguments")("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<unsigned int>())("disable", "Disable an option", cxxopts::value<std::string>())("enable", "Enable an option", cxxopts::value<std::string>())("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<unsigned int>());
-        ;
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
-        }
-    }
 }
 
 namespace Kerberos {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "kerberos" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.allow_unrecognised_options();
+
+        // Arguments for functions that require additional inputs
+        unparsedOptions.add_options("Function arguments")("luid", "Logon session", cxxopts::value<long long>());
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCache:
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.QueryTicketCache(&luid);
 
         default:
-            out << "Unsupported function" << std::endl;
+            std::cout << "Unsupported function" << std::endl;
             return false;
-        }
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "kerberos" };
-        cxxopts::Options options{ command };
-        options.allow_unrecognised_options();
-
-        // Arguments for functions that require additional inputs
-        options.add_options("Function arguments")("luid", "Logon session", cxxopts::value<long long>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
         }
     }
 }
 
 namespace Msv1_0 {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "msv1_0" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.allow_unrecognised_options();
+        unparsedOptions.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
+        unparsedOptions.add_options("Function arguments")("account", "Account name", cxxopts::value<std::string>())("computer", "Computer name", cxxopts::value<std::string>())("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<long long>())("domain", "Domain name", cxxopts::value<std::string>())("hash", "Asciihex hash", cxxopts::value<std::string>())("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))("luid", "Logon session", cxxopts::value<long long>())("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())("newpass", "New password", cxxopts::value<std::string>())("oldpass", "Old password", cxxopts::value<std::string>())("option", "Process option", cxxopts::value<std::string>())("pass", "Password", cxxopts::value<std::string>())("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<long long>())("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
             // Populate the logon info
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -144,7 +129,7 @@ namespace Msv1_0 {
             auto computer{ std::wstring((options.count("computer")) ? converter.from_bytes(options["computer"].as<std::string>()) : L"") };
             std::vector<byte> hash;
             if (options.count("hash")) {
-                hash = HexDecode(out, converter.from_bytes(options["hash"].as<std::string>()));
+                hash = HexDecode(std::cout, converter.from_bytes(options["hash"].as<std::string>()));
             } else {
                 hash = CalculateNtOwfPassword(options["pass"].as<std::string>());
             }
@@ -160,7 +145,7 @@ namespace Msv1_0 {
                 supplementalCreds = Cache::GetSupplementalMitCreds(domain, upn);
             }
             if (options.count("suppcreds")) {
-                supplementalCreds = HexDecode(out, converter.from_bytes(options["suppcreds"].as<std::string>()));
+                supplementalCreds = HexDecode(std::cout, converter.from_bytes(options["suppcreds"].as<std::string>()));
             }
             // Set any additional flags that may have been specified
             requestFlags |= (options.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
@@ -189,7 +174,7 @@ namespace Msv1_0 {
             auto credType{ (options.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             std::vector<byte> mixingBits;
-            mixingBits = HexDecode(out, converter.from_bytes(options["mixingbits"].as<std::string>()));
+            mixingBits = HexDecode(std::cout, converter.from_bytes(options["mixingbits"].as<std::string>()));
             return proxy.DeriveCredential(&luid, credType, mixingBits);
         }
         case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
@@ -222,41 +207,27 @@ namespace Msv1_0 {
             return proxy.TransferCred(&sourceLuid, &destinationLuid);
         }
         default:
-            out << "Unsupported function" << std::endl;
+            std::cout << "Unsupported function" << std::endl;
             return false;
         }
         return false;
     }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "msv1_0" };
-        cxxopts::Options options{ command };
-        options.allow_unrecognised_options();
-        options.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
-        options.add_options("Function arguments")("account", "Account name", cxxopts::value<std::string>())("computer", "Computer name", cxxopts::value<std::string>())("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<long long>())("domain", "Domain name", cxxopts::value<std::string>())("hash", "Asciihex hash", cxxopts::value<std::string>())("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))("luid", "Logon session", cxxopts::value<long long>())("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())("newpass", "New password", cxxopts::value<std::string>())("oldpass", "Old password", cxxopts::value<std::string>())("option", "Process option", cxxopts::value<std::string>())("pass", "Password", cxxopts::value<std::string>())("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<long long>())("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
-        }
-    }
 }
 
 namespace Negotiate {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "negotiate" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
+
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::EnumPackagePrefixes:
             return proxy.EnumPackagePrefixes();
         case PROTOCOL_MESSAGE_TYPE::GetCallerName: {
@@ -265,39 +236,25 @@ namespace Negotiate {
             return proxy.GetCallerName(&luid);
         }
         default:
-            out << "Unsupported function" << std::endl;
+            std::cout << "Unsupported function" << std::endl;
             return false;
-        }
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "negotiate" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
         }
     }
 }
 
 namespace Pku2u {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "pku2u" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:
             return proxy.PurgeTicketEx();
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
@@ -306,39 +263,27 @@ namespace Pku2u {
             return proxy.QueryTicketCacheEx2(&luid);
         }
         default:
-            out << "Unsupported function" << std::endl;
+            std::cout << "Unsupported function" << std::endl;
             return false;
-        }
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "pku2u" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
         }
     }
 }
 
 namespace Schannel {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "schannel" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.add_options("Schannel Function")("f,function", "Function name", cxxopts::value<std::string>());
+        // Arguments for functions that require additional inputs
+        unparsedOptions.add_options("Function arguments")("server", "Server name", cxxopts::value<std::string>())("luid", "Logon session", cxxopts::value<long long>())("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"));
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::CacheInfo: {
             return false; // CacheInfo();
         }
@@ -367,41 +312,24 @@ namespace Schannel {
         case PROTOCOL_MESSAGE_TYPE::StreamSizes:
             return proxy.StreamSizes();
         default:
-            out << "Unsupported function" << std::endl;
+            std::cout << "Unsupported function" << std::endl;
             return false;
-        }
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "schannel" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Schannel Function")("f,function", "Function name", cxxopts::value<std::string>());
-
-        // Arguments for functions that require additional inputs
-        options.add_options("Function arguments")("server", "Server name", cxxopts::value<std::string>())("luid", "Logon session", cxxopts::value<long long>())("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"));
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
         }
     }
 }
 
 namespace Wdigest {
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options) {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "wdigest" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.add_options("Wdigest Function")("f,function", "Function name", cxxopts::value<std::string>());
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(options["function"].as<std::string>()).value()) {
         case PROTOCOL_MESSAGE_TYPE::VerifyDigest:
             return false;
@@ -409,12 +337,5 @@ namespace Wdigest {
             break;
         }
         return false;
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "wdigest" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Wdigest Function")("f,function", "Function name", cxxopts::value<std::string>());
     }
 }
