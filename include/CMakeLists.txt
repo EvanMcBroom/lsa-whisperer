@@ -1,6 +1,5 @@
 target_include_directories(sspi PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/nt
 )
 # Absolute paths are used to allow the USE_STAMP_FILE option to be used with doxygen_add_docs
 set(SSPI_HEADERS
@@ -24,4 +23,5 @@ target_precompile_headers(sspi PUBLIC <windows.h>)
 
 target_sources(lsa-whisperer PRIVATE
     cli.hpp
+    commands.hpp
 )

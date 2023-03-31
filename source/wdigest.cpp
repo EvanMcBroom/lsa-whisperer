@@ -2,10 +2,8 @@
 #include <Winternl.h>
 #include <codecvt>
 #include <crypt.hpp>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <lsa.hpp>
-#include <magic_enum.hpp>
 #include <schannel.hpp>
 #include <string>
 #include <vector>
@@ -30,22 +28,5 @@ namespace Wdigest {
             return lsa->CallPackage(WDIGEST_SP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
         }
         return false;
-    }
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(options["function"].as<std::string>()).value()) {
-        case PROTOCOL_MESSAGE_TYPE::VerifyDigest:
-            return false;
-        default:
-            break;
-        }
-        return false;
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "wdigest" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Wdigest Function")("f,function", "Function name", cxxopts::value<std::string>());
     }
 }

@@ -11,6 +11,10 @@ Microsoft provides a technical document for https://learn.microsoft.com/en-us/op
 Due to its design, Negotiate also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
 The negotiate AP does not support untrusted calls or calls that are passed through.
 
+When a client uses negotiate to establish an authentication with a server, it will prioritize Keberos, then the NEGOEX packages, then NTLM.
+An exception was identified for this when a server is targeted using a SPN containing the word `localhost` or the DNS or NetBIOS name of the local machine when the LSASS process started.
+In that situation, negotiate is hardcoded to attempt NTLM authentication first.
+
 == Functions
 
 The protocol messages that negotiate supports is not documented by Microsoft but is provided here.
@@ -41,11 +45,14 @@ This function to provided to support the simple authentication and security laye
 [%header]
 |===
 | Mechanism Name   | OID
+| Spnego           | 6.7.43.6.1.5.5.2
 | Kerberos         | 6.9.42.134.72.134.247.18.1.2.2
 | Kerberos Legacy  | 6.9.42.134.72.130.247.18.1.2.2
 | Microsoft (NTLM) | 6.10.43.6.1.4.1.130.55.2.2.0
-| Spnego           | 6.7.43.6.1.5.5.2
 |===
+
+The Kerberos Legacy mechanism is used for compatibility with a previous version of the kerberos package on NT 5.0.
+When Kerberos is added to negotiate's package list, the legacy OID will be added first to prevent the version of Wininet on NT 5.0 from having to handle additional SPNEGO round-trips which it cannot do reliably.
 
 The Microsoft mechanism is used by negotiate to identify the NTLM security package.
 When negotiate gathers information about packages it supports during initialization it will overwrite the last byte of the Microsoft mechanism OID with what it believes to be the RPC ID of the NTLM package.

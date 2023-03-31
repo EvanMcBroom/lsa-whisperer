@@ -3,12 +3,12 @@
 #include <Winternl.h>
 
 #include <Ntsecapi.h>
-#include <cxxopts.hpp>
 #include <lsa.hpp>
 #include <memory>
 #include <netlogon.hpp>
 #include <string>
 #include <vector>
+
 
 namespace Msv1_0 {
     enum class CacheLogonFlags : ULONG {
@@ -302,9 +302,6 @@ namespace Msv1_0 {
         template<typename _Request, typename _Response>
         bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
-    void Parse(std::ostream& out, const std::vector<std::string>& args);
 
     namespace Cache {
         std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::wstring& computerName, const std::vector<byte>& hash, ULONG logonType = RPC_C_AUTHN_GSS_KERBEROS);

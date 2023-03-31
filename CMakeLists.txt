@@ -15,11 +15,10 @@ include(cmake/requirements.cmake)
 
 add_library(sspi STATIC)
 target_compile_definitions(sspi PUBLIC NOMINMAX)
-target_link_libraries(sspi PUBLIC cxxopts::cxxopts magic_enum::magic_enum)
 
 add_executable(lsa-whisperer)
-target_sources(lsa-whisperer PRIVATE source/cli.cpp source/main.cpp)
-target_link_libraries(lsa-whisperer PRIVATE replxx::replxx sspi)
+target_sources(lsa-whisperer PRIVATE source/cli.cpp source/commands.cpp source/main.cpp)
+target_link_libraries(lsa-whisperer PRIVATE cxxopts::cxxopts magic_enum::magic_enum replxx::replxx sspi)
 
 add_subdirectory(include)
 add_subdirectory(source)

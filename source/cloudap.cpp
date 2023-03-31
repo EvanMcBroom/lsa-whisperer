@@ -1,9 +1,7 @@
 #include <Windows.h>
 #include <cloudap.hpp>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <lsa.hpp>
-#include <magic_enum.hpp>
 
 namespace Cloudap {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
@@ -116,90 +114,5 @@ namespace Cloudap {
             return lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
         }
         return false;
-    }
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
-        case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
-            return proxy.ReinitPlugin();
-        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetTokenBlob(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
-            return false;
-        case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
-            return proxy.ProfileDeleted();
-        case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetAuthenticatingProvider(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::RenameAccount:
-            return proxy.RenameAccount();
-        case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
-            return proxy.RefreshTokenBlob();
-        case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
-            return proxy.GenARSOPwd();
-        case PROTOCOL_MESSAGE_TYPE::SetTestParas:
-            return proxy.SetTestParas(0);
-        case PROTOCOL_MESSAGE_TYPE::TransferCreds:
-            if (options.count("sluid") && options.count("dluid")) {
-                LUID source;
-                source.LowPart = options["sluid"].as<DWORD>();
-                LUID destination;
-                destination.LowPart = options["dluid"].as<DWORD>();
-                return proxy.TransferCreds(&source, &destination);
-            } else {
-                std::cout << "A source or destination LUID was not specified." << std::endl;
-                return false;
-            }
-            break;
-        case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
-            return proxy.ProvisionNGCNode();
-        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo:
-            return proxy.GetPwdExpiryInfo(nullptr, nullptr);
-        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon:
-            return proxy.DisableOptimizedLogon();
-        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType:
-            return proxy.GetUnlockKeyType();
-        case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
-            return proxy.GetPublicCachedInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
-            return proxy.GetAccountInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus:
-            return proxy.GetDpApiCredKeyDecryptStatus();
-        case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache:
-            return proxy.IsCloudToOnPremTgtPresentInCache();
-        default:
-            break;
-        }
-        return false;
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "cloudap" };
-        cxxopts::Options options{ command };
-        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-        options.add_options("Function arguments")("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<unsigned int>())("disable", "Disable an option", cxxopts::value<std::string>())("enable", "Enable an option", cxxopts::value<std::string>())("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<unsigned int>());
-        ;
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
-        }
     }
 }

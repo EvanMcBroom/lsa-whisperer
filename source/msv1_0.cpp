@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <iostream>
 #include <lsa.hpp>
-#include <magic_enum.hpp>
 #include <msv1_0.hpp>
 #include <netlogon.hpp>
 #include <string>
@@ -233,7 +232,7 @@ namespace Msv1_0 {
         GETUSERINFO_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            lsa->out << "LogonType      : " << magic_enum::enum_names<SECURITY_LOGON_TYPE>()[response->LogonType] << std::endl;
+            lsa->out << "LogonType      : " << response->LogonType << std::endl;
             auto offset{ reinterpret_cast<byte*>(response + 1) };
             auto sidLength{ reinterpret_cast<byte*>(response->UserName.Buffer) - offset };
             UNICODE_STRING sidString;
@@ -307,125 +306,6 @@ namespace Msv1_0 {
     bool Proxy::CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const {
         std::string stringSubmitBuffer(reinterpret_cast<const char*>(submitBuffer), submitBufferLength);
         return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
-    }
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
-        case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
-            // Populate the logon info
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            auto domain{ converter.from_bytes(options["domain"].as<std::string>()) };
-            auto account{ converter.from_bytes(options["account"].as<std::string>()) };
-            auto computer{ std::wstring((options.count("computer")) ? converter.from_bytes(options["computer"].as<std::string>()) : L"") };
-            std::vector<byte> hash;
-            if (options.count("hash")) {
-                hash = HexDecode(out, converter.from_bytes(options["hash"].as<std::string>()));
-            } else {
-                hash = CalculateNtOwfPassword(options["pass"].as<std::string>());
-            }
-            auto logonInfo{ Cache::GetLogonInfo(domain, account, computer, hash) };
-            // Populate the validation info and supplemental creds
-            ULONG requestFlags = static_cast<ULONG>(CacheLogonFlags::RequestInfo4);
-            Netlogon::VALIDATION_SAM_INFO4 validationInfo4;
-            std::memset(&validationInfo4, 0, sizeof(Netlogon::VALIDATION_SAM_INFO4));
-            std::vector<byte> supplementalCreds;
-            if (options.count("mitlogon")) {
-                requestFlags |= static_cast<ULONG>(CacheLogonFlags::RequestMitLogon);
-                auto upn{ converter.from_bytes(options["mitlogon"].as<std::string>()) };
-                supplementalCreds = Cache::GetSupplementalMitCreds(domain, upn);
-            }
-            if (options.count("suppcreds")) {
-                supplementalCreds = HexDecode(out, converter.from_bytes(options["suppcreds"].as<std::string>()));
-            }
-            // Set any additional flags that may have been specified
-            requestFlags |= (options.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
-            requestFlags |= (options.count("smartcard")) ? static_cast<ULONG>(CacheLogonFlags::RequestSmartcardOnly) : 0;
-            void* response{ nullptr };
-            return proxy.CacheLogon(logonInfo.get(), &validationInfo4, supplementalCreds, requestFlags);
-        }
-        case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
-            break;
-        case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
-            //auto domain{ options["domain"].as<std::string>() };
-            //auto account{ options["account"].as<std::string>() };
-            //auto oldpass{ options["oldpass"].as<std::string>() };
-            //auto newpass{ options["newpass"].as<std::string>() };
-            //return ChangeCachedPassword(domain, account, oldpass, newpass, options["imp"].as<bool>());
-        }
-        case PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials:
-            return proxy.ClearCachedCredentials();
-        case PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey:
-            return proxy.DecryptDpapiMasterKey();
-        case PROTOCOL_MESSAGE_TYPE::DeleteTbalSecrets:
-            return proxy.DeleteTbalSecrets();
-        case PROTOCOL_MESSAGE_TYPE::DeriveCredential: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            auto credType{ (options.count("sha1v2")) ? DeriveCredType::Sha1V2 : DeriveCredType::Sha1 };
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            std::vector<byte> mixingBits;
-            mixingBits = HexDecode(out, converter.from_bytes(options["mixingbits"].as<std::string>()));
-            return proxy.DeriveCredential(&luid, credType, mixingBits);
-        }
-        case PROTOCOL_MESSAGE_TYPE::EnumerateUsers:
-            return proxy.EnumerateUsers();
-        case PROTOCOL_MESSAGE_TYPE::GetCredentialKey: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetCredentialKey(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey:
-            return false;
-        case PROTOCOL_MESSAGE_TYPE::GetUserInfo: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetUserInfo(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
-            return proxy.Lm20ChallengeRequest();
-        case PROTOCOL_MESSAGE_TYPE::ProvisionTbal: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.ProvisionTbal(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::SetProcessOption:
-            return proxy.SetProcessOption(magic_enum::enum_cast<ProcessOption>(options["option"].as<std::string>()).value(), options["disable"].as<bool>());
-        case PROTOCOL_MESSAGE_TYPE::TransferCred: {
-            LUID sourceLuid, destinationLuid;
-            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
-            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
-            return proxy.TransferCred(&sourceLuid, &destinationLuid);
-        }
-        default:
-            out << "Unsupported function" << std::endl;
-            return false;
-        }
-        return false;
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "msv1_0" };
-        cxxopts::Options options{ command };
-        options.allow_unrecognised_options();
-        options.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
-        options.add_options("Function arguments")("account", "Account name", cxxopts::value<std::string>())("computer", "Computer name", cxxopts::value<std::string>())("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<long long>())("domain", "Domain name", cxxopts::value<std::string>())("hash", "Asciihex hash", cxxopts::value<std::string>())("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))("luid", "Logon session", cxxopts::value<long long>())("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())("newpass", "New password", cxxopts::value<std::string>())("oldpass", "Old password", cxxopts::value<std::string>())("option", "Process option", cxxopts::value<std::string>())("pass", "Password", cxxopts::value<std::string>())("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<long long>())("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
-        }
     }
 
     namespace Cache {

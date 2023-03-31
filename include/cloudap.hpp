@@ -1,6 +1,5 @@
 #pragma once
 #include <Windows.h>
-#include <cxxopts.hpp>
 #include <lsa.hpp>
 #include <memory>
 #include <string>
@@ -200,8 +199,4 @@ namespace Cloudap {
             const char* WLIDProviderGuid = "\x8F\x88\xF9\xD7\xFC\xE3\xB0\x49\x9E\xA6\xA8\x5B\x5F\x39\x2A\x4F";
         };
     }
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
-    void Parse(std::ostream& out, const std::vector<std::string>& args);
-
 }

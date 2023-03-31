@@ -1,13 +1,8 @@
-﻿#include <cloudap.hpp>
-#include <cli.hpp>
+﻿#include <cli.hpp>
+#include <commands.hpp>
 #include <fstream>
 #include <iomanip>
 #include <replxx.hxx>
-#include <msv1_0.hpp>
-#include <negotiate.hpp>
-#include <pku2u.hpp>
-#include <schannel.hpp>
-#include <kerberos.hpp>
 #include <magic_enum.hpp>
 #include <memory>
 #include <thread>

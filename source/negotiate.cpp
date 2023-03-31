@@ -1,9 +1,7 @@
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
 #include <crypt.hpp>
-#include <cxxopts.hpp>
 #include <lsa.hpp>
-#include <magic_enum.hpp>
 #include <msv1_0.hpp>
 #include <negotiate.hpp>
 #include <string>
@@ -54,44 +52,5 @@ namespace Negotiate {
             return lsa->CallPackage(NEGOSSP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
         }
         return false;
-    }
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options) {
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(function).value()) {
-        case PROTOCOL_MESSAGE_TYPE::EnumPackagePrefixes:
-            return proxy.EnumPackagePrefixes();
-        case PROTOCOL_MESSAGE_TYPE::GetCallerName: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetCallerName(&luid);
-        }
-        default:
-            out << "Unsupported function" << std::endl;
-            return false;
-        }
-    }
-
-    void Parse(std::ostream& out, const std::vector<std::string>& args) {
-        char* command{ "negotiate" };
-        cxxopts::Options options{ command };
-
-        options.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-
-        try {
-            std::vector<char*> argv;
-            std::for_each(args.begin(), args.end(), [&argv](const std::string& arg) {
-                argv.push_back(const_cast<char*>(arg.data()));
-            });
-            if (argv.size() > 1) {
-                auto function{ argv[1] };
-                auto result{ options.parse(argv.size(), argv.data()) };
-                Proxy proxy{ std::make_shared<Lsa>(out) };
-                HandleFunction(out, proxy, function, result);
-            } else {
-                out << options.help() << std::endl;
-            }
-        } catch (const std::exception& exception) {
-            out << exception.what() << std::endl;
-        }
     }
 }

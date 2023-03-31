@@ -1,7 +1,6 @@
 #pragma once
 #include <Windows.h>
 #include <Winternl.h>
-#include <cxxopts.hpp>
 #include <lsa.hpp>
 
 namespace Wdigest {
@@ -72,7 +71,4 @@ namespace Wdigest {
         template<typename _Request, typename _Response>
         bool CallPackagePassthrough(const _Request& submitBuffer, _Response** returnBuffer) const;
     };
-
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const cxxopts::ParseResult& options);
-    void Parse(std::ostream& out, const std::vector<std::string>& args);
 }

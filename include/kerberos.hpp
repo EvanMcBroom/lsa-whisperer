@@ -1,8 +1,8 @@
 #pragma once
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
+
 #include <Ntsecapi.h>
-#include <cxxopts.hpp>
 #include <lsa.hpp>
 #include <memory>
 #include <netlogon.hpp>
@@ -77,7 +77,4 @@ namespace Kerberos {
         template<typename _Request, typename _Response>
         bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
-    bool HandleFunction(std::ostream& out, const Proxy& proxy, const std::string& function, const cxxopts::ParseResult& options);
-    void Parse(std::ostream& out, const std::vector<std::string>& args);
-
 }
