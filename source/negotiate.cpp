@@ -4,8 +4,8 @@
 #include <lsa.hpp>
 #include <msv1_0.hpp>
 #include <negotiate.hpp>
-#include <string>
 #include <security.h>
+#include <string>
 
 namespace Negotiate {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
@@ -22,7 +22,8 @@ namespace Negotiate {
                 auto packagePrefix{ reinterpret_cast<PPACKAGE_PREFIX>(offset) };
                 lsa->out << std::to_string(packagePrefix->PackageId) + " Prefix[0x" << packagePrefix->PrefixLen << "]: ";
                 OutputHex(lsa->out, std::string(reinterpret_cast<char*>(packagePrefix->Prefix), packagePrefix->PrefixLen));
-                lsa->out << std::endl << "         Leak: ";
+                lsa->out << std::endl
+                         << "         Leak: ";
                 OutputHex(lsa->out, std::string(reinterpret_cast<char*>(packagePrefix->Prefix) + packagePrefix->PrefixLen, MaxPrefix() - packagePrefix->PrefixLen));
                 lsa->out << std::endl;
                 offset += sizeof(PACKAGE_PREFIX);

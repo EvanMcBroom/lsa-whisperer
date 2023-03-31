@@ -8,9 +8,17 @@ namespace Cloudap {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "cloudap" };
         cxxopts::Options unparsedOptions{ command };
-        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-        unparsedOptions.add_options("Function arguments")("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<unsigned int>())("disable", "Disable an option", cxxopts::value<std::string>())("enable", "Enable an option", cxxopts::value<std::string>())("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<unsigned int>());
-        ;
+        // clang-format off
+        unparsedOptions.add_options("Command arguments")
+            ("luid", "Logon session", cxxopts::value<long long>());
+        unparsedOptions.add_options("Function arguments")
+            ("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))
+            ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
+            ("disable", "Disable an option", cxxopts::value<std::string>())
+            ("enable", "Enable an option", cxxopts::value<std::string>())
+            ("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))
+            ("sluid", "Source logon session", cxxopts::value<unsigned int>());
+        // clang-format on
         auto options{ unparsedOptions.parse(args.size(), args.data()) };
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -83,9 +91,10 @@ namespace Kerberos {
         char* command{ "kerberos" };
         cxxopts::Options unparsedOptions{ command };
         unparsedOptions.allow_unrecognised_options();
-
-        // Arguments for functions that require additional inputs
-        unparsedOptions.add_options("Function arguments")("luid", "Logon session", cxxopts::value<long long>());
+        // clang-format off
+        unparsedOptions.add_options("Function arguments")
+            ("luid", "Logon session", cxxopts::value<long long>());
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
@@ -111,8 +120,30 @@ namespace Msv1_0 {
         char* command{ "msv1_0" };
         cxxopts::Options unparsedOptions{ command };
         unparsedOptions.allow_unrecognised_options();
-        unparsedOptions.add_options()("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
-        unparsedOptions.add_options("Function arguments")("account", "Account name", cxxopts::value<std::string>())("computer", "Computer name", cxxopts::value<std::string>())("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))("dluid", "Destination logon session", cxxopts::value<long long>())("domain", "Domain name", cxxopts::value<std::string>())("hash", "Asciihex hash", cxxopts::value<std::string>())("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))("luid", "Logon session", cxxopts::value<long long>())("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())("newpass", "New password", cxxopts::value<std::string>())("oldpass", "Old password", cxxopts::value<std::string>())("option", "Process option", cxxopts::value<std::string>())("pass", "Password", cxxopts::value<std::string>())("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))("sluid", "Source logon session", cxxopts::value<long long>())("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
+        // clang-format off
+        unparsedOptions.add_options()
+            ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
+        unparsedOptions.add_options("Function arguments")
+            ("account", "Account name", cxxopts::value<std::string>())
+            ("computer", "Computer name", cxxopts::value<std::string>())
+            ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
+            ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
+            ("dluid", "Destination logon session", cxxopts::value<long long>())
+            ("domain", "Domain name", cxxopts::value<std::string>())
+            ("hash", "Asciihex hash", cxxopts::value<std::string>())
+            ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())
+            ("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())
+            ("newpass", "New password", cxxopts::value<std::string>())
+            ("oldpass", "Old password", cxxopts::value<std::string>())
+            ("option", "Process option", cxxopts::value<std::string>())
+            ("pass", "Password", cxxopts::value<std::string>())
+            ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
+            ("sluid", "Source logon session", cxxopts::value<long long>())
+            ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
+            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
@@ -218,8 +249,10 @@ namespace Negotiate {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "negotiate" };
         cxxopts::Options unparsedOptions{ command };
-        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
-
+        // clang-format off
+        unparsedOptions.add_options("Command arguments")
+            ("luid", "Logon session", cxxopts::value<long long>());
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
@@ -246,7 +279,10 @@ namespace Pku2u {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "pku2u" };
         cxxopts::Options unparsedOptions{ command };
-        unparsedOptions.add_options("Command arguments")("luid", "Logon session", cxxopts::value<long long>());
+        // clang-format off
+        unparsedOptions.add_options("Command arguments")\
+            ("luid", "Logon session", cxxopts::value<long long>());
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
@@ -322,7 +358,10 @@ namespace Wdigest {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "wdigest" };
         cxxopts::Options unparsedOptions{ command };
-        unparsedOptions.add_options("Wdigest Function")("f,function", "Function name", cxxopts::value<std::string>());
+        // clang-format off
+        unparsedOptions.add_options("Wdigest Function")
+            ("f,function", "Function name", cxxopts::value<std::string>());
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;

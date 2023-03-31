@@ -2,8 +2,8 @@
 #include <cloudap.hpp>
 #include <cxxopts.hpp>
 #include <kerberos.hpp>
-#include <negotiate.hpp>
 #include <msv1_0.hpp>
+#include <negotiate.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
 #include <wdigest.hpp>

@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-
 namespace Msv1_0 {
     enum class CacheLogonFlags : ULONG {
         RequestMitLogon = 1,

@@ -1,11 +1,11 @@
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
-#include <iostream>
-#include <lsa.hpp>
-#include <string>
 #include <codecvt>
 #include <crypt.hpp>
+#include <iostream>
 #include <kerberos.hpp>
+#include <lsa.hpp>
+#include <string>
 
 namespace Kerberos {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)

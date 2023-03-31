@@ -166,7 +166,6 @@ namespace Msv1_0 {
         return result;
     }
 
-    
     bool Proxy::GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const {
         std::vector<byte> requestBytes(sizeof(PASSTHROUGH_REQUEST) + (domainName.size() + packageName.size()) * sizeof(wchar_t) + data.size(), 0);
         auto request{ reinterpret_cast<PPASSTHROUGH_REQUEST>(requestBytes.data()) };

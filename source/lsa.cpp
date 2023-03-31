@@ -31,7 +31,7 @@ namespace {
         HMODULE library{ LoadLibraryW(L"NTDLL.DLL") };
         if (library) {
             LPSTR message{ nullptr };
-            auto error { RtlNtStatusToDosError(status) };
+            auto error{ RtlNtStatusToDosError(status) };
             if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, library, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&message), 0, nullptr)) {
                 std::string messageString{ message };
                 LocalFree(message);

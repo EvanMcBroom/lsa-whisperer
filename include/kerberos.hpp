@@ -51,25 +51,23 @@ namespace Kerberos {
         PrintCloudKerberosDebugMessage
     };
 
-
     typedef struct _QUERY_TKT_CACHE_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::QueryTicketCache };
         LUID LogonId;
     } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
 
-
     class Proxy {
-        public:
+    public:
         Proxy(const std::shared_ptr<Lsa>& lsa);
-            
+
         // A subset of the supported functions in Kerberos
         bool QueryTicketCache(PLUID luid) const;
         // bool KerbChangeMachinePassword(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const;
-    
-        protected:
+
+    protected:
         std::shared_ptr<Lsa> lsa;
 
-        private:
+    private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer
         bool CallPackage(const std::string& submitBuffer, void** returnBuffer) const;
         template<typename _Request, typename _Response>
