@@ -93,7 +93,7 @@ namespace Kerberos {
         unparsedOptions.allow_unrecognised_options();
         // clang-format off
         unparsedOptions.add_options("Function arguments")
-            ("luid", "Logon session", cxxopts::value<long long>());
+            ("luid", "Logon session", cxxopts::value<long long>())("cacheoption", "cacheOption field for KerbRetrieveTicketMessage", cxxopts::value<long long>())("targetname", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())("ticketflag", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>())("encryptiontype", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long >());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -107,7 +107,25 @@ namespace Kerberos {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.QueryTicketCache(&luid);
-
+        case PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };
+            auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
+            return proxy.ChangeMachinePassword(oldPassword, newPassword);
+        }
+        case PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket: {
+            LUID luid;
+            Kerberos::EncryptionType encryptionType;
+            Kerberos::TicketFlags ticketFlags;
+            Kerberos::CacheOptions cacheOptions;
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            cacheOptions = (Kerberos::CacheOptions)options["cacheoption"].as<long long>();
+            ticketFlags = (Kerberos::TicketFlags)options["ticketflag"].as<long long>();
+            encryptionType = (Kerberos::EncryptionType)options["encryptiontype"].as<long long>();
+            auto targetName{ converter.from_bytes(options["targetname"].as<std::string>()) };
+            return proxy.RetrieveEncodedTicket(&luid, targetName, ticketFlags, cacheOptions, encryptionType);
+        }
         default:
             std::cout << "Unsupported function" << std::endl;
             return false;

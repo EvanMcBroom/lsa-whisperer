@@ -104,6 +104,17 @@ namespace Kerberos {
         Feserved = 0x80000000
     };
 
+    /*
+                required structure for call KerbChangeMachinePasswordMessage
+
+    */
+    typedef struct _CHANGE_MACH_PWD_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword };
+        UNICODE_STRING NewPassword;
+        UNICODE_STRING OldPassword;
+    } CHANGE_MACH_PWD_REQUEST, * PCHANGE_MACH_PWD_REQUEST;
+
+
     typedef struct _RETRIEVE_TKT_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket };
         LUID LogonId;
@@ -123,12 +134,16 @@ namespace Kerberos {
         LUID LogonId;
     } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
 
+
+   
+
     class Proxy {
     public:
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // A subset of the supported functions in Kerberos
         bool QueryTicketCache(PLUID luid) const;
+        bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
         bool RetrieveEncodedTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type) const;
 
     protected:
