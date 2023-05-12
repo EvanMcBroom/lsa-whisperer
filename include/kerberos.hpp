@@ -55,9 +55,22 @@ namespace Kerberos {
         }
     } PIN_KDC, *PPIN_KDC;
 
-    typedef struct _QUERY_TKT_CACHE_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::QueryTicketCache };
-        LUID LogonId;
+    typedef struct _PURGE_TKT_CACHE_REQUEST : KERB_PURGE_TKT_CACHE_REQUEST {
+        _PURGE_TKT_CACHE_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCache);
+        }
+    } PURGE_TKT_CACHE_REQUEST, *PPURGE_TKT_CACHE_REQUEST;
+
+    typedef struct _PURGE_TKT_CACHE_EX_REQUEST : KERB_PURGE_TKT_CACHE_EX_REQUEST {
+        _PURGE_TKT_CACHE_EX_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCacheEx);
+        }
+    } PURGE_TKT_CACHE_EX_REQUEST, *PPURGE_TKT_CACHE_EX_REQUEST;
+
+    typedef struct _QUERY_TKT_CACHE_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
+        _QUERY_TKT_CACHE_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCache);
+        }
     } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
 
     typedef struct _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {

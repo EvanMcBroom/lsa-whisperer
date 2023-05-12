@@ -19,8 +19,12 @@ namespace Pku2u {
         QUERY_TICKET_CACHE_EX2_REQUEST request;
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
-        void* response;
-        return CallPackage(request, &response);
+        KERB_QUERY_TKT_CACHE_EX2_RESPONSE* response{ nullptr };
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     template<typename _Request, typename _Response>

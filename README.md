@@ -5,9 +5,9 @@
 > Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for this tool and the research, support, and collaboration throughout its development.
 
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
-The initial release of LSA Whisperer includes support for several msv1_0 messages.
-Initial support is also provided for cloudap, negotiate, pku2u, schannel, and kerberos messages as well.
-More authentication packages may be added in the future.
+Support is provided for the cloudap, msv1_0, negotiate, pku2u, schannel, and kerberos packages.
+Please refer to the [wiki](https://github.com/EvanMcBroom/lsa-whisperer/wiki) to see which message protocols are currently supported. 
+Support for more authentication packages may be added in the future.
 
 ## Building
 
