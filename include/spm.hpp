@@ -1,17 +1,10 @@
 // The message format for security package manager (SPM) API calls
 // An SPM API message may include a authentication package (AP) API call message, which is also defined here
 #pragma once
-#define SECURITY_WIN32
-#define WIN32_NO_STATUS
-#include <Security.h>
+#include <pch.hpp>
 
 #define MAX_BUFFERS_IN_CALL 8
-typedef struct _SECURITY_USER_DATA {
-    SECURITY_STRING UserName; // User name
-    SECURITY_STRING LogonDomainName; // Domain the user logged on to
-    SECURITY_STRING LogonServer; // Server that logged the user on
-    PSID pSid; // SID of user
-} SECURITY_USER_DATA, *PSECURITY_USER_DATA;
+
 typedef SECURITY_USER_DATA SecurityUserData, *PSecurityUserData;
 
 typedef struct _PORT_MESSAGE {

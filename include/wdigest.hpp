@@ -1,6 +1,6 @@
 #pragma once
-#include <Windows.h>
-#include <Winternl.h>
+#include <pch.hpp>
+
 #include <lsa.hpp>
 
 namespace Wdigest {

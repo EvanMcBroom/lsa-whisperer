@@ -1,5 +1,6 @@
 #pragma once
-#include <Winternl.h>
+#include <pch.hpp>
+
 #include <lsa.hpp>
 
 namespace Negotiate {
@@ -13,6 +14,16 @@ namespace Negotiate {
         TransferCred,
         EnumPackageNames
     };
+
+    typedef struct _CALLER_NAME_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetCallerName };
+        LUID LogonId;
+    } CALLER_NAME_REQUEST, *PCALLER_NAME_REQUEST;
+
+    typedef struct _CALLER_NAME_RESPONSE {
+        PROTOCOL_MESSAGE_TYPE MessageType;
+        PWSTR CallerName;
+    } CALLER_NAME_RESPONSE, *PCALLER_NAME_RESPONSE;
 
     typedef struct _PACKAGE_NAMES {
         ULONG NamesCount;
@@ -34,15 +45,12 @@ namespace Negotiate {
         ULONG Pad;
     } PACKAGE_PREFIXES, *PPACKAGE_PREFIXES;
 
-    typedef struct _CALLER_NAME_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetCallerName };
-        LUID LogonId;
-    } CALLER_NAME_REQUEST, *PCALLER_NAME_REQUEST;
-
-    typedef struct _CALLER_NAME_RESPONSE {
-        PROTOCOL_MESSAGE_TYPE MessageType;
-        PWSTR CallerName;
-    } CALLER_NAME_RESPONSE, *PCALLER_NAME_RESPONSE;
+    // TRANSFER_CRED_REQUEST::Flags may be OptimisticLogon, CleanupCredentials, or ToSsoSession
+    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
+        _TRANSFER_CRED_REQUEST() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCred);
+        }
+    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {
     public:
@@ -51,6 +59,7 @@ namespace Negotiate {
         // A subset of the supported functions in negotiate
         bool EnumPackagePrefixes() const;
         bool GetCallerName(PLUID logonId) const;
+        bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const;
 
     protected:
         std::shared_ptr<Lsa> lsa;

@@ -1,8 +1,6 @@
 #pragma once
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h>
+#include <pch.hpp>
 
-#include <NTSecAPI.h>
 #include <iostream>
 #include <ms-sspir_c.h>
 #include <rpc.hpp>
@@ -29,6 +27,12 @@ private:
             return c;
         }
     } nullBuffer;
+};
+
+enum class TransferCredFlag {
+    OptimisticLogon = 1, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_OPTIMISTIC_LOGON
+    CleanupCredentials = 2, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_CLEANUP_CREDENTIALS
+    ToSsoSession = 4, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_TO_SSO_SESSION
 };
 
 // Reimplements Windows functions that use the SSPI RPC interface

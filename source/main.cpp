@@ -7,6 +7,7 @@
 #include <memory>
 #include <replxx.hxx>
 #include <thread>
+#include <token.hpp>
 
 namespace {
     void Help(Cli& cli, const std::string& args) {
@@ -57,6 +58,7 @@ int main(int argc_, char** argv_) {
     });
     cli.AddCommand(".help", Help);
     cli.AddCommand(".history", History);
+    cli.AddCommand(".token", Token::Command);
     cli.AddCommand("cloudap", CommandFactory(lsa, Cloudap::Call));
     cli.AddCommand("kerberos", CommandFactory(lsa, Kerberos::Call));
     cli.AddCommand("msv1_0", CommandFactory(lsa, Msv1_0::Call));
@@ -71,6 +73,7 @@ int main(int argc_, char** argv_) {
     cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("schannel", SubCommands<Schannel::PROTOCOL_MESSAGE_TYPE>());
+    cli.AddSubCommandCompletions(".token", SubCommands<Token::SubCommands>());
     cli.Start();
     return 0;
 }

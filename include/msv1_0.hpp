@@ -1,8 +1,6 @@
 #pragma once
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h>
+#include <pch.hpp>
 
-#include <Ntsecapi.h>
 #include <lsa.hpp>
 #include <memory>
 #include <netlogon.hpp>
@@ -261,11 +259,13 @@ namespace Msv1_0 {
         BOOLEAN DisableOptions; // correct
         BOOLEAN unknown; // something else
     } SETTHREADOPTION_REQUEST, *PSETTHREADOPTION_REQUEST;
-
-    typedef struct _TRANSFER_CRED_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::TransferCred };
-        LUID SourceLuid;
-        LUID DestinationLuid;
+    
+    // TRANSFER_CRED_REQUEST::Flags is ignored by msv1_0
+    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
+        _TRANSFER_CRED_REQUEST() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCred);
+            Flags = 0;
+        }
     } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {

@@ -23,6 +23,18 @@ namespace Kerberos {
         }
         return result;
     }
+
+    bool Proxy::TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const {
+        TRANSFER_CRED_REQUEST request;
+        request.OriginLogonId.LowPart = sourceLuid->LowPart;
+        request.OriginLogonId.HighPart = sourceLuid->HighPart;
+        request.DestinationLogonId.LowPart = destinationLuid->LowPart;
+        request.DestinationLogonId.HighPart = destinationLuid->HighPart;
+        request.Flags = flags;
+        void* response;
+        return CallPackage(request, &response);
+    }
+
     template<typename _Request, typename _Response>
     bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
         if (lsa->Connected()) {

@@ -1,5 +1,6 @@
 #pragma once
-#include <Windows.h>
+#include <pch.hpp>
+
 #include <lsa.hpp>
 #include <memory>
 #include <string>
@@ -85,11 +86,12 @@ namespace Cloudap {
         ULONG Flags{ 0 };
     } SET_TEST_PARAS_REQUEST, *PSET_TEST_PARAS_REQUEST;
 
-    typedef struct _TRANSFER_CREDS_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::TransferCreds };
-        LUID SourceLuid{ 0 };
-        LUID DestinationLuid{ 0 };
-    } TRANSFER_CREDS_REQUEST, *PTRANSFER_CREDS_REQUEST;
+    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
+        _TRANSFER_CRED_REQUEST() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCreds);
+            Flags = 0; // must be 0
+        }
+    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {
     public:

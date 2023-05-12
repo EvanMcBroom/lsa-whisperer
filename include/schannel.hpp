@@ -1,5 +1,6 @@
 #pragma once
-#include <Winternl.h>
+#include <pch.hpp>
+
 #include <lsa.hpp>
 
 namespace Schannel {

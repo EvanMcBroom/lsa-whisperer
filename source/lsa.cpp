@@ -1,14 +1,6 @@
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h> // Must be included before Ntsecapi
-
-#include <Ntsecapi.h>
-#include <iomanip>
-#include <iostream>
 #include <lsa.hpp>
+#include <iomanip>
 #include <msv1_0.hpp>
-#include <ntstatus.h>
-#include <spm.hpp>
-#include <string>
 
 namespace {
     typedef enum _THREAD_INFORMATION_CLASS {

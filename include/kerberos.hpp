@@ -1,8 +1,6 @@
 #pragma once
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h>
+#include <pch.hpp>
 
-#include <Ntsecapi.h>
 #include <lsa.hpp>
 #include <memory>
 #include <netlogon.hpp>
@@ -51,10 +49,34 @@ namespace Kerberos {
         PrintCloudKerberosDebugMessage
     };
 
+    typedef struct _PIN_KDC : _SECPKG_CALL_PACKAGE_PIN_DC_REQUEST {
+        _PIN_KDC() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::PinKdc);
+        }
+    } PIN_KDC, *PPIN_KDC;
+
     typedef struct _QUERY_TKT_CACHE_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::QueryTicketCache };
         LUID LogonId;
     } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
+
+    typedef struct _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {
+        ULONG MessageType;
+        ULONG Flags; // reserved, must be 0
+    } SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST, *PSECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST;
+
+    // TRANSFER_CRED_REQUEST::Flags may be CleanupCredentials or OptimisticLogon
+    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
+        _TRANSFER_CRED_REQUEST() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCredentials);
+        }
+    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
+
+    typedef struct _UNPIN_ALL_KDCS : _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {
+        _UNPIN_ALL_KDCS() {
+            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::UnpinAllKdcs);
+        }
+    } UNPIN_ALL_KDCS, *PUNPIN_ALL_KDCS;
 
     class Proxy {
     public:
@@ -62,7 +84,7 @@ namespace Kerberos {
 
         // A subset of the supported functions in Kerberos
         bool QueryTicketCache(PLUID luid) const;
-        // bool KerbChangeMachinePassword(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const;
+        bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const;
 
     protected:
         std::shared_ptr<Lsa> lsa;

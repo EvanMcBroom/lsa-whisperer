@@ -9,6 +9,7 @@ set(SSPI_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/netlogon.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pch.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pku2u.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rpc.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/schannel.hpp
@@ -19,9 +20,11 @@ set(SSPI_HEADERS
 )
 set(SSPI_HEADERS ${SSPI_HEADERS} PARENT_SCOPE)
 target_sources(sspi PRIVATE ${SSPI_HEADERS})
-target_precompile_headers(sspi PUBLIC <windows.h>)
+target_precompile_headers(sspi PUBLIC <pch.hpp>)
 
 target_sources(lsa-whisperer PRIVATE
     cli.hpp
     commands.hpp
+    lazy.hpp
+    token.hpp
 )

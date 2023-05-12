@@ -1,5 +1,6 @@
 #pragma once
-#include <Winternl.h>
+#include <pch.hpp>
+
 #include <lsa.hpp>
 
 #define PKU2U_NAME_A "pku2u"

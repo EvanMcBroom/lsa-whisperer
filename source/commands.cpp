@@ -27,58 +27,52 @@ namespace Cloudap {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
-            return proxy.ReinitPlugin();
-        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetTokenBlob(&luid);
-        }
         case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
             return false;
-        case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
-            return proxy.ProfileDeleted();
+        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon:
+            return proxy.DisableOptimizedLogon();
+        case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
+            return proxy.GenARSOPwd();
+        case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
+            return proxy.GetAccountInfo();
         case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetAuthenticatingProvider(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::RenameAccount:
-            return proxy.RenameAccount();
-        case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
-            return proxy.RefreshTokenBlob();
-        case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
-            return proxy.GenARSOPwd();
-        case PROTOCOL_MESSAGE_TYPE::SetTestParas:
-            return proxy.SetTestParas(0);
-        case PROTOCOL_MESSAGE_TYPE::TransferCreds:
-            if (options.count("sluid") && options.count("dluid")) {
-                LUID source;
-                source.LowPart = options["sluid"].as<DWORD>();
-                LUID destination;
-                destination.LowPart = options["dluid"].as<DWORD>();
-                return proxy.TransferCreds(&source, &destination);
-            } else {
-                std::cout << "A source or destination LUID was not specified." << std::endl;
-                return false;
-            }
-            break;
-        case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
-            return proxy.ProvisionNGCNode();
-        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo:
-            return proxy.GetPwdExpiryInfo(nullptr, nullptr);
-        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon:
-            return proxy.DisableOptimizedLogon();
-        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType:
-            return proxy.GetUnlockKeyType();
-        case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
-            return proxy.GetPublicCachedInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
-            return proxy.GetAccountInfo();
         case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus:
             return proxy.GetDpApiCredKeyDecryptStatus();
+        case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
+            return proxy.GetPublicCachedInfo();
+        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo:
+            return proxy.GetPwdExpiryInfo(nullptr, nullptr);
+        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetTokenBlob(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType:
+            return proxy.GetUnlockKeyType();
         case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache:
             return proxy.IsCloudToOnPremTgtPresentInCache();
+        case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
+            return proxy.ProfileDeleted();
+        case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
+            return proxy.ProvisionNGCNode();
+        case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
+            return proxy.RefreshTokenBlob();
+        case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
+            return proxy.ReinitPlugin();
+        case PROTOCOL_MESSAGE_TYPE::RenameAccount:
+            return proxy.RenameAccount();
+        case PROTOCOL_MESSAGE_TYPE::SetTestParas:
+            return proxy.SetTestParas(0);
+        case PROTOCOL_MESSAGE_TYPE::TransferCreds: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            return proxy.TransferCreds(&sourceLuid, &destinationLuid);
+        }
         default:
             break;
         }
@@ -93,7 +87,11 @@ namespace Kerberos {
         unparsedOptions.allow_unrecognised_options();
         // clang-format off
         unparsedOptions.add_options("Function arguments")
-            ("luid", "Logon session", cxxopts::value<long long>());
+            ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("dluid", "Destination logon session", cxxopts::value<long long>())
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("sluid", "Source logon session", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -107,7 +105,15 @@ namespace Kerberos {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.QueryTicketCache(&luid);
-
+        case PROTOCOL_MESSAGE_TYPE::TransferCredentials: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            ULONG flags{ 0 };
+            flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
+            flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
+            return proxy.TransferCreds(&sourceLuid, &destinationLuid, flags);
+        }
         default:
             std::cout << "Unsupported function" << std::endl;
             return false;
@@ -251,7 +257,10 @@ namespace Negotiate {
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
         unparsedOptions.add_options("Command arguments")
-            ("luid", "Logon session", cxxopts::value<long long>());
+            ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("to-sso-session", "To SSO session flag", cxxopts::value<bool>()->default_value("false"));
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -267,6 +276,16 @@ namespace Negotiate {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetCallerName(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::TransferCred: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            ULONG flags{ 0 };
+            flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
+            flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
+            flags += (options.count("to-sso-session")) ? static_cast<ULONG>(TransferCredFlag::ToSsoSession) : 0;
+            return proxy.TransferCreds(&sourceLuid, &destinationLuid, flags);
         }
         default:
             std::cout << "Unsupported function" << std::endl;
