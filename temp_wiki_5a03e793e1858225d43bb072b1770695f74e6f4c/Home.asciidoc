@@ -1,0 +1,137 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= The Local Security Authority
+
+The Local Security Authority (LSA) provides several security related services for the Windows operating system.
+LSA runs within the LSA Subsystem Service (LSASS) Windows service executable but is largely implemented in the LSA server DLL (e.g. `lsasrv.dll`) and other DLLs that the LSA server DLL imports.
+
+:toc:
+
+The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process as of NT 10.
+
+.LSA RPC Interfaces
+[[interfaces]]
+[%header]
+|===
+| Description            | UUID (Version)                               | File
+| DPAPI ICryptProtect    | `11220835-5b26-4d94-ae86-c3e475a809de` (1.0) | dpapisrv.dll
+| DPAPI PasswordRecovery | `5cbe92cb-f4be-45c9-9fc9-33e73e557b20` (1.0) | dpapisrv.dll
+| DPAPI SidKey           | `7f1317a8-4dea-4fa2-a551-df5516ff8879` (1.0) | dpapisrv.dll
+| Exchange ActiveSync    | `d25576e4-00d2-43f7-98f9-b4c0724158f9` (0.0) | lsasrv.dll
+| Idp Ex                 | `c0d930f0-b787-4124-99bc-21f0ecb642ce` (0.0) | lsasrv.dll
+| Key Isolation          | `b25a52bf-e5dd-4f4a-aea6-8ca7272a0e86` (1.0) | keyiso.dll
+| MS-CAPR                | `afc07e2e-311c-4435-808c-c483ffeec7c9` (1.0) | lsasrv.dll
+| MS-DSSP (Dsrole)       | `3919286a-b10c-11d0-9ba8-00c04fd92ef5` (0.0) | lsasrv.dll
+| MS-EFSR                | `c681d488-d850-11d0-8c52-00c04fd90f7e` (1.0) | efslsaext.dll
+| MS-LSAD (Audit)        | `12345778-1234-abcd-ef00-0123456789ab` (0.0) | lsasrv.dll
+| MS-SAMR                | `12345778-1234-abcd-ef00-0123456789ac` (1.0) | samsrv.dll
+| Ngc Pop Key Service    | `51a227ae-825b-41f2-b4a9-1ac9557a1018` (1.0) | keyiso.dll
+| Ngc Pop Key Service    | `8fb74744-b2ff-4c00-be0d-9ef9a191fe1b` (1.0) | keyiso.dll
+| Policy Lookup          | `fb8a0729-2d04-4658-be93-27b4ad553fac` (1.0) | lsass.exe
+| Private Data           | `ace1c026-8b3f-4711-8918-f345d17f5bff` (1.0) | lsasrv.dll
+| [.underline]#Sspi#     | `4f32adc8-6052-4a04-8701-293ccf2096f0` (1.0) | [.underline]#SspiSrv.dll#
+| Vault                  | `bb8b98e8-84dd-45e7-9f34-c3fb6155eeed` (1.0) | vaultsvc.dll
+|===
+
+== Security Support Provider Interface
+
+The LSA Whisperer project focuses on interacting with security support provider (SSP) DLLs.
+Microsoft provides https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of functions] (ex. `LsaCallAuthenticationPackage`) for interacting with SSPs.
+These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface (underlined in <<interfaces>>) which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
+
+.SSPI Operations
+[%header]
+|===
+| Opnum | Operation                          | Notes
+| `0x0` | SspirConnectRpc                    | `LsaConnectUntrusted`
+| `0x1` | SspirDisconnectRpc                 | `LsaDeregisterLogonProcess`
+| `0x2` | SspirDisconnectRpc                 | Calls the same server function as procnum `0x1`
+| `0x3` | SspirCallRpc                       | `LsaCallAuthenticationPackage` and `LsaLookupAuthenticationPackage`. Handled by `lsasrv.dll!DispatchAPI`
+| `0x4` | SspirAcquireCredentialsHandle      | `LsaAcquireCredentialsHandle`
+| `0x5` | SspirFreeCredentialsHandle         | `LsaFreeCredentialsHandle`
+| `0x6` | SspirProcessSecurityContext        | `LsaInitializeSecurityContext` and `LsaAcceptSecurityContext`
+| `0x7` | SspirDeleteSecurityContext         | `LsaDeleteSecurityContext`
+| `0x8` | SspirSslQueryCredentialsAttributes | `QueryCredentialsAttributes (Schannel)`
+| `0x9` | SspirNegQueryContextAttributes     | `QueryContextAttributes (Negotiate)`
+| `0xA` | SspirSslSetCredentialsAttributes   | `SetCredentialsAttributes (Schannel)`
+| `0xB` | SspirApplyControlToken             | `LsaApplyControlToken`
+| `0xC` | SspirLogonUser                     | `LsaLogonUser`
+| `0xD` | SspirLookupAccountSid              | Verifies that the provided SID is valid
+| `0xE` | SspirGetUserName                   | `GetUserNameExW`
+| `0xF` | SspirGetInprocDispatchTable        | Returns `&SspiInprocFunctions` if local
+|===
+
+=== Security Support Providers
+
+SSPs are DLLs that either implement a security protocol (security packages - SPs) and/or authentication logic (authentication package - APs).
+The LSA Whisperer project largely focuses on the authentication logic contained in an SSP.
+As such, the project will refer to SSPs that support both a security protocol and authentication logic as an authentication package (AP).
+
+.Microsoft SSPs
+[%header]
+|===
+| Dll       | Common Name                               | SP            | AP                 | RPC ID | RPC Authn
+| cloudap   | Cloud AP                                  | OAuth 2.0     | :heavy_check_mark: | 36     | `CLOUD_AP`
+| credssp   | Credential Delegation SSP                 | TLS+SPNEGO    | :heavy_minus_sign: |        |
+| kerberos  | Kerberos                                  | Kerberos      | :heavy_check_mark: | 16     | `GSS_KERBEROS`
+| livessp   | Live SSP                                  | ?             | :heavy_check_mark: | 32     | `LIVE_SSP`
+| msapsspc  | DPA Client                                | NTLM          | :heavy_minus_sign: | 17     | `DPA`
+| msnsspc   | MSN Client                                | NTLM          | :heavy_minus_sign: | 18     | `MSN`
+| msv1_0    | Microsoft Authentication Package v1.0     | NTLM          | :heavy_check_mark: | 10     | `WINNT`
+| negoexts  | Negotiate Extender                        | NEGOEX        | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
+| negotiate | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
+| pku2u     | Public Key User to User                   | PKU2U         | :heavy_check_mark: | 31     | `NEGO_PKU2U`
+| schannel  | Secure Channel                            | SSL/TLS       | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
+| tspkg     | Terminal Services Package                 |               | :heavy_check_mark: | 22     | ?
+| wdigest   | Windows Digest                            | Digest Access | :heavy_check_mark: | 21     | `DIGEST`
+|===
+
+NOTE: Livessp, msapsspc, and msnsspc are legacy SSPs that have been removed from Windows.
+Additionally, the components for the distributed computing environment (DCE), kernel, and message queue (MQ) RPC authn options could not be identified for auditing.
+
+.3rd Party SSPs
+[%header]
+|===
+| Dll        | Name                              | SP | AP                 | RPC ID
+| vmwsu_v1_0 | VMware SU Authentication Provider |    | :heavy_check_mark: | `0xffff`
+|===
+
+NOTE: The only meaningful functions that vmwsu_v1_0 implements is `SpGetInfo` and `LogonUser`.
+
+=== SSPI Security
+
+Windows does not register any security callback function when registering the interface. It does however make a low box security descriptor that it applies when registering the endpoint and the interface.
+Unfortunately, the interface is also registered with the flag `RPC_IF_ALLOW_LOCAL_ONLY` which prevents LSA whisperer from using it remotely.
+
+The RPC server will additionally check if the client is local before issuing operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done by the server and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandler`).
+
+It is also worth noting that the RPC runtime has a hardcoded list of interfaces that are exempt from multiple security mitigations that have existed since NT 5.2.
+The list is named `RpcVerifierExemptInterfaces` and may be found by viewing its use in the `rpcrt4.dll!IsInterfaceExempt` function.
+The list includes multiple RPC servers that have been previously abused such as https://github.com/Wh04m1001/DFSCoerce[MS-DFSNM], https://github.com/topotam/PetitPotam[MS-EFSR], https://learn.microsoft.com/en-us/security-updates/securitybulletins/2008/ms08-067[MS-SRVS], and https://www.akamai.com/blog/security-research/cold-hard-cache-bypassing-rpc-with-cache-abuse[MS-WKST].
+
+Interestingly, Microsoft has only added 2 interfaces to this list since NT 5.2.
+One is the Remote Management interface and one is SSPI.
+Microsoft has also added 1 additional mitigation bypass which has only been applied to SSPI (flag `0x8`).
+The following is the full list of flags for bypassing RPC runtime mitigations which have all been applied to the SSPI interface.
+Microsoft's need for doing this has still not been determined.
+
+[source,c]
+----
+// Registering an interface that is remotely acessible without a
+// security callback and without RPC_IF_ALLOW_SECURE_ONLY flag
+#define ALLOW_UNSECURE_REMOTE_ACCESS 0x00000001
+
+// An interface may be called remotely without
+// RPC_C_AUTHN_LEVEL_PKT_PRIVACY
+#define ALLOW_UNENCRYPTED_REMOTE_ACCESS 0x00000002
+
+// An interface may be called remotely without mutual
+// authentication.
+#define ALLOW_NO_MUTUAL_AUTH_REMOTE_ACCESS 0x00000004
+
+// Do not flag the use of a security callback when running
+// with the RPC verifier. Usage determined by binary auditing
+#define RPC_VERIFIER_UNSAFE_FEATURE 0x00000008
+----

@@ -1,0 +1,41 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Public Key User 2 User (PKU2U)
+:toc: macro
+
+...
+
+toc::[]
+
+== Functions
+
+The protocol messages that pku2u supports is not documented by Microsoft but is provided here.
+The message IDs, request buffers, and response buffers for each function align with their equivalent function in the kerberos package.
+As such, the message type names were choosen to align with how Microsoft named them for kerberos.
+
+[%header]
+|===
+| Id     | Message Type        | CLI Support        | NT Version | Internal Function
+| `0x0f` | PurgeTicketCacheEx  | _Planned_          |            | Pku2uPurgeTicketEx
+| `0x14` | QueryTicketCacheEx2 | _Planned_          |            | Pku2uQueryTicketCacheEx2
+|===
+
+NOTE: The internal function will be located in `pku2u.dll`.
+
+=== PurgeTicketCacheEx
+
+Remove an individuel ticket or all tickets from the ticket cache for a logon session.
+
+```
+pku2u PurgeTicketCacheEx [--all] ...
+```
+
+=== QueryTicketCacheEx2
+
+Get the tickets for a logon session.
+
+```
+pku2u QueryTicketCacheEx2 --luid {session id}
+```

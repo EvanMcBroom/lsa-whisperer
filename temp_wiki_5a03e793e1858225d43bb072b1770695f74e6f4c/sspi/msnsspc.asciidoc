@@ -1,0 +1,24 @@
+= MSN Client SSP
+
+The Microsoft Network (MSN) client package is a legacy SSP for NTLM.
+Client versions of the package (e.g., `msnsspc.dll`) were released as early as Windows 95 and NT 4.0 and were removed in NT 6.0.
+Although a built copy of the server version of the package could not be identified (e.g., `msnssps.dll`), it was built from the same sources as the client package, albeit with different predefined macros, which allowed it to be audited as well.
+
+The package was made to allow registered MSN users to authenticate to MSN servers over HTTP for purchasing services and viewing billing information.
+During authentication, MSN servers would relay the NTLM messages to an Online Brokering Service within MSN to validate the user's name and LM password hash against a database of user information.
+You may find more information about the Online Brokering Service and user database from the following US patents Microsoft filled in 1995 and 1996:
+
+- https://patents.google.com/patent/US5941947A/en[System and method for Controlling Access to Data Entities in a Computer Network]
+- https://patents.google.com/patent/US5815665A/en[System and Method for Providing Trusted Brokering Services Over a Distributed Network]
+
+The package only supported NTLMv1 authentication with the possibility for NTLM1 signing and sealing.
+When signing and sealing was used, the package would only generate the smaller 40-bit session key option for NTLM1 using a https://davenport.sourceforge.net/ntlm.html#keyWeakening[well defined key weakening scheme].
+
+The package did allow for 16 character ASCII passwords which is longer than the 14 byte limitation of LanManager passwords.
+The package supported this by distributing the 7 least significant bits of the 15th and 16th characters over the most significant bit of characters 1 through 14 when necessary.
+The package would also allow for blank passwords.
+
+In addition to only allowing a weak scheme for authentication messages, signing, and sealing, the package would also cache a user's name and LM password hash in a shared memory object named `SicilyMsnPwdSharedMemory` which other processes could access.
+The package would even create a mutex named `MsnSspcPrivatePwdMutex` with a https://learn.microsoft.com/en-us/windows/win32/secauthz/null-dacls-and-empty-dacls[Null DACL] for synchronizing access to the shared memory object.
+That allowed any process that attempted to recover LM password hashes from shared memory to also be able to synchronize its attempts with the mutex and not disrupt the normal operations of the package.
+Needless to say, it's for the best that Microsoft removed this package from Windows.

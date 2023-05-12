@@ -1,0 +1,87 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Negotiate
+:toc: macro
+
+Negotiate is the security package (SP) for Simple and Protected GSSAPI Negotiation (SPNEGO).
+Negotiate is compiled into lsasrv.dll and supports NTLM, Keberos, and as of NT 6.1, NEGOEX.
+Microsoft provides a technical document for https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-spng/f377a379-c24f-4a0f-a3eb-0d835389e28a[SPNEGO].
+Due to its design, Negotiate also supports authentication package (AP) functions for user logons and package calls (e.g., `LsaApCallPackage`).
+The negotiate AP does not support untrusted calls or calls that are passed through.
+
+When a client uses negotiate to establish an authentication with a server, it will prioritize Keberos, then the NEGOEX packages, then NTLM.
+An exception was identified for this when a server is targeted using a SPN containing the word `localhost` or the DNS or NetBIOS name of the local machine when the LSASS process started.
+In that situation, negotiate is hardcoded to attempt NTLM authentication first.
+
+== Functions
+
+The protocol messages that negotiate supports is not documented by Microsoft but is provided here.
+Supporting negotiate commands is currently not a priority for Lsa Whisperer.
+
+[%header]
+|===
+| Id    | Message Type          | CLI Support        | NT Version | Internal Function
+| `0x0` | `EnumPackagePrefixes` | :heavy_check_mark: | `>=5.1`    | `NegEnumPackagePrefixesCall`
+| `0x1` | `GetCallerName`       | :heavy_check_mark: | `>=5.1`    | `NegGetCallerNameCall`
+| `0x2` | `TransferCred`        | :heavy_check_mark: | `>=?`      | `NegTransferCredCall`
+| `0x3` | `EnumPackageNames`    | :x:                | `>=?`      | `NetEnumPackageNamesCall` [sic]
+|===
+
+NOTE: The internal function will be located in `lsasrv.dll`.
+
+The `EnumPackageNames` function prefix is likely a typo by a Microsoft developer and meant to be `Neg`.
+
+=== EnumPackagePrefixes
+
+Microsoft has an OID branch for "Security Mechanisms" (e.g., `1.3.6.1.4.1.311.2.2`) which is followed by a mechanism identifier.
+Examples include Loopback (9) and an RPC ID (ex. NTLM - 10).
+
+Get the DER encoded OIDs (e.g., "prefix") for each mechanism supported by negotiate.
+This function to provided to support the simple authentication and security layer (SASL) for negotiating security packages.
+
+.Negotiate Supported Mechanism OIDs
+[%header]
+|===
+| Mechanism Name   | OID
+| Spnego           | 6.7.43.6.1.5.5.2
+| Kerberos         | 6.9.42.134.72.134.247.18.1.2.2
+| Kerberos Legacy  | 6.9.42.134.72.130.247.18.1.2.2
+| Microsoft (NTLM) | 6.10.43.6.1.4.1.130.55.2.2.0
+|===
+
+The Kerberos Legacy mechanism is used for compatibility with a previous version of the kerberos package on NT 5.0.
+When Kerberos is added to negotiate's package list, the legacy OID will be added first to prevent the version of Wininet on NT 5.0 from having to handle additional SPNEGO round-trips which it cannot do reliably.
+
+The Microsoft mechanism is used by negotiate to identify the NTLM security package.
+When negotiate gathers information about packages it supports during initialization it will overwrite the last byte of the Microsoft mechanism OID with what it believes to be the RPC ID of the NTLM package.
+Through testing, this last byte will be overwritten with `3`.
+
+```
+negotiate EnumPackagePrefixes
+```
+
+=== GetCallerName
+
+Negotiate maintains a doubly linked list of structures to maintain user specific information about each session created by the package.
+That structure contains a `UNICODE_STRING AlternateName` member in the format `DomainName\UserName` which this call returns.
+
+```
+negotiate GetCallerName
+```
+
+=== TransferCred
+
+Transfer data between two negotiate logon sessions.
+The specific data that is transferred and privileges that may be required are still being determined.
+The function only accepts the cleanup credentials, optimistic logon, and to SSO session flags.
+
+```
+negotiate TransferCred --sluid {session id} --dluid {session id} [--cleanup-credentials] [--optimistic-logon] [--to-sso-session]
+```
+
+=== EnumPackageNames
+
+The function may not be called by another process and negotiate does not support passthrough calls.
+So the function may only be called by lsass or 3rd party code loaded by lsass.
