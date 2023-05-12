@@ -36,7 +36,7 @@ It is not known on which version of NT these functions were originally introduce
 | `0x06` | `RefreshTokenBlob`                 | _Planned_
 | `0x07` | `GenARSOPwd`                       | _Planned_
 | `0x08` | `SetTestParas`                     | :x:
-| `0x09` | `TransferCreds`                    | _Planned_
+| `0x09` | `TransferCreds`                    | :heavy_check_mark:
 | `0x0A` | `ProvisionNGCNode`                 | :x:
 | `0x0B` | `GetPwdExpiryInfo`                 | _Planned_
 | `0x0C` | `DisableOptimizedLogon`            | _Planned_
@@ -47,41 +47,76 @@ It is not known on which version of NT these functions were originally introduce
 | `0x11` | `IsCloudToOnPremTgtPresentInCache` | _Planned_
 |===
 
-=== ReinitPlugin
-
-Unloads then reloads all cloudap plugins.
-
-=== GetTokenBlob
-
-The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, also referred to as the CloudTGT.
-This function unprotects and returns the TokenBlob entry.
-
 === CallPluginGeneric
 
 Call a CloudAP plugin function.
 The function id and its arguments are serialized as a single JSON object.
 
-=== ProfileDeleted
+=== DisableOptimizedLogon
 
-Need to finish auditing.
+Turn off optimized logon.
+
+=== GenARSOPwd
+
+Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
+
+=== GetAccountInfo
+
+Todo.
 
 === GetAuthenticatingProvider
 
 The `_LOGON_SESSION` structure has a GUID entry to identify which cloudap plugin was used (e.g., AzureAD or MicrosoftAccount)
 This function returns that GUID entry.
 
-=== RenameAccount
+=== GetDpApiCredKeyDecryptStatus
 
-Will update the account name in the Security Accounts Manager (SAM).
+Return DpApiCredKeyDecryptStatus from user cache entry.
+
+=== GetPublicCachedInfo
+
+Retrieve PublicCacheData from disk, deserialize, and return it.
+`code + package guid + uint 6 + (uint + uint) + (uint + uint).`
+
+=== GetPwdExpiryInfo
+
+Returns a FILETIME for the TokenBlob expiry time followed by a unicode string.
+
+=== GetTokenBlob
+
+The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, also referred to as the CloudTGT.
+This function unprotects and returns the TokenBlob entry.
+
+
+=== GetUnlockKeyType
+
+Return the UnlockKeyType from the UserCacheEntry which can only be of value `x` for `0 < x < 8`.
+
+=== IsCloudToOnPremTgtPresentInCache
+
+Todo.
+
+=== ProfileDeleted
+
 Need to finish auditing.
+
+=== ProvisionNGCNode
+
+Todo.
+Ngc Prime Cached Logon In Lsa.
 
 === RefreshTokenBlob
 
 Refresh a logon session's TokenBlob using the `RefreshToken` cloudap function plugin.
 
-=== GenARSOPwd
+=== ReinitPlugin
 
-Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
+Unloads then reloads all cloudap plugins.
+
+=== RenameAccount
+
+Will update the account name in the Security Accounts Manager (SAM).
+Need to finish auditing.
 
 === SetTestParas
 
@@ -96,43 +131,14 @@ A ULONG must be provided after the call ID.
 
 === TransferCreds
 
-Transfers creds between two CloudAP logon sessions.
+Transfer data between two cloudap logon sessions.
+The specific data that is transferred and privileges that may be required are still being determined.
 Will generate a new logon session for dst if needed.
-Src then dst LUIDs must follow call ID.
+The function does not take any flags.
 
-=== ProvisionNGCNode
-
-Todo.
-Ngc Prime Cached Logon In Lsa.
-
-=== GetPwdExpiryInfo
-
-Returns a FILETIME for the TokenBlob expiry time followed by a unicode string.
-
-=== DisableOptimizedLogon
-
-Turn off optimized logon.
-
-=== GetUnlockKeyType
-
-Return the UnlockKeyType from the UserCacheEntry which can only be of value `x` for `0 < x < 8`.
-
-=== GetPublicCachedInfo
-
-Retrieve PublicCacheData from disk, deserialize, and return it.
-`code + package guid + uint 6 + (uint + uint) + (uint + uint).`
-
-=== GetAccountInfo
-
-Todo.
-
-=== GetDpApiCredKeyDecryptStatus
-
-Return DpApiCredKeyDecryptStatus from user cache entry.
-
-=== IsCloudToOnPremTgtPresentInCache
-
-Todo.
+```
+cloudap TransferCreds --sluid {session id} --dluid {session id}
+```
 
 == Plugins
 

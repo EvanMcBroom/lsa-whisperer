@@ -25,7 +25,7 @@ Supporting negotiate commands is currently not a priority for Lsa Whisperer.
 | Id    | Message Type          | CLI Support        | NT Version | Internal Function
 | `0x0` | `EnumPackagePrefixes` | :heavy_check_mark: | `>=5.1`    | `NegEnumPackagePrefixesCall`
 | `0x1` | `GetCallerName`       | :heavy_check_mark: | `>=5.1`    | `NegGetCallerNameCall`
-| `0x2` | `TransferCred`        | _Planned_          | `>=?`      | `NegTransferCredCall`
+| `0x2` | `TransferCred`        | :heavy_check_mark: | `>=?`      | `NegTransferCredCall`
 | `0x3` | `EnumPackageNames`    | :x:                | `>=?`      | `NetEnumPackageNamesCall` [sic]
 |===
 
@@ -73,8 +73,13 @@ negotiate GetCallerName
 
 === TransferCred
 
-Transfer data from one logon session to another logon session.
+Transfer data between two negotiate logon sessions.
 The specific data that is transferred and privileges that may be required are still being determined.
+The function only accepts the cleanup credentials, optimistic logon, and to SSO session flags.
+
+```
+negotiate TransferCred --sluid {session id} --dluid {session id} [--cleanup-credentials] [--optimistic-logon] [--to-sso-session]
+```
 
 === EnumPackageNames
 
