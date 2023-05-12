@@ -29,7 +29,7 @@ NOTE: The internal function will be located in `pku2u.dll`.
 Remove an individuel ticket or all tickets from the ticket cache for a logon session.
 
 ```
-pku2u PurgeTicketCacheEx ...
+pku2u PurgeTicketCacheEx [--all] ...
 ```
 
 === QueryTicketCacheEx2

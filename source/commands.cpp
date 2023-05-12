@@ -299,7 +299,8 @@ namespace Pku2u {
         char* command{ "pku2u" };
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
-        unparsedOptions.add_options("Command arguments")\
+        unparsedOptions.add_options("Command arguments")
+            ("all", "Purge all tickets flag", cxxopts::value<bool>()->default_value("false"))
             ("luid", "Logon session", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
@@ -311,7 +312,10 @@ namespace Pku2u {
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:
-            return proxy.PurgeTicketEx();
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            DWORD flags{ (options.count("all")) ? KERB_PURGE_ALL_TICKETS : 0 };
+            return proxy.PurgeTicketEx(&luid, flags);
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
