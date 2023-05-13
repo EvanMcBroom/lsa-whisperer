@@ -1,8 +1,0 @@
-= Credential Delegation SSP
-
-The credssp package implements a security protocol for delegating (e.g. transmitting) credentials from a client to a server for remote authentication.
-The client first establishes a TLS channel with the server.
-The client then authenticates with the server using the Simple and Protected Negotiate (SPNEGO) protocol.
-The credssp package does not support any authentication package (AP) functions and as such there are no plans to support credssp commands in Lsa Whisperer for directly interacting with it.
-
-More information may be found in Microsoft's 2006 patent application on https://patents.google.com/patent/US7913084["Policy driven, credential delegation for single sign on and secure access to network resources"] and their technical document on the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cssp/85f57821-40bb-46aa-bfcb-ba9590b8fc30[Credential Security Support Provider (CredSSP) Protocol].

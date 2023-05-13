@@ -35,6 +35,7 @@ pku2u PurgeTicketCacheEx [--all] ...
 === QueryTicketCacheEx2
 
 Get the tickets for a logon session.
+`SeTcbPrivilege` is not required to make the call, but is required for the call to return data.
 
 ```
 pku2u QueryTicketCacheEx2 --luid {session id}

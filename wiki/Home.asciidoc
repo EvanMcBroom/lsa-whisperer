@@ -77,7 +77,7 @@ As such, the project will refer to SSPs that support both a security protocol an
 | credssp   | Credential Delegation SSP                 | TLS+SPNEGO    | :heavy_minus_sign: |        |
 | kerberos  | Kerberos                                  | Kerberos      | :heavy_check_mark: | 16     | `GSS_KERBEROS`
 | livessp   | Live SSP                                  | ?             | :heavy_check_mark: | 32     | `LIVE_SSP`
-| msapsspc  | DPA Client                                | NTLM          | :heavy_minus_sign: | 17     | `DPA`
+| msapsspc  | DPA Client                                | RPA           | :heavy_minus_sign: | 17     | `DPA`
 | msnsspc   | MSN Client                                | NTLM          | :heavy_minus_sign: | 18     | `MSN`
 | msv1_0    | Microsoft Authentication Package v1.0     | NTLM          | :heavy_check_mark: | 10     | `WINNT`
 | negoexts  | Negotiate Extender                        | NEGOEX        | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
