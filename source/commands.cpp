@@ -311,11 +311,12 @@ namespace Pku2u {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:
+        case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            DWORD flags{ (options.count("all")) ? KERB_PURGE_ALL_TICKETS : 0 };
+            auto flags{ (options.count("all")) ? KERB_PURGE_ALL_TICKETS : 0 };
             return proxy.PurgeTicketEx(&luid, flags);
+        }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
