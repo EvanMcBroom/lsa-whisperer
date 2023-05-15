@@ -11,4 +11,4 @@ Server versions of the package were not released with Windows (e.g., `msapssps.d
 
 DPA authentication for on premise resources required administrators to maintain a Membership Directory to store user information, which could be any ODBC-compliant database (ex. an SQL or LDAP server).
 The Membership Directory would store all user information in plaintext, including user passwords.
-Clearly, it is for the best that Microsoft has removed this package from Windows and stopped supporting DPA.
+Clearly, it is for the best that Microsoft has removed this package from Windows and has stopped supporting DPA.

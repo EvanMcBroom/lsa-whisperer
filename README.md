@@ -57,3 +57,4 @@ Aside from the creators and maintainers of the above [open source](#open) projec
 - [Adam Chester](https://twitter.com/_xpn_)
 - [Lee Christensen](https://twitter.com/tifkin_)
 - [Dr. Nestori Syynimaa](https://twitter.com/DrAzureAD)
+- [Steve Syfuhs](https://twitter.com/SteveSyfuhs)
