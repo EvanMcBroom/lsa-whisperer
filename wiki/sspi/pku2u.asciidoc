@@ -8,7 +8,7 @@ endif::[]
 The pku2u authentication package (AP) supports peer-to-peer logons.
 It is also the security package (SP) for the https://datatracker.ietf.org/doc/id/draft-zhu-pku2u-09.txt[Public Key Cryptography Based User-to-User] protocol, a GSS-API compliant alternative to Kerberos V which does not require a Key Distribution Center (KDC).
 Pku2u https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd560634(v=ws.10)[was added in NT 6.1] to allow https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-r2-and-2008/dd560662(v=ws.10)[users with linked online IDs] to share files via https://en.wikipedia.org/wiki/Features_new_to_Windows_7#HomeGroup[HomeGroup], a Windows feature that was removed in https://support.microsoft.com/en-us/windows/homegroup-removed-from-windows-10-version-1803-07ca5db1-7bca-4d11-68a3-a31ff4a09979[NT 10 1803].
-Pku2u is now used to allow https://syfuhs.net/how-authentication-works-when-you-use-remote-desktop[Azure AD (AAD) joined hosts to authenticate with other AAD joined hosts for RDP, SMB, and another network protocol].
+Pku2u is now used to allow https://syfuhs.net/how-authentication-works-when-you-use-remote-desktop[Azure AD (AAD) joined hosts to authenticate with other AAD joined hosts for RDP, SMB, and other network protocols].
 
 toc::[]
 
