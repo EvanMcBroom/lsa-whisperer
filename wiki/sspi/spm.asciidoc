@@ -1,0 +1,126 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Security Package Manager
+:toc: macro
+
+The security package manager (SPM) is an undocumented component of LSA.
+The SPM manages both the authentication package and security package DLLs that LSA loads.
+As far as I am aware, the SPM has not been previously written about.
+
+As far back as NT 3.5, LSA has provided an API for interacting with authentication packages (e.g., the AU API) over LPC port `\\LsaAuthenticationPort`.
+Clients could interact with the API by either using an abstracted Win32 function (ex. `LsaLookupAuthenticationPackage`) or by submitting data to the port formatted as an `LSAP_AU_API_MESSAGE` structure.
+The `ntoskrnl.exe` has always provided Win32 function equivalents which are internally handled by the `ksecdd.sys` driver.
+The `ksecdd.sys` driver currently implements this functionality as an https://medium.com/yarden-shafir/yes-more-callbacks-the-kernel-extension-mechanism-c7300119a37a[NTOS extension host] (e.g., `SepAuthExtensionHost`).
+
+Microsoft later added an SPM API which extends the AU API.
+The SPM API has been identified in NT 5.2 but may have existed as early as NT 5.0.
+Microsoft provides Win32 and `ntoskrnl.exe` exports for some SPM APIs but clients must submit data to the SPM directly to interact with all of the API's functions.
+
+Data for SPM API calls are formated as an `SPM_LPC_MESSAGE` structure.
+The first members of the `LSAP_AU_API_MESSAGE` and `SPM_LPC_MESSAGE` structures are binary compatible up until the structure member that identifies which API number is to be called.
+That allows the SPM to know which API is being requested and which structure definition should be used to interpret the remainder of the data.
+
+Oddly, Microsoft continued to use the same LPC port for communication in NT 6.0 despite the introduction of ALPC.
+The APIs have only been updated in NT 6.1 when the SSPI RPC interface was added to LSA.
+
+The LPC port was removed in NT 6.1 and clients must now use the `SspirCallRpc` operation of the SSPI RPC interface to send data directly to either API.
+Although the communication is now facilitated via RPC, the code for handling API requests has not been updated and still expects data to be formatted as an `LSAP_AU_API_MESSAGE` or `SPM_LPC_MESSAGE` structure.
+Additionally, some API functions were removed to become SSPI RPC operations while others were removed entirely.
+Other than the API updates for NT 6.1 and slight name changes for functions over the years both APIs have remaned stable.
+
+toc::[]
+
+== Authentication API (AU API)
+
+.AU APIs Pre-NT 6.1
+[%header]
+|===
+| Id     | Message Type           | CLI Support        | NT Version | Notes
+| `0x00` | LookupPackage          | :x:                | `>=3.5`    |
+| `0x01` | LogonUser              | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x02` | CallPackage            | :x:                | `>=3.5`    |
+| `0x03` | DeregisterLogonProcess | :x:                | `>=3.5`    |
+|===
+
+.AU APIs Post-NT 6.1
+[%header]
+|===
+| Id     | Message Type           | CLI Support        | NT Version | Notes
+| `0x00` | LookupPackage          | :x:                | `>=6.1`    |
+| `0x01` | CallPackage            | :x:                | `>=6.1`    |
+| `0x02` | DeregisterLogonProcess | :x:                | `>=6.1`    |
+| `0x03` |                        | :x:                | `>=6.1`    | Not used
+|===
+
+
+== SPM API
+
+.SPM APIs Pre-NT 6.1
+[%header]
+|===
+| Id     | Message Type          | CLI Support        | NT Version | Notes
+| `0x04` | GetBinding            | :x:                | `>=3.5`    |
+| `0x05` | SetSession            | :x:                | `>=3.5`    |
+| `0x06` | FindPackage           | :x:                | `>=3.5`    |
+| `0x07` | EnumPackages          | :x:                | `>=3.5`    |
+| `0x08` | AcquireCreds          | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x09` | EstablishCreds        | :x:                | `>=3.5`    | Later removed
+| `0x0A` | FreeCredHandle        | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x0B` | InitContext           | :x:                | `>=3.5`    | Later removed
+| `0x0C` | AcceptContext         | :x:                | `>=3.5`    | Later removed
+| `0x0D` | ApplyToken            | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x0E` | DeleteContext         | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x0F` | QueryPackage          | :x:                | `>=3.5`    |
+| `0x10` | GetUserInfo           | :x:                | `>=3.5`    |
+| `0x11` | GetCreds              | :x:                | `>=3.5`    | Later removed
+| `0x12` | SaveCreds             | :x:                | `>=3.5`    | Later removed
+| `0x13` | QueryCredAttributes   | :x:                | `>=3.5`    |
+| `0x14` | AddPackage            | :x:                | `>=3.5`    |
+| `0x15` | DeletePackage         | :x:                | `>=3.5`    | Later removed
+| `0x16` | EfsGenerateKey        | :x:                | `>=3.5`    |
+| `0x17` | EfsGenerateDirEfs     | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
+| `0x18` | EfsDecryptFek         | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
+| `0x19` | EfsGenerateSessionKey | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
+| `0x1A` | QueryContextAttr      | :x:                | `>=3.5`    | Renamed to `QueryContextAttributes`
+| `0x1B` | Callback              | :x:                | `>=3.5`    |
+| `0x1C` | LsaPolicyChangeNotify | :x:                | `>=3.5`    |
+| `0x1D` | GetUserNameX          | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x1E` | AddCredential         | :x:                | `>=3.5`    | Renamed to `AddCredentials`
+| `0x1F` | EnumLogonSession      | :x:                | `>=3.5`    | Renamed to `EnumLogonSessions`
+| `0x20` | GetLogonSessionData   | :x:                | `>=3.5`    |
+| `0x21` | SetContextAttr        | :x:                | `>=3.5`    | Renamed to `SetContextAttributes`
+| `0x22` | LookupAccountSidX     | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x23` | LookupAccountNameX    | :x:                | `>=3.5`    | Renamed to `LookupAccountName`
+| `0x24` | LookupWellKnownSid    | :x:                | `>=3.5`    |
+|===
+
+.SPM APIs Post-NT 6.1
+[%header]
+|===
+| Id     | Message Type           | CLI Support        | NT Version | Notes
+| `0x04` | GetBinding             | :x:                | `>=6.1`    |
+| `0x05` | SetSession             | :x:                | `>=6.1`    |
+| `0x06` | FindPackage            | :x:                | `>=6.1`    |
+| `0x07` | EnumPackages           | :x:                | `>=6.1`    |
+| `0x08` | QueryPackage           | :x:                | `>=6.1`    |
+| `0x09` | GetUserInfo            | :x:                | `>=6.1`    |
+| `0x0A` | QueryCredAttributes    | :x:                | `>=6.1`    |
+| `0x0B` | AddPackage             | :x:                | `>=6.1`    |
+| `0x0C` | EfsGenerateKey         | :x:                | `>=6.1`    | Named `EfsGenerateFek` in NT 6.1
+| `0x0D` | EfsGenerateKey         | :x:                | `>=6.1`    | Named `EfsGenerateFek` in NT 6.1
+| `0x0E` | EfsGenerateKey         | :x:                | `>=6.1`    | Named `EfsGenerateFek` in NT 6.1
+| `0x0F` | EfsGenerateKey         | :x:                | `>=6.1`    | Named `EfsGenerateFek` in NT 6.1
+| `0x10` | Callback               | :x:                | `>=6.1`    |
+| `0x11` | QueryContextAttributes | :x:                | `>=6.1`    |
+| `0x12` | LsaPolicyChangeNotify  | :x:                | `>=6.1`    |
+| `0x13` | AddCredentials         | :x:                | `>=6.1`    |
+| `0x14` | EnumLogonSessions      | :x:                | `>=6.1`    |
+| `0x15` | GetLogonSessionData    | :x:                | `>=6.1`    |
+| `0x16` | SetContextAttributes   | :x:                | `>=6.1`    |
+| `0x17` | LookupAccountName      | :x:                | `>=6.1`    |
+| `0x18` | LookupWellKnownSid     | :x:                | `>=6.1`    |
+| `0x19` | SetCredAttributes      | :x:                | `>=6.1`    |
+| `0x1A` | ChangeAccountPassword  | :x:                | `>=6.1`    |
+|===

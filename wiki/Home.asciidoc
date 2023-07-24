@@ -39,7 +39,7 @@ The components of LSA may be categorized in different ways but are presented her
 
 The LSA Whisperer project focuses on interacting with security support provider (SSP) DLLs.
 Microsoft provides https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of functions] (ex. `LsaCallAuthenticationPackage`) for interacting with SSPs.
-These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface (underlined in <<interfaces>>) which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in Windows 7]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
+These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface (underlined in <<interfaces>>) which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in NT 6.1]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
 
 .SSPI Operations
 [%header]
