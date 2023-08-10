@@ -32,6 +32,10 @@ namespace Schannel {
     bool Call(const std::shared_ptr<Lsa>& proxy, const std::vector<char*>& args);
 }
 
+namespace Spm {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
+}
+
 namespace Wdigest {
     bool Call(const std::shared_ptr<Lsa>& proxy, const std::vector<char*>& args);
 }

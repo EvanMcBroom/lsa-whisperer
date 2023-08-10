@@ -378,6 +378,32 @@ namespace Schannel {
     }
 }
 
+namespace Spm {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "spm" };
+        cxxopts::Options unparsedOptions{ command };
+        // clang-format off
+        unparsedOptions.add_options("Spm Function")
+            ("f,function", "Function name", cxxopts::value<std::string>());
+        // clang-format on
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+
+        switch (magic_enum::enum_cast<SpmApi::NUMBER>(args[1]).value()) {
+        case SpmApi::NUMBER::EnumLogonSessions:
+            return lsa->EnumLogonSessions();
+        case SpmApi::NUMBER::EnumPackages:
+            return lsa->EnumPackages();
+        default:
+            break;
+        }
+        return false;
+    }
+}
+
 namespace Wdigest {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "wdigest" };

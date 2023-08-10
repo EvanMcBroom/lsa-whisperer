@@ -22,7 +22,6 @@ namespace Kerberos {
         AddBindingCacheEntry,
         SetPassword,
         SetPasswordEx,
-        AddExtraCredentialsMessage = 17,
         VerifyCredentials,
         QueryTicketCacheEx,
         PurgeTicketCacheEx,
@@ -104,10 +103,7 @@ namespace Kerberos {
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer
-        bool CallPackage(const std::string& submitBuffer, void** returnBuffer) const;
         template<typename _Request, typename _Response>
         bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const;
-        template<typename _Request, typename _Response>
-        bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
 }

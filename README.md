@@ -2,8 +2,6 @@
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.txt)
 
-> Thank you to [Elad](https://twitter.com/elad_shamir) for providing the inspiration for this tool and the research, support, and collaboration throughout its development.
-
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
 Support is provided for the cloudap, msv1_0, negotiate, pku2u, schannel, and kerberos packages.
 Please refer to the [wiki](https://github.com/EvanMcBroom/lsa-whisperer/wiki) to see which message protocols are currently supported. 
@@ -41,10 +39,10 @@ Thank you to the following packages that are used in LSA Whisperer directly or i
     - [sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx) (license - [BSD](https://github.com/sphinx-doc/sphinx/blob/master/LICENSE))
     - [readthedocs/sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) (license - [MIT](https://github.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE))
 
-Thank you to the following related projects that greatly helped in the development of LSA Whisperer:
+Although not used by LSA Whisperer, the following projects greatly helped in its development:
 
-- [Kekeo](https://github.com/gentilkiwi/kekeo) - A little toolbox to play with Microsoft Kerberos in C
 - [Impacket](https://github.com/SecureAuthCorp/impacket) - A collection of Python classes for working with network protocols
+- [Kekeo](https://github.com/gentilkiwi/kekeo) - A little toolbox to play with Microsoft Kerberos in C
 - [Mimikatz](https://github.com/gentilkiwi/mimikatz) - A little tool to play with Windows security
 - [NtObjectManager](https://github.com/googleprojectzero/sandbox-attacksurface-analysis-tools/tree/main/NtObjectManager) - A library to access the NT object manager namespace
 - [ROADtools](https://github.com/dirkjanm/ROADtools) - The Azure AD exploration framework
@@ -52,9 +50,18 @@ Thank you to the following related projects that greatly helped in the developme
 
 ## Acknowledgments
 
-Aside from the creators and maintainers of the above [open source](#open) projects, additional thanks are needed to the following people who's research helped as well:
+Thank you to [SpecterOps](https://specterops.io/) for supporting this research and to my coworkers who have helped with its development.
 
-- [Adam Chester](https://twitter.com/_xpn_)
-- [Lee Christensen](https://twitter.com/tifkin_)
-- [Dr. Nestori Syynimaa](https://twitter.com/DrAzureAD)
-- [Steve Syfuhs](https://twitter.com/SteveSyfuhs)
+Thank you [Elad](https://twitter.com/elad_shamir) and [Lee](https://twitter.com/tifkin_) for both inspiring this tool and the research, support, and collaboration throughout its development.
+Elad additionally developed the operational use cases for [msv1_0's](https://github.com/EvanMcBroom/lsa-whisperer/wiki/msv1_0) caching functions and Lee both introduced me to [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and showed it's potential for recovering authentication data. 
+
+Thank you as well to [Will](https://twitter.com/harmj0y) for always being a good sounding board, [Daniel](https://twitter.com/hotnops) for answering my AzureAD questions, and [Kai](https://twitter.com/mhskai2017) for helping add Kerberos support.
+
+## Related Work
+
+- [Adam Chester](https://twitter.com/_xpn_) ([2019](https://blog.xpnsec.com/exploring-mimikatz-part-2/)), showed a POC for SPM's AddPackage API
+- [Alex Short](https://twitter.com/alexsho71327477) ([2023](https://github.com/rbmm/TBAL)), showed POCs for ARSO and TBAL
+- [Mor Rubin](https://twitter.com/rubin_mor) ([2020](https://medium.com/@mor2464/azure-ad-pass-the-certificate-d0c5de624597)), created tools and techniques for NegoEX
+- [Dr. Nestori Syynimaa](https://twitter.com/DrAzureAD) ([2017-Current](https://aadinternals.com/post/welcome/)), for the Office 365 blog
+- [Passcape Software](https://www.passcape.com/) ([2019](https://www.passcape.com/text/articles/tbal.pdf)), documented ARSO and TBAL
+- [Steve Syfuhs](https://twitter.com/SteveSyfuhs) ([2017-Current](https://syfuhs.net/category/Authentication)), for the Windows Authentication blog posts

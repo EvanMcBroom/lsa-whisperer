@@ -28,9 +28,16 @@ The APIs have only been updated in NT 6.1 when the SSPI RPC interface was added 
 The LPC port was removed in NT 6.1 and clients must now use the `SspirCallRpc` operation of the SSPI RPC interface to send data directly to either API.
 Although the communication is now facilitated via RPC, the code for handling API requests has not been updated and still expects data to be formatted as an `LSAP_AU_API_MESSAGE` or `SPM_LPC_MESSAGE` structure.
 Additionally, some API functions were removed to become SSPI RPC operations while others were removed entirely.
+The only API function that was added was `ChangeAccountPassword`.
 Other than the API updates for NT 6.1 and slight name changes for functions over the years both APIs have remaned stable.
 
 toc::[]
+
+== SPM Security 
+
+`LsapGetClientInfo` checks for:
+
+- userPrincipalName capability which is documented as required for https://learn.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations[`GetUserNameEx`].
 
 == Authentication API (AU API)
 
@@ -42,6 +49,7 @@ toc::[]
 | `0x01` | LogonUser              | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
 | `0x02` | CallPackage            | :x:                | `>=3.5`    |
 | `0x03` | DeregisterLogonProcess | :x:                | `>=3.5`    |
+| `0x04` |                        | :heavy_minus_sign: | `>=6.1`    | Not used
 |===
 
 .AU APIs Post-NT 6.1
@@ -51,9 +59,24 @@ toc::[]
 | `0x00` | LookupPackage          | :x:                | `>=6.1`    |
 | `0x01` | CallPackage            | :x:                | `>=6.1`    |
 | `0x02` | DeregisterLogonProcess | :x:                | `>=6.1`    |
-| `0x03` |                        | :x:                | `>=6.1`    | Not used
+| `0x03` |                        | :heavy_minus_sign: | `>=6.1`    | Not used
 |===
 
+=== CallPackage
+
+Facilitates the https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsacallauthenticationpackage[`LsaCallAuthenticationPackage`] API and is the primary API used by LSA Whisperer.
+
+=== DeregisterLogonProcess
+
+Facilitates the https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsaderegisterlogonprocess[`LsaDeregisterLogonProcess`] API.
+
+=== LogonUser
+
+Facilitates the https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsalogonuser[`LsaLogonUser`] API.
+
+=== LookupPackage
+
+Facilitates the https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsalookupauthenticationpackage[`LsaLookupAuthenticationPackage`] API.
 
 == SPM API
 
@@ -61,40 +84,43 @@ toc::[]
 [%header]
 |===
 | Id     | Message Type          | CLI Support        | NT Version | Notes
-| `0x04` | GetBinding            | :x:                | `>=3.5`    |
-| `0x05` | SetSession            | :x:                | `>=3.5`    |
-| `0x06` | FindPackage           | :x:                | `>=3.5`    |
-| `0x07` | EnumPackages          | :x:                | `>=3.5`    |
-| `0x08` | AcquireCreds          | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x09` | EstablishCreds        | :x:                | `>=3.5`    | Later removed
-| `0x0A` | FreeCredHandle        | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x0B` | InitContext           | :x:                | `>=3.5`    | Later removed
-| `0x0C` | AcceptContext         | :x:                | `>=3.5`    | Later removed
-| `0x0D` | ApplyToken            | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x0E` | DeleteContext         | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x0F` | QueryPackage          | :x:                | `>=3.5`    |
-| `0x10` | GetUserInfo           | :x:                | `>=3.5`    |
-| `0x11` | GetCreds              | :x:                | `>=3.5`    | Later removed
-| `0x12` | SaveCreds             | :x:                | `>=3.5`    | Later removed
-| `0x13` | QueryCredAttributes   | :x:                | `>=3.5`    |
-| `0x14` | AddPackage            | :x:                | `>=3.5`    |
-| `0x15` | DeletePackage         | :x:                | `>=3.5`    | Later removed
-| `0x16` | EfsGenerateKey        | :x:                | `>=3.5`    |
-| `0x17` | EfsGenerateDirEfs     | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
-| `0x18` | EfsDecryptFek         | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
-| `0x19` | EfsGenerateSessionKey | :x:                | `>=3.5`    | Replaced by `EfsGenerateKey`
-| `0x1A` | QueryContextAttr      | :x:                | `>=3.5`    | Renamed to `QueryContextAttributes`
-| `0x1B` | Callback              | :x:                | `>=3.5`    |
-| `0x1C` | LsaPolicyChangeNotify | :x:                | `>=3.5`    |
-| `0x1D` | GetUserNameX          | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x1E` | AddCredential         | :x:                | `>=3.5`    | Renamed to `AddCredentials`
-| `0x1F` | EnumLogonSession      | :x:                | `>=3.5`    | Renamed to `EnumLogonSessions`
-| `0x20` | GetLogonSessionData   | :x:                | `>=3.5`    |
-| `0x21` | SetContextAttr        | :x:                | `>=3.5`    | Renamed to `SetContextAttributes`
-| `0x22` | LookupAccountSidX     | :x:                | `>=3.5`    | Moved to the SSPI RPC interface
-| `0x23` | LookupAccountNameX    | :x:                | `>=3.5`    | Renamed to `LookupAccountName`
-| `0x24` | LookupWellKnownSid    | :x:                | `>=3.5`    |
+| `0x05` | GetBinding            | :x:                | `>~5.2`    |
+| `0x06` | SetSession            | :x:                | `>~5.2`    |
+| `0x07` | FindPackage           | :x:                | `>~5.2`    |
+| `0x08` | EnumPackages          | :x:                | `>~5.2`    |
+| `0x09` | AcquireCreds          | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x0A` | EstablishCreds        | :x:                | `>~5.2`    | Later removed
+| `0x0B` | FreeCredHandle        | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x0C` | InitContext           | :x:                | `>~5.2`    | Later removed
+| `0x0D` | AcceptContext         | :x:                | `>~5.2`    | Later removed
+| `0x0E` | ApplyToken            | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x0F` | DeleteContext         | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x10` | QueryPackage          | :x:                | `>~5.2`    |
+| `0x11` | GetUserInfo           | :x:                | `>~5.2`    |
+| `0x12` | GetCreds              | :x:                | `>~5.2`    | Later removed
+| `0x13` | SaveCreds             | :x:                | `>~5.2`    | Later removed
+| `0x14` | QueryCredAttributes   | :x:                | `>~5.2`    |
+| `0x15` | AddPackage            | :x:                | `>~5.2`    |
+| `0x16` | DeletePackage         | :x:                | `>~5.2`    | Later removed
+| `0x17` | EfsGenerateKey        | :x:                | `>~5.2`    |
+| `0x18` | EfsGenerateDirEfs     | :x:                | `>~5.2`    | Replaced by `EfsGenerateKey`
+| `0x19` | EfsDecryptFek         | :x:                | `>~5.2`    | Replaced by `EfsGenerateKey`
+| `0x1A` | EfsGenerateSessionKey | :x:                | `>~5.2`    | Replaced by `EfsGenerateKey`
+| `0x1B` | QueryContextAttr      | :x:                | `>~5.2`    | Renamed to `QueryContextAttributes`
+| `0x1C` | Callback              | :x:                | `>~5.2`    |
+| `0x1D` | LsaPolicyChangeNotify | :x:                | `>~5.2`    |
+| `0x1E` | GetUserNameX          | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x1F` | AddCredential         | :x:                | `>~5.2`    | Renamed to `AddCredentials`
+| `0x20` | EnumLogonSession      | :x:                | `>~5.2`    | Renamed to `EnumLogonSessions`
+| `0x21` | GetLogonSessionData   | :x:                | `>~5.2`    |
+| `0x22` | SetContextAttr        | :x:                | `>~5.2`    | Renamed to `SetContextAttributes`
+| `0x23` | LookupAccountSidX     | :x:                | `>~5.2`    | Moved to the SSPI RPC interface
+| `0x24` | LookupAccountNameX    | :x:                | `>~5.2`    | Renamed to `LookupAccountName`
+| `0x25` | LookupWellKnownSid    | :x:                | `>~5.2`    |
+| `0x26` |                       | :heavy_minus_sign: | `>~5.2`    | Not used
 |===
+
+NOTE: The SPM API has been identified in NT 5.2 but may have existed as early as NT 5.0.
 
 .SPM APIs Post-NT 6.1
 [%header]
@@ -123,4 +149,139 @@ toc::[]
 | `0x18` | LookupWellKnownSid     | :x:                | `>=6.1`    |
 | `0x19` | SetCredAttributes      | :x:                | `>=6.1`    |
 | `0x1A` | ChangeAccountPassword  | :x:                | `>=6.1`    |
+| `0x1B` |                        | :heavy_minus_sign: | `>=6.1`    | Not used
 |===
+
+=== AcceptContext
+
+Facilitates the `AcceptSecurityContext` API.
+
+=== AcquireCreds
+
+...
+
+=== AddCredentials
+
+...
+
+=== AddPackage
+
+Facilitates the `AddSecurityPackageW` API.
+
+=== ApplyToken
+
+...
+
+=== Callback
+
+...
+
+=== DeleteContext
+
+Facilitates the `FreeContextBuffer` API.
+Not to be confused with the `DeleteSecurityContext` API which frees local data associated with a security context.
+
+=== DeletePackage
+
+Microsoft likely intended this to facilitate the `DeleteSecurityPackageW` API, but both https://dennisbabkin.com/blog/?t=when-developers-give-up-deletesecuritypackage-function[that API] and it's SPM counterpart were never completed.
+That is likely why the API was removed from the SPM in the NT 6.1 update.
+
+=== EfsDecryptFek
+
+Decrypts or recovers an encrypted files system (EFS) File Encryption Key (FEK) for a provided http://ntfs.com/attribute-encrypted-files.htm[`$EFS` attribute] for a file.
+
+=== EfsGenerateDirEfs
+
+...
+
+=== EfsGenerateKey
+
+Generate a File Encryption Key (FEK) and encrypted files system (EFS) stream for a file being encrypted.
+
+=== EfsGenerateSessionKey
+
+...
+
+=== EnumLogonSessions
+
+Facilitates the `LsaEnumerateLogonSessions` API.
+
+=== EnumPackages
+
+Facilitates the `EnumerateSecurityPackagesW ` API.
+
+=== EstablishCreds
+
+...
+
+=== FindPackage
+
+...
+
+=== FreeCredHandle
+
+Frees and credential handle.
+
+=== GetBinding
+
+Returns the full path or DLL name for a specified package ID.
+
+=== GetCreds
+
+...
+
+=== GetLogonSessionData
+
+Facilitates the `LsaGetLogonSessionData` API.
+
+=== GetUserInfo
+
+...
+
+=== GetUserNameX
+
+Facilitates the `GetUserNameExW` API.
+
+=== InitContext
+
+Facilitates the `InitializeSecurityContext` API.
+
+=== LookupAccountName
+
+Stub to call `LsarLookupNames3`.
+
+=== LookupAccountSidX
+
+...
+
+=== LookupWellKnownSid
+
+...
+
+=== LsaPolicyChangeNotify
+
+Facilitates the `LsaUnregisterPolicyChangeNotification` API.
+
+=== QueryContextAttributes
+
+...
+
+=== QueryCredAttributes
+
+...
+
+=== QueryPackage
+
+Facilitates the `QuerySecurityPackageInfoW` API.
+
+=== SaveCreds
+
+...
+
+=== SetContextAttributes
+
+...
+
+=== SetSession
+
+...

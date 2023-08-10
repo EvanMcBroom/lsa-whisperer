@@ -45,6 +45,9 @@ public:
     // Will call LsaDeregisterLogonProcess/SspirDisconnectRpc
     ~Sspi();
 
+    // Call a security package manager (SPM) API
+    NTSTATUS CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output);
+
     bool Connected();
 
     // The authentication package APIs
@@ -61,8 +64,6 @@ private:
     long packageCount{ 0 };
     std::unique_ptr<Rpc::Client> rpcClient{ nullptr };
 
-    // Call a security package manager (SPM) API
-    NTSTATUS CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output);
     void RpcBind(const std::wstring& portName);
 };
 
@@ -70,7 +71,7 @@ class Lsa {
 public:
     std::ostream& out;
 
-    Lsa(std::ostream& out = NullStream(), bool useRpc = true);
+    Lsa(std::ostream& out = NullStream(), bool useRpc = true, const std::wstring& portName = std::wstring(L"lsasspirpc"));
     ~Lsa();
     bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const;
     // Uses the GenericPassthrough message implemented by msv1_0
@@ -80,9 +81,16 @@ public:
         return connected;
     };
 
+    // Exposes the SPM API
+    // Currently only supports issuing calls via the SSPI RPC interface
+    bool EnumLogonSessions() const;
+    bool EnumPackages() const;
+
 private:
     bool connected{ false };
     HANDLE lsaHandle;
+    bool preNt61{ false };
+    bool useBroker;
     bool useRpc;
     std::unique_ptr<Sspi> sspi;
 };
