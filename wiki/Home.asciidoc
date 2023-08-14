@@ -9,7 +9,7 @@ LSA runs within the LSA Subsystem Service (LSASS) Windows service executable but
 
 :toc:
 
-The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process as of NT 10.
+The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process on a workstation host as of NT 10.
 
 .LSA RPC Interfaces
 [[interfaces]]
@@ -21,6 +21,7 @@ The components of LSA may be categorized in different ways but are presented her
 | DPAPI SidKey           | `7f1317a8-4dea-4fa2-a551-df5516ff8879` (1.0) | dpapisrv.dll
 | Exchange ActiveSync    | `d25576e4-00d2-43f7-98f9-b4c0724158f9` (0.0) | lsasrv.dll
 | Idp Ex                 | `c0d930f0-b787-4124-99bc-21f0ecb642ce` (0.0) | lsasrv.dll
+| Isolated User Mode MK  | `41baa680-50ce-4967-a8fa-0596343a7ccf` (0.0) | lsasrv.dll
 | Key Isolation          | `b25a52bf-e5dd-4f4a-aea6-8ca7272a0e86` (1.0) | keyiso.dll
 | MS-CAPR                | `afc07e2e-311c-4435-808c-c483ffeec7c9` (1.0) | lsasrv.dll
 | MS-DSSP (Dsrole)       | `3919286a-b10c-11d0-9ba8-00c04fd92ef5` (0.0) | lsasrv.dll
@@ -102,8 +103,8 @@ NOTE: The only meaningful functions that vmwsu_v1_0 implements is `SpGetInfo` an
 
 === SSPI Security
 
-Windows does not register any security callback function when registering the interface. It does however make a low box security descriptor that it applies when registering the endpoint and the interface.
-Unfortunately, the interface is also registered with the flag `RPC_IF_ALLOW_LOCAL_ONLY` which prevents LSA whisperer from using it remotely.
+Windows does not register any security callback function when registering the interface.
+It does however register the interface with the flag `RPC_IF_ALLOW_LOCAL_ONLY` which prevents LSA whisperer from using it remotely.
 
 The RPC server will additionally check if the client is local before issuing operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done by the server and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandler`).
 
