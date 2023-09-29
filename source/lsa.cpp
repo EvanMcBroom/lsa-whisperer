@@ -253,7 +253,7 @@ NTSTATUS Sspi::CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** outp
         *outputSize = 0;
         // Ignore the results of the outputed callback args
         // It's data is normally passed to sspicli!LsaCallbackHandler, but you can't call that
-        SPMCallbackAPI args = { 0 };
+        SSPIR_SPMCallbackAPI args = { 0 };
         status = SspirCallRpc(this->lsaHandle, message->u1.s1.TotalLength, reinterpret_cast<unsigned char*>(message), reinterpret_cast<long*>(outputSize), reinterpret_cast<unsigned char**>(output), &args);
     }
     return status;
