@@ -73,7 +73,7 @@ public:
 
     Lsa(std::ostream& out = NullStream(), bool useRpc = true, const std::wstring& portName = std::wstring(L"lsasspirpc"));
     ~Lsa();
-    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const;
+    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength = nullptr) const;
     // Uses the GenericPassthrough message implemented by msv1_0
     // Data will be used as an input and output argument. It's original values will be cleared if the call is successful
     bool CallPackagePassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;

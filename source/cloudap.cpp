@@ -12,8 +12,12 @@ namespace Cloudap {
         return false;
     }
 
-    bool Proxy::DisableOptimizedLogon() const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon);
+    bool Proxy::DisableOptimizedLogon(PLUID luid) const {
+        DISABLE_OPTIMIZED_LOGON_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        void* response;
+        return CallPackage(request, &response);
     }
 
     bool Proxy::GenARSOPwd() const {
@@ -28,39 +32,90 @@ namespace Cloudap {
         GET_TOKEN_BLOB_REQUEST request;
         request.Luid.LowPart = luid->LowPart;
         request.Luid.HighPart = luid->HighPart;
-        void* response;
-        return this->CallPackage(request, &response);
+        GET_AUTHENTICATION_PROVIDER_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            RPC_WSTR providerString;
+            (void)UuidToStringW(&response->provider, &providerString);
+            lsa->out << "Provider: " << providerString << std::endl;
+            RpcStringFreeW(&providerString);
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
-    bool Proxy::GetDpApiCredKeyDecryptStatus() const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus);
+    bool Proxy::GetDpApiCredKeyDecryptStatus(PLUID luid) const {
+        GET_DP_API_CRED_KEY_DECRYPT_STATUS_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        GET_DP_API_CRED_KEY_DECRYPT_STATUS_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            lsa->out << "IsDecrypted: " << response->IsDecrypted << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::GetPublicCachedInfo() const {
         return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo);
     }
 
-    bool Proxy::GetPwdExpiryInfo(PFILETIME expiryTime, std::string* expiryTimeString) const {
-        auto request{ PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo };
-        void* response{ nullptr };
-        auto status{ CallPackage(request, &response) };
-        return status;
+    bool Proxy::GetPwdExpiryInfo(PLUID luid) const {
+        GET_PWD_EXPIRY_INFO_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        GET_PWD_EXPIRY_INFO_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            lsa->out << "ExpiryInfo: " << response->ExpiryTime << std::endl;
+            std::vector<wchar_t> buffer(response->ExpiryString.Length + 1);
+            std::memcpy(buffer.data(), response->ExpiryString.Buffer, response->ExpiryString.Length);
+            buffer.data()[response->ExpiryString.Length] = L'\0';
+            std::wcout << "ExpiryString: " << buffer.data() << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::GetTokenBlob(PLUID luid) const {
         GET_TOKEN_BLOB_REQUEST request;
         request.Luid.LowPart = luid->LowPart;
         request.Luid.HighPart = luid->HighPart;
-        void* response;
-        return CallPackage(request, &response);
+        char* response;
+        size_t returnBufferLength;
+        auto result{ CallPackage(request, &response, &returnBufferLength) };
+        if (result) {
+            OutputHex(lsa->out, "TokenBlob", std::string(response, returnBufferLength));
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
-    bool Proxy::GetUnlockKeyType() const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType);
+    bool Proxy::GetUnlockKeyType(PLUID luid) const {
+        GET_UNLOCK_KEY_TYPE_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        GET_UNLOCK_KEY_TYPE_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            lsa->out << "Type: " << response->Type << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
-    bool Proxy::IsCloudToOnPremTgtPresentInCache() const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache);
+    bool Proxy::IsCloudToOnPremTgtPresentInCache(PLUID luid) const {
+        IS_CLOUD_TO_ON_PREM_TGT_PRESENT_IN_CACHE_REQUEST request;
+        request.Luid.LowPart = luid->LowPart;
+        request.Luid.HighPart = luid->HighPart;
+        IS_CLOUD_TO_ON_PREM_TGT_PRESENT_IN_CACHE_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            lsa->out << "IsPresent: " << response->IsPresent << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::ProfileDeleted() const {
@@ -109,6 +164,12 @@ namespace Cloudap {
 
     template<typename _Request, typename _Response>
     bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
+        size_t returnBufferLength;
+        return CallPackage(submitBuffer, returnBuffer, &returnBufferLength);
+    }
+
+    template<typename _Request, typename _Response>
+    bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer, size_t* returnBufferLength) const {
         if (lsa->Connected()) {
             std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
             return lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));

@@ -91,7 +91,7 @@ Lsa::~Lsa() {
     }
 }
 
-bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const {
+bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
     bool result{ false };
     if (returnBuffer) {
         *returnBuffer = reinterpret_cast<void*>(0x0);
@@ -106,20 +106,23 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
         }
         if (SUCCEEDED(status)) {
             PVOID returnBuffer2;
-            ULONG returnBufferLength;
+            ULONG returnBufferLength2;
             NTSTATUS protocolStatus;
             OutputHex(this->out, "InputData", submitBuffer);
             auto submitBufferPtr{ submitBuffer.data() };
             NTSTATUS status;
             if (useRpc) {
-                status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
+                status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
             } else {
-                status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
+                status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
             }
             if (SUCCEEDED(status)) {
                 if (protocolStatus >= 0) {
-                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
+                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength2));
                     *returnBuffer = returnBuffer2;
+                    if (returnBufferLength) {
+                        *returnBufferLength = returnBufferLength2;
+                    }
                     result = true;
                 } else {
                     out << "OutputData[0]: nullptr" << std::endl;

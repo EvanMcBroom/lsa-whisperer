@@ -29,8 +29,11 @@ namespace Cloudap {
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
             return false;
-        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon:
-            return proxy.DisableOptimizedLogon();
+        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.DisableOptimizedLogon(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
             return proxy.GenARSOPwd();
         case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
@@ -40,21 +43,33 @@ namespace Cloudap {
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetAuthenticatingProvider(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus:
-            return proxy.GetDpApiCredKeyDecryptStatus();
+        case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetDpApiCredKeyDecryptStatus(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
             return proxy.GetPublicCachedInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo:
-            return proxy.GetPwdExpiryInfo(nullptr, nullptr);
+        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetPwdExpiryInfo(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetTokenBlob(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType:
-            return proxy.GetUnlockKeyType();
-        case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache:
-            return proxy.IsCloudToOnPremTgtPresentInCache();
+        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetUnlockKeyType(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.IsCloudToOnPremTgtPresentInCache(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
             return proxy.ProfileDeleted();
         case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
