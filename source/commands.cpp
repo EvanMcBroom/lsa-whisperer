@@ -13,6 +13,7 @@ namespace Cloudap {
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
             ("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))
+            ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
@@ -24,74 +25,114 @@ namespace Cloudap {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
         }
-        auto proxy{ Proxy(lsa) };
-
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
+        if (options["aad"].count() && options["msa"].count()) {
+            std::cout << "You may only specify one cloudap plugin." << std::endl;
             return false;
-        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.DisableOptimizedLogon(&luid);
+        } else if (options["aad"].count()) {
+            auto proxy{ Aad::Proxy(lsa) };
+            switch (magic_enum::enum_cast<PLUGIN_FUNCTION>(args[1]).value()) {
+            case PLUGIN_FUNCTION::AcceptPeerCertificate:
+                break;
+            case PLUGIN_FUNCTION::AssembleOpaqueData:
+                break;
+            case PLUGIN_FUNCTION::DisassembleOpaqueData:
+                break;
+            case PLUGIN_FUNCTION::GenericCallPkg:
+                break;
+            case PLUGIN_FUNCTION::GetCertificateFromCred:
+                break;
+            case PLUGIN_FUNCTION::GetKeys:
+                break;
+            case PLUGIN_FUNCTION::GetToken:
+                break;
+            case PLUGIN_FUNCTION::GetUnlockKey:
+                return proxy.GetUnlockKey(static_cast<AUTHORITY_TYPE>(options["authority"].as<unsigned int>()));
+            case PLUGIN_FUNCTION::LookupIdentityFromSIDName:
+                break;
+            case PLUGIN_FUNCTION::LookupSIDFromIdentityName:
+                break;
+            case PLUGIN_FUNCTION::PluginUninitialize:
+                break;
+            case PLUGIN_FUNCTION::PostLogonProcessing:
+                break;
+            case PLUGIN_FUNCTION::RefreshToken:
+                return proxy.RefreshToken();
+            case PLUGIN_FUNCTION::ValidateUserInfo:
+                break;
+            default:
+                break;
+            }
+            return false;
+        } else if (options["msa"].count()) {
+        } else {
+            auto proxy{ Proxy(lsa) };
+            switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+            case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
+                return false;
+            case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.DisableOptimizedLogon(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
+                return proxy.GenARSOPwd();
+            case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
+                return proxy.GetAccountInfo();
+            case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetAuthenticatingProvider(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetDpApiCredKeyDecryptStatus(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
+                return proxy.GetPublicCachedInfo();
+            case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetPwdExpiryInfo(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetTokenBlob(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetUnlockKeyType(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.IsCloudToOnPremTgtPresentInCache(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
+                return proxy.ProfileDeleted();
+            case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
+                return proxy.ProvisionNGCNode();
+            case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
+                return proxy.RefreshTokenBlob();
+            case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
+                return proxy.ReinitPlugin();
+            case PROTOCOL_MESSAGE_TYPE::RenameAccount:
+                return proxy.RenameAccount();
+            case PROTOCOL_MESSAGE_TYPE::SetTestParas:
+                return proxy.SetTestParas(0);
+            case PROTOCOL_MESSAGE_TYPE::TransferCreds: {
+                LUID sourceLuid, destinationLuid;
+                reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+                reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+                return proxy.TransferCreds(&sourceLuid, &destinationLuid);
+            }
+            default:
+                break;
+            }
+            return false;
         }
-        case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
-            return proxy.GenARSOPwd();
-        case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
-            return proxy.GetAccountInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetAuthenticatingProvider(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetDpApiCredKeyDecryptStatus(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
-            return proxy.GetPublicCachedInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetPwdExpiryInfo(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetTokenBlob(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetUnlockKeyType(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.IsCloudToOnPremTgtPresentInCache(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
-            return proxy.ProfileDeleted();
-        case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
-            return proxy.ProvisionNGCNode();
-        case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
-            return proxy.RefreshTokenBlob();
-        case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
-            return proxy.ReinitPlugin();
-        case PROTOCOL_MESSAGE_TYPE::RenameAccount:
-            return proxy.RenameAccount();
-        case PROTOCOL_MESSAGE_TYPE::SetTestParas:
-            return proxy.SetTestParas(0);
-        case PROTOCOL_MESSAGE_TYPE::TransferCreds: {
-            LUID sourceLuid, destinationLuid;
-            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
-            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
-            return proxy.TransferCreds(&sourceLuid, &destinationLuid);
-        }
-        default:
-            break;
-        }
-        return false;
     }
 }
 

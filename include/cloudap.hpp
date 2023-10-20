@@ -8,6 +8,11 @@
 #define CLOUDAP_NAME_A "cloudap"
 
 namespace Cloudap {
+    typedef enum _AUTHORITY_TYPE {
+        AUTHORITY_TYPE_1 = 1,
+        AUTHORITY_TYPE_2 = 2,
+    } AUTHORITY_TYPE;
+
     // PluginFunctionTable is populated by two other tables,
     // PluginNoNetworkFunctionTable then PluginNetworkOkFunctionTable
     enum class PLUGIN_FUNCTION : ULONG {
@@ -62,6 +67,13 @@ namespace Cloudap {
         EnablePreRS2Support = 2
     };
 
+    typedef struct _CALL_PLUGIN_GENERIC_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::CallPluginGeneric };
+        GUID Package;
+        ULONG BufferLength; // 0 or room for 0x1b extra
+        CHAR Buffer[0];
+    } CALL_PLUGIN_GENERIC_REQUEST, *PCALL_PLUGIN_GENERIC_REQUEST;
+
     typedef struct _DISABLE_OPTIMIZED_LOGON_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon };
         LUID Luid{ 0 };
@@ -113,8 +125,8 @@ namespace Cloudap {
     } GET_PWD_EXPIRY_INFO_REQUEST, *PGET_PWD_EXPIRY_INFO_REQUEST;
 
     typedef struct _GET_PWD_EXPIRY_INFO_RESPONSE {
-        LPVOID ExpiryTime; // When the token blob will expire
-        UNICODE_STRING ExpiryString;
+        FILETIME PwdExpirationTime;
+        WCHAR PwdResetUrl[0];
     } GET_PWD_EXPIRY_INFO_RESPONSE, *PGET_PWD_EXPIRY_INFO_RESPONSE;
 
     typedef struct _GET_TOKEN_BLOB_REQUEST {
@@ -165,7 +177,7 @@ namespace Cloudap {
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // Supported functions in cloudAP!PluginFunctionTable
-        bool CallPluginGeneric(GUID* plugin, const std::string& json, void** returnBuffer) const;
+        bool CallPluginGeneric(const GUID* plugin, const std::string& json, void** returnBuffer, size_t* returnBufferLength) const;
         bool DisableOptimizedLogon(PLUID luid) const;
         bool GenARSOPwd() const;
         bool GetAccountInfo() const;
@@ -199,11 +211,6 @@ namespace Cloudap {
 
     // The AzureAD plugin (AAD), implemented in aadcloudap.dll
     namespace Aad {
-        enum _AUTHORITY_TYPE {
-            AUTHORITY_TYPE_1 = 1,
-            AUTHORITY_TYPE_2 = 2,
-        };
-
         typedef struct _PRT_INFO {
             LPWSTR unknown1;
             LPWSTR unknown2;
@@ -217,30 +224,29 @@ namespace Cloudap {
             Proxy(const std::shared_ptr<Lsa>& lsa);
 
             // Supported functions in aadcloudap!PluginNoNetworkFunctionTable
-            void PluginUninitialize() const;
-            void ValidateUserInfo() const;
-            void GetUnlockKey() const;
-            void AcceptPeerCertificate() const;
-            void AssembleOpaqueData() const;
-            void DisassembleOpaqueData() const;
+            bool PluginUninitialize() const;
+            bool ValidateUserInfo() const;
+            bool GetUnlockKey(AUTHORITY_TYPE authority) const;
+            bool AcceptPeerCertificate() const;
+            bool AssembleOpaqueData() const;
+            bool DisassembleOpaqueData() const;
 
             // Supported functions in aadcloudap!PluginNetworkOkFunctionTable
-            void GetToken() const;
-            void RefreshToken() const;
-            void GetKeys() const;
-            void LookupSIDFromIdentityName() const;
-            void LookupIdentityFromSIDName() const;
-            void GetCertificateFromCred() const;
-            void GenericCallPkg() const;
-            void PostLogonProcessing() const;
+            bool GetToken() const;
+            bool RefreshToken() const;
+            bool GetKeys() const;
+            bool LookupSIDFromIdentityName() const;
+            bool LookupIdentityFromSIDName() const;
+            bool GetCertificateFromCred() const;
+            bool GenericCallPkg() const;
+            bool PostLogonProcessing() const;
 
         private:
             // Requests
             // const BYTE GetPrt[] = "{\"call\":3,\"authoritytype\":1}}"; // From dsreg!PrepareLsaGetPrtRequest
             // const BYTE GetDeviceValidity[] = "{\"call\":7,\"correlationId\":\"%s\"}}"; // From dsreg!PrepareLsaDeviceValidityRequest, %s is a GUID
-
             // {B16898C6-A148-4967-9171-64D755DA8520}
-            const char* AadGlobalIdProviderGuid = "\xC6\x98\x68\xB1\x48\xA1\x67\x49\x91\x71\x64\xD7\x55\xDA\x85\x20";
+            GUID AadGlobalIdProviderGuid = { 0xB16898C6, 0xA148, 0x4967, 0x91, 0x71, 0x64, 0xD7, 0x55, 0xDA, 0x85, 0x20 };
         };
     }
 
@@ -251,21 +257,21 @@ namespace Cloudap {
             Proxy(const std::shared_ptr<Lsa>& lsa);
 
             // Supported functions in MicrosoftAccountCloudAP!PluginNoNetworkFunctionTable
-            void AcceptPeerCertificate() const;
-            void GetDefaultCredentialComplexity() const;
-            void GetUnlockKey() const;
-            void IsConnected() const;
-            void PluginUninitialize() const;
-            void ValidateUserInfo() const;
+            bool AcceptPeerCertificate() const;
+            bool GetDefaultCredentialComplexity() const;
+            bool GetUnlockKey(AUTHORITY_TYPE authority) const;
+            bool IsConnected() const;
+            bool PluginUninitialize() const;
+            bool ValidateUserInfo() const;
 
             // Supported functions in MicrosoftAccountCloudAP!PluginNetworkOkFunctionTable
-            void ConnectIdentity() const;
-            void DisconnectIdentity() const;
-            void GenericCallPkg() const;
-            void GetKeys() const;
-            void GetToken() const;
-            void RenewCertificate() const;
-            void UserProfileLoaded() const;
+            bool ConnectIdentity() const;
+            bool DisconnectIdentity() const;
+            bool GenericCallPkg() const;
+            bool GetKeys() const;
+            bool GetToken() const;
+            bool RenewCertificate() const;
+            bool UserProfileLoaded() const;
 
         private:
             // {D7F9888F-E3FC-49b0-9EA6-A85B5F392A4F}

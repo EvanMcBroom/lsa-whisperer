@@ -91,7 +91,12 @@ int main(int argc, char** argv) {
     cli.AddCommand("spm", CommandFactory(lsa, Spm::Call));
     cli.AddExitCommand(".exit");
     cli.AddExitCommand(".quit");
-    cli.AddSubCommandCompletions("cloudap", SubCommands<Cloudap::PROTOCOL_MESSAGE_TYPE>());
+    // Add autocompletions for each command's subcommands
+    auto cloudapPluginFunctions{ magic_enum::enum_names<Cloudap::PLUGIN_FUNCTION>() };
+    auto cloudapMessages(magic_enum::enum_names<Cloudap::PROTOCOL_MESSAGE_TYPE>());
+    std::vector<std::string> cloudapSubCommands{ cloudapMessages.begin(), cloudapMessages.end() };
+    cloudapSubCommands.insert(cloudapSubCommands.end(), cloudapPluginFunctions.begin(), cloudapPluginFunctions.end());
+    cli.AddSubCommandCompletions("cloudap", cloudapSubCommands);
     cli.AddSubCommandCompletions("kerberos", SubCommands<Kerberos::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());

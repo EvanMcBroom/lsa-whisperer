@@ -2,13 +2,27 @@
 #include <cloudap.hpp>
 #include <iostream>
 #include <lsa.hpp>
+#include <sstream>
+#include <string>
 
 namespace Cloudap {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
-    bool Proxy::CallPluginGeneric(GUID* plugin, const std::string& json, void** returnBuffer) const {
+    bool Proxy::CallPluginGeneric(const GUID* plugin, const std::string& json, void** returnBuffer, size_t* returnBufferLength) const {
+        size_t requestLength{ sizeof(CALL_PLUGIN_GENERIC_REQUEST) + json.size() + 1 + 0x1b }; // 0x1b is the sizeof some struct checked in cloudap!CloudAPCallPluginGeneric
+        auto request{ reinterpret_cast<CALL_PLUGIN_GENERIC_REQUEST*>(std::malloc(requestLength)) };
+        std::memset(request, 0, requestLength);
+        request->MessageType = PROTOCOL_MESSAGE_TYPE::CallPluginGeneric;
+        std::memcpy(&request->Package, plugin, sizeof(GUID));
+        request->BufferLength = json.size() + 1;
+        std::memcpy(request->Buffer, json.data(), json.length());
+        request->Buffer[json.length()] = '\0';
+        if (lsa->Connected()) {
+            std::string stringSubmitBuffer(reinterpret_cast<const char*>(request), requestLength);
+            return lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, returnBuffer, returnBufferLength);
+        }
         return false;
     }
 
@@ -66,13 +80,22 @@ namespace Cloudap {
         request.Luid.LowPart = luid->LowPart;
         request.Luid.HighPart = luid->HighPart;
         GET_PWD_EXPIRY_INFO_RESPONSE* response;
-        auto result{ CallPackage(request, &response) };
+        size_t returnLength;
+        auto result{ CallPackage(request, &response, &returnLength) };
         if (result) {
-            lsa->out << "ExpiryInfo: " << response->ExpiryTime << std::endl;
-            std::vector<wchar_t> buffer(response->ExpiryString.Length + 1);
-            std::memcpy(buffer.data(), response->ExpiryString.Buffer, response->ExpiryString.Length);
-            buffer.data()[response->ExpiryString.Length] = L'\0';
-            std::wcout << "ExpiryString: " << buffer.data() << std::endl;
+            FILETIME forever{ 0xd5969fff, 0x7fffff36 };
+            if (response->PwdExpirationTime.dwHighDateTime == forever.dwHighDateTime && response->PwdExpirationTime.dwLowDateTime == forever.dwLowDateTime) {
+                std::wcout << "PwdExpirationTime: Never" << std::endl;
+            } else {
+                SYSTEMTIME systemTime = { 0 };
+                FileTimeToSystemTime(&response->PwdExpirationTime, &systemTime);
+                auto size{ GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systemTime, nullptr, nullptr, 0) };
+                std::vector<wchar_t> formattedTime(size, 0);
+                if (GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systemTime, nullptr, formattedTime.data(), formattedTime.size())) {
+                    std::wcout << "PwdExpirationTime: " << std::wstring(formattedTime.data()) << std::endl;
+                }
+            }
+            std::wcout << "PwdResetUrl: " << std::wstring(response->PwdResetUrl) << std::endl;
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -175,5 +198,32 @@ namespace Cloudap {
             return lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
         }
         return false;
+    }
+}
+
+namespace Cloudap::Aad {
+    Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
+        : Cloudap::Proxy(lsa) {
+    }
+
+    bool Proxy::GetUnlockKey(AUTHORITY_TYPE authority) const {
+        std::stringstream stream;
+        stream << "{\"call\":3,\"authoritytype\":" << authority << "}";
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result{ CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength) };
+        if (result) {
+            lsa->out << "UnlockKey: " << reinterpret_cast<char*>(returnBuffer) << std::endl;
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
+    }
+
+    bool Proxy::RefreshToken() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto aaa = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":11}", &returnBuffer, &returnBufferLength);
+        std::cout << returnBuffer << std::endl;
+        return aaa;
     }
 }
