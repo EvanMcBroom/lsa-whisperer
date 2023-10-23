@@ -165,38 +165,68 @@ The internal names and IDs for interacting with these plugins may be found in th
 | Windows Live ID (MSA) | `D7F9888F-E3FC-49b0-9EA6-A85B5F392A4F` | MicrosoftAccountCloudAP.dll
 |===
 
-Cloudap allows each plugin to implement a number of functions for cloudap or other applications to call.
+Cloudap allows each plugin to implement a number of functions for cloudap to call.
 The full list of functions, their call ID, and the plugins that support them are listed here.
 
 .Plugin Functions
 [%header]
 |===
-| Id     | Message Type                     | Plugins  | CLI Support
-| `0x00` | `PluginUninitialize`             | AAD, MSA | :x:
-| `0x01` | `ValidateUserInfo`               | AAD, MSA | _Planned_
-| `0x02` | `GetUnlockKey`                   | AAD, MSA | _Planned_
-| `0x03` | _Reserved_                       |          |
-| `0x04` | `GetDefaultCredentialComplexity` | MSA      | _Planned_
-| `0x05` | `IsConnected`                    | MSA      | _Planned_
-| `0x06` | `AcceptPeerCertificate`          | AAD, MSA | :x:
-| `0x07` | `AssembleOpaqueData`             | AAD      | _Planned_
-| `0x08` | `DisassembleOpaqueData`          | AAD      | _Planned_
-| `0x09` | `GetToken`                       | AAD, MSA | _Planned_
-| `0x0a` | `RefreshToken`                   | AAD      | _Planned_
-| `0x0b` | `GetKeys`                        | AAD, MSA | _Planned_
-| `0x0c` | `LookupSIDFromIdentityName`      | AAD      | _Planned_
-| `0x0d` | `LookupIdentityFromSIDName`      | AAD      | _Planned_
-| `0x0e` | `UserProfileLoaded`              | MSA      | _Planned_
-| `0x0f` | `ConnectIdentity`                | MSA      | :x:
-| `0x10` | `DisconnectIdentity`             | MSA      | :x:
-| `0x11` | `RenewCertificate`               | MSA      | :x:
-| `0x12` | `GetCertificateFromCred`         | AAD      | _Planned_
-| `0x13` | `GenericCallPkg`                 | AAD, MSA | _Planned_
-| `0x14` | `PostLogonProcessing`            | AAD      | :x:
+| Id     | Message Type                     | Plugins
+| `0x00` | `PluginUninitialize`             | AAD, MSA
+| `0x01` | `ValidateUserInfo`               | AAD, MSA
+| `0x02` | `GetUnlockKey`                   | AAD, MSA
+| `0x03` | _Reserved_                       |
+| `0x04` | `GetDefaultCredentialComplexity` | MSA
+| `0x05` | `IsConnected`                    | MSA
+| `0x06` | `AcceptPeerCertificate`          | AAD, MSA
+| `0x07` | `AssembleOpaqueData`             | AAD
+| `0x08` | `DisassembleOpaqueData`          | AAD
+| `0x09` | `GetToken`                       | AAD, MSA
+| `0x0a` | `RefreshToken`                   | AAD
+| `0x0b` | `GetKeys`                        | AAD, MSA
+| `0x0c` | `LookupSIDFromIdentityName`      | AAD
+| `0x0d` | `LookupIdentityFromSIDName`      | AAD
+| `0x0e` | `UserProfileLoaded`              | MSA
+| `0x0f` | `ConnectIdentity`                | MSA
+| `0x10` | `DisconnectIdentity`             | MSA
+| `0x11` | `RenewCertificate`               | MSA
+| `0x12` | `GetCertificateFromCred`         | AAD
+| `0x13` | `GenericCallPkg`                 | AAD, MSA
+| `0x14` | `PostLogonProcessing`            | AAD
 |===
 
 NOTE: Functions `0x00-0x08` are available offline and functions `0x09-0x14` require online connectivity.
-Function `0x03` does not exist anymore but is referenced by `dsreg!TryPrivateKeyAquireTestCloudAP`.
+
+=== AAD Functions
+
+The Azure AD (AAD) plugin supports additional calls through the `GenericCallPkg` plugin function.
+The full list and their call IDs are listed here.
+The version numbers are anecdotal and will not account for all NT builds for which a function may be present.
+
+[%header]
+|===
+| Id     | Message Type                  | NT Build  | CLI Support
+| `0x01` | `SignPayload`                 | `>=19045` | _Planned_
+| `0x02` | `CreateSSOCookie`             | `>=19045` | _Planned_
+| `0x03` | `GetPrtAuthority`             | `>=19045` | _Planned_
+| `0x04` | `CheckDeviceKeysHealth`       | `>=19045` | _Planned_
+| `0x05` | `DeviceAuth`                  | `>=19045` | _Planned_
+| `0x06` | `RefreshP2PCACert`            | `>=19045` | _Planned_
+| `0x07` | `DeviceValidityCheck`         | `>=19045` | _Planned_
+| `0x08` | `CreateDeviceSSOCookie`       | `>=19045` | _Planned_
+| `0x09` | `CreateNonce`                 | `>=19045` | _Planned_
+| `0x0a` | `ValidateRdpAssertionRequest` | `>=19045` | _Planned_
+| `0x0b` | `RefreshP2PCerts`             | `>=19045` | _Planned_
+| `0x0c` | `CreateBindingKey`            | `>=22621` | _Planned_
+| `0x0d` | `GenerateBindingClaims`       | `>=22621` | _Planned_
+| `0x0e` | _Reserved_                    |           | :x:
+| `0x0f` | `CreateEnterpriseSSOCookie`   | `>=19045` | _Planned_
+|===
+
+=== Microsoft Account Functions
+
+The Microsoft Account (MSA) plugin supports additional functionality through the `GenericCallPkg` plugin function.
+This functionality has not be analyzed.
 
 == Key Structures
 
