@@ -29,7 +29,7 @@ It is not known on which version of NT these functions were originally introduce
 | Id     | Message Type                       | CLI Support
 | `0x00` | `ReinitPlugin`                     | :heavy_check_mark:
 | `0x01` | `GetTokenBlob`                     | :heavy_check_mark:
-| `0x02` | `CallPluginGeneric`                | _Planned_
+| `0x02` | `CallPluginGeneric`                | :heavy_check_mark:
 | `0x03` | `ProfileDeleted`                   | _Planned_
 | `0x04` | `GetAuthenticatingProvider`        | :heavy_check_mark:
 | `0x05` | `RenameAccount`                    | :x:
@@ -46,6 +46,8 @@ It is not known on which version of NT these functions were originally introduce
 | `0x10` | `GetDpApiCredKeyDecryptStatus`     | :heavy_check_mark:
 | `0x11` | `IsCloudToOnPremTgtPresentInCache` | :heavy_check_mark:
 |===
+
+NOTE: Function `CallPluginGeneric` will be called if you use a plugin function.
 
 === CallPluginGeneric
 
@@ -207,21 +209,85 @@ The version numbers are anecdotal and will not account for all NT builds for whi
 |===
 | Id     | Message Type                  | NT Build  | CLI Support
 | `0x01` | `SignPayload`                 | `>=19045` | _Planned_
-| `0x02` | `CreateSSOCookie`             | `>=19045` | _Planned_
-| `0x03` | `GetPrtAuthority`             | `>=19045` | _Planned_
-| `0x04` | `CheckDeviceKeysHealth`       | `>=19045` | _Planned_
+| `0x02` | `CreateSSOCookie`             | `>=19045` | :heavy_check_mark:
+| `0x03` | `GetPrtAuthority`             | `>=19045` | :heavy_check_mark:
+| `0x04` | `CheckDeviceKeysHealth`       | `>=19045` | :heavy_check_mark:
 | `0x05` | `DeviceAuth`                  | `>=19045` | _Planned_
-| `0x06` | `RefreshP2PCACert`            | `>=19045` | _Planned_
-| `0x07` | `DeviceValidityCheck`         | `>=19045` | _Planned_
-| `0x08` | `CreateDeviceSSOCookie`       | `>=19045` | _Planned_
-| `0x09` | `CreateNonce`                 | `>=19045` | _Planned_
+| `0x06` | `RefreshP2PCACert`            | `>=19045` | :heavy_check_mark:
+| `0x07` | `DeviceValidityCheck`         | `>=19045` | :heavy_check_mark:
+| `0x08` | `CreateDeviceSSOCookie`       | `>=19045` | :heavy_check_mark:
+| `0x09` | `CreateNonce`                 | `>=19045` | :heavy_check_mark:
 | `0x0a` | `ValidateRdpAssertionRequest` | `>=19045` | _Planned_
-| `0x0b` | `RefreshP2PCerts`             | `>=19045` | _Planned_
-| `0x0c` | `CreateBindingKey`            | `>=22621` | _Planned_
-| `0x0d` | `GenerateBindingClaims`       | `>=22621` | _Planned_
+| `0x0b` | `RefreshP2PCerts`             | `>=19045` | :heavy_check_mark:
+| `0x0c` | `CreateBindingKey`            | `>=22621` | :x:
+| `0x0d` | `GenerateBindingClaims`       | `>=22621` | :x:
 | `0x0e` | _Reserved_                    |           | :x:
 | `0x0f` | `CreateEnterpriseSSOCookie`   | `>=19045` | _Planned_
 |===
+
+==== CheckDeviceKeysHealth
+
+==== CreateBindingKey
+
+Always returns `E_NOTIMPL`.
+
+==== CreateDeviceSSOCookie
+
+"ua_client_id"
+"sso_nonce"
+"iat"
+"request_nonce"
+"aad:brokerplugin"
+"iss"
+"tenant_id"
+"device_auth"
+"grant_type"
+"10.0.22621.1992"
+"win_ver"
+"2.0.1"
+"windows"
+"windows_api_version"
+"x_client_platform"
+"client_id"
+"redirect_uri"
+
+"assertion"
+
+==== CreateEnterpriseSSOCookie
+
+==== CreateNonce
+
+Create a https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/43e8dd31-7324-4578-bf10-5eb93dd6f4df[Server Nonce PDU] as defined in the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/8f62058b-c7e5-4244-8f14-ed7d76618cb5[RDS AAD Auth Connection Sequence] section of the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/5073f4ed-1e93-45e1-b039-6e30c385867c[MS-RDPBCGR] documentation.
+The caller must be System and the host must be cloud domain joined for the call to succeed.
+
+==== CreateSSOCookie
+
+==== DeviceAuth
+
+"resource"
+"clientid"
+"scope"
+"extraparams"
+
+==== DeviceValidityCheck
+
+==== GenerateBindingClaim
+
+Always returns `E_NOTIMPL`.
+
+==== GetPrtAuthority
+
+==== RefreshP2PCACert
+
+==== RefreshP2PCerts
+
+==== SignPayload
+
+==== ValidateRdpAssertion
+
+Validate an https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/411b3a90-d186-4090-890a-6b6eb29cbf4f[Authentication Request PDU] as defined in the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/8f62058b-c7e5-4244-8f14-ed7d76618cb5[RDS AAD Auth Connection Sequence] section of the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/5073f4ed-1e93-45e1-b039-6e30c385867c[MS-RDPBCGR].
+The Authentication Request PDU will contain an https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/ba819b6b-257a-466f-b8e5-f262d78677f7[RDP Assertion] (e.g., a JWT) which functions as a user credential.
+The caller must be System and the host must be cloud domain joined for the call to succeed.
 
 === Microsoft Account Functions
 
