@@ -6,12 +6,16 @@
 #include <string>
 
 namespace Cloudap {
+    GUID Aad::AadGlobalIdProviderGuid = { 0xB16898C6, 0xA148, 0x4967, 0x91, 0x71, 0x64, 0xD7, 0x55, 0xDA, 0x85, 0x20 };
+    GUID Msa::WLIDProviderGuid = { 0xD7F9888F, 0xE3FC, 0x49b0, 0x9E, 0xA6, 0xA8, 0x5B, 0x5F, 0x39, 0x2A, 0x4F };
+
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
     bool Proxy::CallPluginGeneric(const GUID* plugin, const std::string& json, void** returnBuffer, size_t* returnBufferLength) const {
-        size_t requestLength{ sizeof(CALL_PLUGIN_GENERIC_REQUEST) + json.size() + 1 + 0x1b }; // 0x1b is the sizeof some struct checked in cloudap!CloudAPCallPluginGeneric
+        lsa->out << "InputJson: " << json << std::endl;
+        size_t requestLength{ sizeof(CALL_PLUGIN_GENERIC_REQUEST) + json.size() + 1 };
         auto request{ reinterpret_cast<CALL_PLUGIN_GENERIC_REQUEST*>(std::malloc(requestLength)) };
         std::memset(request, 0, requestLength);
         request->MessageType = PROTOCOL_MESSAGE_TYPE::CallPluginGeneric;
@@ -21,7 +25,13 @@ namespace Cloudap {
         request->Buffer[json.length()] = '\0';
         if (lsa->Connected()) {
             std::string stringSubmitBuffer(reinterpret_cast<const char*>(request), requestLength);
-            return lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, returnBuffer, returnBufferLength);
+            *returnBufferLength = 0;
+            auto result{ lsa->CallPackage(CLOUDAP_NAME_A, stringSubmitBuffer, returnBuffer, returnBufferLength) };
+            if (*returnBufferLength) {
+                std::string output{ reinterpret_cast<char*>(*returnBuffer), reinterpret_cast<char*>(*returnBuffer) + *returnBufferLength };
+                lsa->out << "OutputJson: " << output << std::endl;
+            }
+            return result;
         }
         return false;
     }
@@ -206,24 +216,163 @@ namespace Cloudap::Aad {
         : Cloudap::Proxy(lsa) {
     }
 
-    bool Proxy::GetUnlockKey(AUTHORITY_TYPE authority) const {
+    
+    bool Proxy::CheckDeviceKeysHealth() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":4}", &returnBuffer, &returnBufferLength);
+        if (result) {
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
+    }
+
+    bool Proxy::CreateBindingKey() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":12}", &returnBuffer, &returnBufferLength);
+        if (result) {
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
+    }
+
+    bool Proxy::CreateDeviceSSOCookie() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":8}", &returnBuffer, &returnBufferLength);
+        if (result) {
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
+    }
+
+    bool Proxy::CreateEnterpriseSSOCookie() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":15}", &returnBuffer, &returnBufferLength);
+        if (result) {
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
+    }
+
+    bool Proxy::CreateNonce() const {
+        // https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/74b5513f-08d4-4807-b899-5e03dc9c8d6e
+        UUID correlationId;
+        UuidCreate(&correlationId);
+        RPC_CSTR correlationIdString;
+        if (UuidToStringA(&correlationId, &correlationIdString) == RPC_S_OK) {
+            std::stringstream stream;
+            stream << "{\"call\":9,\"correlationId\":\"" << correlationIdString << "\"}";
+            void* returnBuffer{ nullptr };
+            size_t returnBufferLength{ 0 };
+            auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength);
+            if (result) {
+                LsaFreeReturnBuffer(returnBuffer);
+            }
+            RpcStringFreeA(&correlationIdString);
+            return result;
+        }
+        return false;
+    }
+
+    bool Proxy::CreateSSOCookie(const std::string& nonce) const {
+        UUID correlationId;
+        UuidCreate(&correlationId);
+        RPC_CSTR correlationIdString;
+        if (UuidToStringA(&correlationId, &correlationIdString) == RPC_S_OK) {
+            std::stringstream stream;
+            stream << "{\"call\":2,\"payload\":\"https://login.microsoftonline.com/?sso_nonce=" << nonce << "\", \"correlationId\":\"" << correlationIdString << "\"}";
+            void* returnBuffer{ nullptr };
+            size_t returnBufferLength{ 0 };
+            auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength);
+            if (result) {
+                LsaFreeReturnBuffer(returnBuffer);
+            }
+            RpcStringFreeA(&correlationIdString);
+            return result;
+        }
+        return false;
+    }
+
+    bool Proxy::DeviceAuth() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":5}", &returnBuffer, &returnBufferLength);
+        std::cout << returnBuffer << std::endl;
+        return result;
+    }
+
+    bool Proxy::DeviceValidityCheck() const {
+        UUID correlationId;
+        UuidCreate(&correlationId);
+        RPC_CSTR correlationIdString;
+        if (UuidToStringA(&correlationId, &correlationIdString) == RPC_S_OK) {
+            std::stringstream stream;
+            stream << "{\"call\":7,\"correlationId\":\"" << correlationIdString << "\"}";
+            void* returnBuffer{ nullptr };
+            size_t returnBufferLength{ 0 };
+            auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength);
+            if (result) {
+                LsaFreeReturnBuffer(returnBuffer);
+            }
+            RpcStringFreeA(&correlationIdString);
+            return result;
+        }
+        return false;
+    }
+
+    bool Proxy::GenerateBindingClaims() const {
+        return false;
+    }
+
+    bool Proxy::GetPrtAuthority(AUTHORITY_TYPE authority) const {
         std::stringstream stream;
         stream << "{\"call\":3,\"authoritytype\":" << authority << "}";
         void* returnBuffer{ nullptr };
         size_t returnBufferLength{ 0 };
         auto result{ CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength) };
         if (result) {
-            lsa->out << "UnlockKey: " << reinterpret_cast<char*>(returnBuffer) << std::endl;
             LsaFreeReturnBuffer(returnBuffer);
         }
         return result;
     }
 
-    bool Proxy::RefreshToken() const {
+    bool Proxy::RefreshP2PCACert() const {
         void* returnBuffer{ nullptr };
         size_t returnBufferLength{ 0 };
-        auto aaa = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":11}", &returnBuffer, &returnBufferLength);
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":6}", &returnBuffer, &returnBufferLength);
         std::cout << returnBuffer << std::endl;
-        return aaa;
+        return result;
+    }
+
+    bool Proxy::RefreshP2PCerts() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":11}", &returnBuffer, &returnBufferLength);
+        std::cout << returnBuffer << std::endl;
+        return result;
+    }
+
+    bool Proxy::SignPayload() const {
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result = CallPluginGeneric(&AadGlobalIdProviderGuid, "{\"call\":1}", &returnBuffer, &returnBufferLength);
+        std::cout << returnBuffer << std::endl;
+        return result;
+    }
+
+    bool Proxy::ValidateRdpAssertionRequest(const std::string& correlationId, const std::string& payload) const {
+        // https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/25861219-8546-4780-a9c3-1f709daf4dde
+        std::stringstream stream;
+        stream << "{\"call\":10,\"payload\":\"" << payload << "\",\"correlationId\":\"" << correlationId << "\"}";
+        void* returnBuffer{ nullptr };
+        size_t returnBufferLength{ 0 };
+        auto result{ CallPluginGeneric(&AadGlobalIdProviderGuid, stream.str(), &returnBuffer, &returnBufferLength) };
+        if (result) {
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        return result;
     }
 }

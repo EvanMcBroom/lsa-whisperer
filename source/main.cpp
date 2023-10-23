@@ -92,10 +92,12 @@ int main(int argc, char** argv) {
     cli.AddExitCommand(".exit");
     cli.AddExitCommand(".quit");
     // Add autocompletions for each command's subcommands
-    auto cloudapPluginFunctions{ magic_enum::enum_names<Cloudap::PLUGIN_FUNCTION>() };
+    auto cloudapPluginFunctions{ magic_enum::enum_names<Cloudap::Aad::CALL>() };
     auto cloudapMessages(magic_enum::enum_names<Cloudap::PROTOCOL_MESSAGE_TYPE>());
     std::vector<std::string> cloudapSubCommands{ cloudapMessages.begin(), cloudapMessages.end() };
     cloudapSubCommands.insert(cloudapSubCommands.end(), cloudapPluginFunctions.begin(), cloudapPluginFunctions.end());
+    cloudapSubCommands.erase(std::remove(cloudapSubCommands.begin(), cloudapSubCommands.end(), "CreateBindingKey"), cloudapSubCommands.end());
+    cloudapSubCommands.erase(std::remove(cloudapSubCommands.begin(), cloudapSubCommands.end(), "GenerateBindingClaims"), cloudapSubCommands.end());
     cli.AddSubCommandCompletions("cloudap", cloudapSubCommands);
     cli.AddSubCommandCompletions("kerberos", SubCommands<Kerberos::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());

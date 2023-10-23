@@ -8,39 +8,6 @@
 #define CLOUDAP_NAME_A "cloudap"
 
 namespace Cloudap {
-    typedef enum _AUTHORITY_TYPE {
-        AUTHORITY_TYPE_1 = 1,
-        AUTHORITY_TYPE_2 = 2,
-    } AUTHORITY_TYPE;
-
-    // PluginFunctionTable is populated by two other tables,
-    // PluginNoNetworkFunctionTable then PluginNetworkOkFunctionTable
-    enum class PLUGIN_FUNCTION : ULONG {
-        // NoNetwork Functions
-        PluginUninitialize = 0,
-        ValidateUserInfo,
-        GetUnlockKey,
-        UnknownFunction3,
-        GetDefaultCredentialComplexity,
-        IsConnected,
-        AcceptPeerCertificate,
-        AssembleOpaqueData,
-        DisassembleOpaqueData,
-        // NetworkOk Functions
-        GetToken,
-        RefreshToken,
-        GetKeys,
-        LookupSIDFromIdentityName,
-        LookupIdentityFromSIDName,
-        UserProfileLoaded,
-        ConnectIdentity,
-        DisconnectIdentity,
-        RenewCertificate,
-        GetCertificateFromCred,
-        GenericCallPkg,
-        PostLogonProcessing
-    };
-
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
         ReinitPlugin = 0,
         GetTokenBlob,
@@ -70,8 +37,8 @@ namespace Cloudap {
     typedef struct _CALL_PLUGIN_GENERIC_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::CallPluginGeneric };
         GUID Package;
-        ULONG BufferLength; // 0 or room for 0x1b extra
-        CHAR Buffer[0];
+        ULONG BufferLength;
+        CHAR Buffer[ANYSIZE_ARRAY];
     } CALL_PLUGIN_GENERIC_REQUEST, *PCALL_PLUGIN_GENERIC_REQUEST;
 
     typedef struct _DISABLE_OPTIMIZED_LOGON_REQUEST {
@@ -211,71 +178,62 @@ namespace Cloudap {
 
     // The AzureAD plugin (AAD), implemented in aadcloudap.dll
     namespace Aad {
-        typedef struct _PRT_INFO {
-            LPWSTR unknown1;
-            LPWSTR unknown2;
-            LPWSTR unknown3;
-            LPWSTR unknown4;
-            LPWSTR unknown5;
-        } PRT_INFO, *PPRT_INFO;
+        typedef enum _AUTHORITY_TYPE {
+            AUTHORITY_TYPE_1 = 1,
+            AUTHORITY_TYPE_2 = 2,
+        } AUTHORITY_TYPE;
+
+        // PluginFunctionTable is populated by two other tables,
+        // PluginNoNetworkFunctionTable then PluginNetworkOkFunctionTable
+        enum class CALL : ULONG {
+            SignPayload = 1,
+            CreateSSOCookie,
+            GetPrtAuthority,
+            CheckDeviceKeysHealth,
+            DeviceAuth,
+            RefreshP2PCACert,
+            DeviceValidityCheck,
+            CreateDeviceSSOCookie,
+            CreateNonce,
+            ValidateRdpAssertionRequest,
+            RefreshP2PCerts,
+            CreateBindingKey,
+            GenerateBindingClaims,
+            CreateEnterpriseSSOCookie = 0xf,
+        };
+
+        // {B16898C6-A148-4967-9171-64D755DA8520}
+        extern GUID AadGlobalIdProviderGuid;
 
         class Proxy : public Cloudap::Proxy {
         public:
             Proxy(const std::shared_ptr<Lsa>& lsa);
 
-            // Supported functions in aadcloudap!PluginNoNetworkFunctionTable
-            bool PluginUninitialize() const;
-            bool ValidateUserInfo() const;
-            bool GetUnlockKey(AUTHORITY_TYPE authority) const;
-            bool AcceptPeerCertificate() const;
-            bool AssembleOpaqueData() const;
-            bool DisassembleOpaqueData() const;
-
-            // Supported functions in aadcloudap!PluginNetworkOkFunctionTable
-            bool GetToken() const;
-            bool RefreshToken() const;
-            bool GetKeys() const;
-            bool LookupSIDFromIdentityName() const;
-            bool LookupIdentityFromSIDName() const;
-            bool GetCertificateFromCred() const;
-            bool GenericCallPkg() const;
-            bool PostLogonProcessing() const;
+            bool CheckDeviceKeysHealth() const;
+            bool CreateBindingKey() const;
+            bool CreateDeviceSSOCookie() const;
+            bool CreateEnterpriseSSOCookie() const;
+            bool CreateNonce() const;
+            bool CreateSSOCookie(const std::string& nonce) const;
+            bool DeviceAuth() const;
+            bool DeviceValidityCheck() const;
+            bool GenerateBindingClaims() const;
+            bool GetPrtAuthority(AUTHORITY_TYPE authority) const;
+            bool RefreshP2PCACert() const;
+            bool RefreshP2PCerts() const;
+            bool SignPayload() const;
+            bool ValidateRdpAssertionRequest(const std::string& correlationId, const std::string& payload) const;
 
         private:
             // Requests
             // const BYTE GetPrt[] = "{\"call\":3,\"authoritytype\":1}}"; // From dsreg!PrepareLsaGetPrtRequest
             // const BYTE GetDeviceValidity[] = "{\"call\":7,\"correlationId\":\"%s\"}}"; // From dsreg!PrepareLsaDeviceValidityRequest, %s is a GUID
-            // {B16898C6-A148-4967-9171-64D755DA8520}
-            GUID AadGlobalIdProviderGuid = { 0xB16898C6, 0xA148, 0x4967, 0x91, 0x71, 0x64, 0xD7, 0x55, 0xDA, 0x85, 0x20 };
         };
     }
 
     // The MicrosoftAccount plugin (MSA), implemented in MicrosoftAccountCloudAP.dll
     namespace Msa {
-        class Proxy : public Cloudap::Proxy {
-        public:
-            Proxy(const std::shared_ptr<Lsa>& lsa);
-
-            // Supported functions in MicrosoftAccountCloudAP!PluginNoNetworkFunctionTable
-            bool AcceptPeerCertificate() const;
-            bool GetDefaultCredentialComplexity() const;
-            bool GetUnlockKey(AUTHORITY_TYPE authority) const;
-            bool IsConnected() const;
-            bool PluginUninitialize() const;
-            bool ValidateUserInfo() const;
-
-            // Supported functions in MicrosoftAccountCloudAP!PluginNetworkOkFunctionTable
-            bool ConnectIdentity() const;
-            bool DisconnectIdentity() const;
-            bool GenericCallPkg() const;
-            bool GetKeys() const;
-            bool GetToken() const;
-            bool RenewCertificate() const;
-            bool UserProfileLoaded() const;
-
-        private:
-            // {D7F9888F-E3FC-49b0-9EA6-A85B5F392A4F}
-            const char* WLIDProviderGuid = "\x8F\x88\xF9\xD7\xFC\xE3\xB0\x49\x9E\xA6\xA8\x5B\x5F\x39\x2A\x4F";
-        };
+        // {D7F9888F-E3FC-49b0-9EA6-A85B5F392A4F}
+        extern GUID WLIDProviderGuid;
     }
 }

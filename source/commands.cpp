@@ -12,12 +12,11 @@ namespace Cloudap {
         unparsedOptions.add_options("Command arguments")
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
-            ("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))
             ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
-            ("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))
+            ("nonce", "Cookie nonce", cxxopts::value<std::string>())
             ("sluid", "Source logon session", cxxopts::value<unsigned int>());
         // clang-format on
         auto options{ unparsedOptions.parse(args.size(), args.data()) };
@@ -25,45 +24,41 @@ namespace Cloudap {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
         }
-        if (options["aad"].count() && options["msa"].count()) {
-            std::cout << "You may only specify one cloudap plugin." << std::endl;
-            return false;
-        } else if (options["aad"].count()) {
+        if (magic_enum::enum_contains<Aad::CALL>(args[1])) {
             auto proxy{ Aad::Proxy(lsa) };
-            switch (magic_enum::enum_cast<PLUGIN_FUNCTION>(args[1]).value()) {
-            case PLUGIN_FUNCTION::AcceptPeerCertificate:
+            switch (magic_enum::enum_cast<Aad::CALL>(args[1]).value()) {
+            case Aad::CALL::CheckDeviceKeysHealth:
+                return proxy.CheckDeviceKeysHealth();
+            case Aad::CALL::CreateBindingKey:
+                return proxy.CreateBindingKey();
+            case Aad::CALL::CreateDeviceSSOCookie:
+                return proxy.CreateDeviceSSOCookie();
+            case Aad::CALL::CreateEnterpriseSSOCookie:
+                return proxy.CreateEnterpriseSSOCookie();
+            case Aad::CALL::CreateNonce:
+                return proxy.CreateNonce();
+            case Aad::CALL::CreateSSOCookie:
+                return proxy.CreateSSOCookie(options["nonce"].as<std::string>());
+            case Aad::CALL::DeviceAuth:
+                return proxy.DeviceAuth();
+            case Aad::CALL::DeviceValidityCheck:
+                return proxy.DeviceValidityCheck();
+            case Aad::CALL::GenerateBindingClaims:
                 break;
-            case PLUGIN_FUNCTION::AssembleOpaqueData:
-                break;
-            case PLUGIN_FUNCTION::DisassembleOpaqueData:
-                break;
-            case PLUGIN_FUNCTION::GenericCallPkg:
-                break;
-            case PLUGIN_FUNCTION::GetCertificateFromCred:
-                break;
-            case PLUGIN_FUNCTION::GetKeys:
-                break;
-            case PLUGIN_FUNCTION::GetToken:
-                break;
-            case PLUGIN_FUNCTION::GetUnlockKey:
-                return proxy.GetUnlockKey(static_cast<AUTHORITY_TYPE>(options["authority"].as<unsigned int>()));
-            case PLUGIN_FUNCTION::LookupIdentityFromSIDName:
-                break;
-            case PLUGIN_FUNCTION::LookupSIDFromIdentityName:
-                break;
-            case PLUGIN_FUNCTION::PluginUninitialize:
-                break;
-            case PLUGIN_FUNCTION::PostLogonProcessing:
-                break;
-            case PLUGIN_FUNCTION::RefreshToken:
-                return proxy.RefreshToken();
-            case PLUGIN_FUNCTION::ValidateUserInfo:
+            case Aad::CALL::GetPrtAuthority:
+                return proxy.GetPrtAuthority(static_cast<Aad::AUTHORITY_TYPE>(options["authority"].as<unsigned int>()));
+            case Aad::CALL::RefreshP2PCACert:
+                return proxy.RefreshP2PCACert();
+            case Aad::CALL::RefreshP2PCerts:
+                return proxy.RefreshP2PCerts();
+            case Aad::CALL::SignPayload:
+                return proxy.SignPayload();
+            case Aad::CALL::ValidateRdpAssertionRequest:
                 break;
             default:
                 break;
             }
             return false;
-        } else if (options["msa"].count()) {
         } else {
             auto proxy{ Proxy(lsa) };
             switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
