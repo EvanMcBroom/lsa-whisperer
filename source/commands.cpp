@@ -13,10 +13,12 @@ namespace Cloudap {
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
             ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
+            ("authreq", "RDP authentication request (MS-RDPBCGR 4.11.2)", cxxopts::value<std::string>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
             ("nonce", "Cookie nonce", cxxopts::value<std::string>())
+            ("server", "Who to request a SSO cookie from", cxxopts::value<std::string>()->default_value("login.microsoftonline.com"))
             ("sluid", "Source logon session", cxxopts::value<unsigned int>());
         // clang-format on
         auto options{ unparsedOptions.parse(args.size(), args.data()) };
@@ -32,13 +34,13 @@ namespace Cloudap {
             case Aad::CALL::CreateBindingKey:
                 return proxy.CreateBindingKey();
             case Aad::CALL::CreateDeviceSSOCookie:
-                return proxy.CreateDeviceSSOCookie();
+                return proxy.CreateDeviceSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
             case Aad::CALL::CreateEnterpriseSSOCookie:
-                return proxy.CreateEnterpriseSSOCookie();
+                return proxy.CreateEnterpriseSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
             case Aad::CALL::CreateNonce:
                 return proxy.CreateNonce();
             case Aad::CALL::CreateSSOCookie:
-                return proxy.CreateSSOCookie(options["nonce"].as<std::string>());
+                return proxy.CreateSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
             case Aad::CALL::DeviceAuth:
                 return proxy.DeviceAuth();
             case Aad::CALL::DeviceValidityCheck:
@@ -54,7 +56,7 @@ namespace Cloudap {
             case Aad::CALL::SignPayload:
                 return proxy.SignPayload();
             case Aad::CALL::ValidateRdpAssertionRequest:
-                break;
+                return proxy.ValidateRdpAssertionRequest(options["authreq"].as<std::string>());
             default:
                 break;
             }

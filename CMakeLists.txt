@@ -20,7 +20,7 @@ add_executable(sspi-broker)
 target_link_libraries(sspi-broker PRIVATE advapi32 magic_enum::magic_enum replxx::replxx sspi)
 
 add_executable(lsa-whisperer)
-target_link_libraries(lsa-whisperer PRIVATE advapi32 Userenv.lib clipp::clipp cxxopts::cxxopts magic_enum::magic_enum replxx::replxx sspi)
+target_link_libraries(lsa-whisperer PRIVATE advapi32 Userenv.lib Wininet.lib clipp::clipp cxxopts::cxxopts magic_enum::magic_enum replxx::replxx sspi)
 
 add_subdirectory(include)
 add_subdirectory(source)

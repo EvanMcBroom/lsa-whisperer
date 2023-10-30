@@ -179,12 +179,10 @@ namespace Cloudap {
     // The AzureAD plugin (AAD), implemented in aadcloudap.dll
     namespace Aad {
         typedef enum _AUTHORITY_TYPE {
-            AUTHORITY_TYPE_1 = 1,
-            AUTHORITY_TYPE_2 = 2,
+            AzureAd = 1,
+            Enterprise = 2,
         } AUTHORITY_TYPE;
 
-        // PluginFunctionTable is populated by two other tables,
-        // PluginNoNetworkFunctionTable then PluginNetworkOkFunctionTable
         enum class CALL : ULONG {
             SignPayload = 1,
             CreateSSOCookie,
@@ -211,10 +209,10 @@ namespace Cloudap {
 
             bool CheckDeviceKeysHealth() const;
             bool CreateBindingKey() const;
-            bool CreateDeviceSSOCookie() const;
-            bool CreateEnterpriseSSOCookie() const;
+            bool CreateDeviceSSOCookie(const std::string& server, const std::string& nonce) const;
+            bool CreateEnterpriseSSOCookie(const std::string& server, const std::string& nonce) const;
             bool CreateNonce() const;
-            bool CreateSSOCookie(const std::string& nonce) const;
+            bool CreateSSOCookie(const std::string& server, const std::string& nonce) const;
             bool DeviceAuth() const;
             bool DeviceValidityCheck() const;
             bool GenerateBindingClaims() const;
@@ -222,12 +220,7 @@ namespace Cloudap {
             bool RefreshP2PCACert() const;
             bool RefreshP2PCerts() const;
             bool SignPayload() const;
-            bool ValidateRdpAssertionRequest(const std::string& correlationId, const std::string& payload) const;
-
-        private:
-            // Requests
-            // const BYTE GetPrt[] = "{\"call\":3,\"authoritytype\":1}}"; // From dsreg!PrepareLsaGetPrtRequest
-            // const BYTE GetDeviceValidity[] = "{\"call\":7,\"correlationId\":\"%s\"}}"; // From dsreg!PrepareLsaDeviceValidityRequest, %s is a GUID
+            bool ValidateRdpAssertionRequest(const std::string& authenticationRequest) const;
         };
     }
 

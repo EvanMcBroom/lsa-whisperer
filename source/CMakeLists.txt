@@ -25,6 +25,7 @@ target_idl_sources(sspi-broker CLIENT SOURCES ms-sspir.idl)
 target_idl_sources(sspi-broker SERVER SOURCES ms-sspir.idl)
 
 target_sources(lsa-whisperer PRIVATE
+    aad.cpp
     appcontainer.cpp
     cli.cpp
     commands.cpp

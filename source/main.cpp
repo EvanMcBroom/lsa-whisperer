@@ -12,6 +12,7 @@
 #include <replxx.hxx>
 #include <thread>
 #include <token.hpp>
+#include <wininet.h>
 
 namespace {
     void Help(Cli& cli, const std::string& args) {
@@ -43,6 +44,55 @@ namespace {
         auto scan{ cli.history_scan() };
         for (size_t i{ 0 }; scan.next(); i++) {
             std::cout << std::setw(4) << i << ": " << scan.get().text() << std::endl;
+        }
+    }
+
+    void Nonce(Cli& cli, const std::string& args) {
+        auto internet{ InternetOpenW(L"", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0) };
+        if (internet) {
+            auto connection{ InternetConnectW(internet, L"login.microsoftonline.com", 443, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0) };
+            if (connection) {
+                DWORD flags{ INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_NO_AUTO_REDIRECT | INTERNET_FLAG_NO_UI | INTERNET_FLAG_SECURE };
+                auto request{ HttpOpenRequestW(connection, L"POST", L"/common/oauth2/token", nullptr, nullptr, nullptr, flags, 0) };
+                if (request) {
+                    std::string body{ "grant_type=srv_challenge" };
+                    if (HttpSendRequestW(request, nullptr, 0, body.data(), body.length())) {
+                        DWORD status{ 0 };
+                        DWORD bufferLength{ sizeof(status) };
+                        if (HttpQueryInfoW(request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &bufferLength, 0)) {
+                            // A post response may not contain a content length header
+                            // So do not refer to it when reading all bytes from the body of the POST response
+                            size_t chunkSize{ 1024 };
+                            std::vector<std::vector<byte>> chunks;
+                            DWORD bytesRead{ 0 };
+                            size_t totalRead{ 0 };
+                            do {
+                                // On additional iterations of the loop, resize the previously recieved chunk is necessary
+                                if (chunks.size()) {
+                                    chunks.back().resize(bytesRead);
+                                }
+                                chunks.emplace_back(std::vector<byte>(chunkSize, 0));
+                                totalRead += bytesRead;
+                            } while (InternetReadFile(request, chunks.back().data(), chunkSize, &bytesRead) && bytesRead);
+                            if (totalRead) {
+                                // Using chunk size intervals when coalescing data to make the process easier to write
+                                std::vector<byte> buffer(chunks.size() * chunkSize, 0);
+                                size_t bytesCopied{ 0 };
+                                for (size_t index{ 0 }; index < chunks.size(); index++) {
+                                    auto& chunk{ chunks[index] };
+                                    std::memcpy(buffer.data() + bytesCopied, chunk.data(), chunk.size());
+                                    bytesCopied += chunk.size();
+                                }
+                                std::wstring response{ buffer.data(), buffer.data() + buffer.size() };
+                                std::wcout << response << std::endl;
+                            }
+                        }
+                    }
+                    InternetCloseHandle(request);
+                }
+                InternetCloseHandle(connection);
+            }
+            InternetCloseHandle(internet);
         }
     }
 
@@ -81,6 +131,7 @@ int main(int argc, char** argv) {
     });
     cli.AddCommand(".help", Help);
     cli.AddCommand(".history", History);
+    cli.AddCommand(".nonce", Nonce);
     cli.AddCommand(".token", Token::Command);
     cli.AddCommand("cloudap", CommandFactory(lsa, Cloudap::Call));
     cli.AddCommand("kerberos", CommandFactory(lsa, Kerberos::Call));
