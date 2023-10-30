@@ -1,13 +1,8 @@
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h> // Must be included before Ntsecapi
-
-#include <Ntsecapi.h>
+#include <codecvt>
 #include <iomanip>
-#include <iostream>
+#include <locale>
 #include <lsa.hpp>
 #include <msv1_0.hpp>
-#include <ntstatus.h>
-#include <spm.hpp>
 #include <string>
 
 namespace {
@@ -71,12 +66,14 @@ UnicodeString::~UnicodeString() {
     RtlFreeUnicodeString(this);
 }
 
-Lsa::Lsa(std::ostream& out, bool useRpc)
-    : out(out), useRpc(useRpc) {
+Lsa::Lsa(std::ostream& out, bool useRpc, const std::wstring& portName)
+    : out(out), useBroker(useBroker) {
     auto version{ NtVersion() };
+    preNt61 = version.first < 6 || (version.first == 6 && version.second == 0);
     // The SSPI RPC interface is only supported on Windows 7 and above
-    if (useRpc && version.first >= 6 && !(version.first == 6 && version.second == 0)) {
-        this->sspi = std::make_unique<Sspi>(L"");
+    this->useRpc = useRpc && !preNt61;
+    if (this->useRpc) {
+        this->sspi = std::make_unique<Sspi>(portName);
         this->connected = this->sspi->Connected();
     }
     // Use LSA APIs to connect if connecting via RPC failed or the host is older than Windows 7
@@ -94,7 +91,7 @@ Lsa::~Lsa() {
     }
 }
 
-bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const {
+bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
     bool result{ false };
     if (returnBuffer) {
         *returnBuffer = reinterpret_cast<void*>(0x0);
@@ -109,20 +106,23 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
         }
         if (SUCCEEDED(status)) {
             PVOID returnBuffer2;
-            ULONG returnBufferLength;
+            ULONG returnBufferLength2;
             NTSTATUS protocolStatus;
             OutputHex(this->out, "InputData", submitBuffer);
             auto submitBufferPtr{ submitBuffer.data() };
             NTSTATUS status;
             if (useRpc) {
-                status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
+                status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
             } else {
-                status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength, &protocolStatus);
+                status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
             }
             if (SUCCEEDED(status)) {
                 if (protocolStatus >= 0) {
-                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength));
+                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength2));
                     *returnBuffer = returnBuffer2;
+                    if (returnBufferLength) {
+                        *returnBufferLength = returnBufferLength2;
+                    }
                     result = true;
                 } else {
                     out << "OutputData[0]: nullptr" << std::endl;
@@ -177,18 +177,62 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
     return false;
 }
 
+bool Lsa::EnumLogonSessions() const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::EnumLogonSessions, sizeof(SpmApi::Args::SPMEnumLogonSessionAPI) };
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.EnumLogonSession };
+            out << "LogonSessionCount: " << response.LogonSessionCount << std::endl;
+            auto luid{ reinterpret_cast<LUID*>(response.LogonSessionList) };
+            for (size_t count{ response.LogonSessionCount }; count > 0; count--, luid++) {
+                out << std::hex << std::setfill('0') << std::setw(8) << luid->HighPart << "-" << std::setw(8) << luid->LowPart << std::endl;
+            }
+            LsaFreeReturnBuffer(output);
+        }
+    }
+    return false;
+}
+
+bool Lsa::EnumPackages() const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::EnumPackages, sizeof(SpmApi::Args::SPMEnumPackagesAPI) };
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.EnumPackages };
+            out << "Packages: " << response.cPackages << std::endl;
+            auto package{ response.pPackages };
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            for (size_t count{ response.cPackages }; count > 0; count--, package++) {
+                out << "Name: " << converter.to_bytes(package->Name) << std::endl;
+                out << "    Capabilities: 0x" << std::setfill('0') << std::setw(8) << package->fCapabilities << std::endl;
+                out << "    Version     : " << package->wVersion << std::endl;
+                out << "    RPCID       : " << package->wRPCID << std::endl;
+                out << "    MaxToken    : " << package->cbMaxToken << std::endl;
+                out << "    Comment     : " << converter.to_bytes(package->Comment) << std::endl;
+            }
+            LsaFreeReturnBuffer(output);
+        }
+    }
+    return false;
+}
+
 Sspi::Sspi(const std::wstring& portName) {
     this->RpcBind(portName);
     if (this->rpcClient->IsBound()) {
-        auto status{ SspirConnectRpc(nullptr, static_cast<long>(ApApi::ClientMode::Usermode), &this->packageCount, &this->operationalMode, &this->lsaHandle) };
+        auto status{ SspirConnectRpc(nullptr, static_cast<long>(AuApi::ClientMode::Usermode), &this->packageCount, &this->operationalMode, &this->lsaHandle) };
         this->connected = NT_SUCCESS(status);
     }
 }
 
 Sspi::Sspi(const std::wstring& portName, const std::string& logonProcessName) {
     this->RpcBind(portName);
-    if (this->rpcClient->IsBound() && logonProcessName.length() <= ApApi::MaxLogonProcNameLength()) {
-        unsigned char message[ApApi::MaxLogonProcNameLength() + 1] = { 0 };
+    if (this->rpcClient->IsBound() && logonProcessName.length() <= AuApi::MaxLogonProcNameLength()) {
+        unsigned char message[AuApi::MaxLogonProcNameLength() + 1] = { 0 };
         std::memcpy(message, logonProcessName.data(), logonProcessName.size());
         auto status{ SspirConnectRpc(message, 0, &this->packageCount, &this->operationalMode, &this->lsaHandle) };
         this->connected = NT_SUCCESS(status);
@@ -199,51 +243,6 @@ Sspi::~Sspi() {
     if (this->connected) {
         SspirDisconnectRpc(&this->lsaHandle);
     }
-}
-
-bool Sspi::Connected() {
-    return this->connected;
-}
-
-NTSTATUS Sspi::LsaCallAuthenticationPackage(ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
-    SpmApi::MESSAGE message = { 0 };
-    message.pmMessage.u1.s1.DataLength = sizeof(message) - sizeof(PORT_MESSAGE);
-    message.pmMessage.u1.s1.TotalLength = sizeof(message);
-    message.ApiCallRequest.dwAPI = static_cast<SpmApi::NUMBER>(ApApi::NUMBER::CallPackageApi);
-    auto& callPackage{ message.ApiCallRequest.Args.ApArguments.CallPackage };
-    callPackage.AuthenticationPackage = AuthenticationPackage;
-    callPackage.ProtocolSubmitBuffer = ProtocolSubmitBuffer;
-    callPackage.SubmitBufferLength = SubmitBufferLength;
-    size_t outputMessageSize{ 0 };
-    ApApi::MESSAGE* output{ nullptr };
-    auto status{ this->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
-    *ProtocolStatus = output->Arguments.CallPackage.ProtocolStatus;
-    *ProtocolReturnBuffer = output->Arguments.CallPackage.ProtocolReturnBuffer;
-    *ReturnBufferLength = output->Arguments.CallPackage.ReturnBufferLength;
-    return NT_SUCCESS(status) ? output->ReturnedStatus : status;
-}
-
-NTSTATUS Sspi::LsaLookupAuthenticationPackage(PSTRING PackageName, PULONG AuthenticationPackage) {
-    if (PackageName->Length <= ApApi::MaxLogonProcNameLength()) {
-        SpmApi::MESSAGE message = { 0 };
-        message.pmMessage.u1.s1.DataLength = sizeof(message) - sizeof(PORT_MESSAGE);
-        message.pmMessage.u1.s1.TotalLength = sizeof(message);
-        message.ApiCallRequest.dwAPI = static_cast<SpmApi::NUMBER>(ApApi::NUMBER::LookupPackageApi);
-        auto& lookupPackage{ message.ApiCallRequest.Args.ApArguments.LookupPackage };
-        lookupPackage.PackageNameLength = PackageName->Length;
-        strncpy_s(lookupPackage.PackageName, ApApi::MaxLogonProcNameLength() + 1, PackageName->Buffer, PackageName->Length);
-        lookupPackage.PackageName[PackageName->Length] = 0;
-        size_t outputMessageSize{ 0 };
-        SpmApi::MESSAGE* output{ nullptr };
-        auto status{ this->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
-        if (NT_SUCCESS(status)) {
-            *AuthenticationPackage = output->ApiCallRequest.Args.ApArguments.LookupPackage.AuthenticationPackage;
-            status = output->ApiCallRequest.scRet;
-            MIDL_user_free(output);
-        }
-        return status;
-    }
-    return 0xC0000106; // STATUS_NAME_TOO_LONG
 }
 
 NTSTATUS Sspi::CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output) {
@@ -257,10 +256,49 @@ NTSTATUS Sspi::CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** outp
         *outputSize = 0;
         // Ignore the results of the outputed callback args
         // It's data is normally passed to sspicli!LsaCallbackHandler, but you can't call that
-        SPMCallbackAPI args = { 0 };
+        SSPIR_SPMCallbackAPI args = { 0 };
         status = SspirCallRpc(this->lsaHandle, message->u1.s1.TotalLength, reinterpret_cast<unsigned char*>(message), reinterpret_cast<long*>(outputSize), reinterpret_cast<unsigned char**>(output), &args);
     }
     return status;
+}
+
+bool Sspi::Connected() {
+    return this->connected;
+}
+
+NTSTATUS Sspi::LsaCallAuthenticationPackage(ULONG AuthenticationPackage, PVOID ProtocolSubmitBuffer, ULONG SubmitBufferLength, PVOID* ProtocolReturnBuffer, PULONG ReturnBufferLength, PNTSTATUS ProtocolStatus) {
+    AuApi::MESSAGE message{ AuApi::NUMBER::CallPackage };
+    auto& callPackage{ message.Arguments.CallPackage };
+    callPackage.AuthenticationPackage = AuthenticationPackage;
+    callPackage.ProtocolSubmitBuffer = ProtocolSubmitBuffer;
+    callPackage.SubmitBufferLength = SubmitBufferLength;
+    size_t outputMessageSize{ 0 };
+    AuApi::MESSAGE* output{ nullptr };
+    auto status{ this->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+    *ProtocolStatus = output->Arguments.CallPackage.ProtocolStatus;
+    *ProtocolReturnBuffer = output->Arguments.CallPackage.ProtocolReturnBuffer;
+    *ReturnBufferLength = output->Arguments.CallPackage.ReturnBufferLength;
+    return NT_SUCCESS(status) ? output->ReturnedStatus : status;
+}
+
+NTSTATUS Sspi::LsaLookupAuthenticationPackage(PSTRING PackageName, PULONG AuthenticationPackage) {
+    if (PackageName->Length <= AuApi::MaxLogonProcNameLength()) {
+        AuApi::MESSAGE message{ AuApi::NUMBER::LookupPackage };
+        auto& lookupPackage{ message.Arguments.LookupPackage };
+        lookupPackage.PackageNameLength = PackageName->Length;
+        strncpy_s(lookupPackage.PackageName, AuApi::MaxLogonProcNameLength() + 1, PackageName->Buffer, PackageName->Length);
+        lookupPackage.PackageName[PackageName->Length] = 0;
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status)) {
+            *AuthenticationPackage = output->ApiCallRequest.Args.ApArguments.LookupPackage.AuthenticationPackage;
+            status = output->ApiCallRequest.scRet;
+            MIDL_user_free(output);
+        }
+        return status;
+    }
+    return 0xC0000106; // STATUS_NAME_TOO_LONG
 }
 
 void Sspi::RpcBind(const std::wstring& portName) {

@@ -7,3 +7,6 @@
 [submodule "libraries/replxx"]
 	path = libraries/replxx
 	url = https://github.com/AmokHuginnsson/replxx.git
+[submodule "libraries/clipp"]
+	path = libraries/clipp
+	url = https://github.com/muellan/clipp.git

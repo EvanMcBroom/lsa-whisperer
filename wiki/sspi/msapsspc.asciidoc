@@ -1,10 +1,14 @@
 = DPA Client SSP
 
-The distributed password authentication (DPA) client is a legacy SSP for NTLM.
-The package also makes references to the Remote Passphrase Authentication (RPA) scheme which was https://patents.google.com/patent/US6058480A/en[developed and used by CompuServe].
+The distributed password authentication (DPA) client is a legacy SSP that provided another option for users to authenticate with servers over HTTP.
+DPA was used to authenticate users to the Microsoft Network (MSN), Site Server websites, BackOffice Servers, and other discontinued Microsoft solutions.
+
+The package internally makes references to the Remote Passphrase Authentication (RPA) scheme which was https://patents.google.com/patent/US6058480A/en[developed and used by CompuServe].
+RPA is the security protocol that DPA is believed to be designed after.
+
 It could not be identified when client versions of the package were first released (e.g., `msapsspc.dll`), but they were removed in NT 6.0.
-The server version of the package was not released with Windows (e.g., `msapssps.dll`), but it was bundled with the installation media for now discontinued Microsoft server products such as https://en.wikipedia.org/wiki/Microsoft_Site_Server[Site Server] and https://en.wikipedia.org/wiki/Microsoft_BackOffice_Server[BackOffice Server].
+Server versions of the package were not released with Windows (e.g., `msapssps.dll`), but were bundled with the installation media for now discontinued Microsoft server products such as https://en.wikipedia.org/wiki/Microsoft_Site_Server[Site Server] and https://en.wikipedia.org/wiki/Microsoft_BackOffice_Server[BackOffice Server].
 
-The package was made to provide another option for users to authenticate over HTTP to the Microsoft Network (MSN), Site Server websites, BackOffice Servers, and other discontinued Microsoft solutions.
-
-Administrators would first configure a Membership Directory to store user information, which could be any ODBC-compliant database (ex. an SQL or LDAP server)...
+DPA authentication for on premise resources required administrators to maintain a Membership Directory to store user information, which could be any ODBC-compliant database (ex. an SQL or LDAP server).
+The Membership Directory would store all user information in plaintext, including user passwords.
+Clearly, it is for the best that Microsoft has removed this package from Windows and has stopped supporting DPA.

@@ -67,7 +67,7 @@ msv1_0 CacheLookup --account {name} [--domain name] --credtype {name} --cred {as
 === CacheLookupEx
 
 This dispatch routine looks up the local logon in the cache.
-The `SeTcbPrivilege` is required.
+`SeTcbPrivilege` is required.
 
 ```
 msv1_0 CacheLookupEx ...
@@ -78,7 +78,7 @@ msv1_0 CacheLookupEx ...
 This dispatch routine changes a password in the logon cache.
 This is used when the password is changed on the domain controller using some other mechanism and the locally cached version needs to be updated to match the new value.
 For example, RAS handles changing the passwords on the domain but then needs to update the cached copy so the user can still access servers.
-The `SeTcbPrivilege` is required if you are changing the cached entry for someone else.
+`SeTcbPrivilege` is required if you are changing the cached entry for someone else.
 
 ```
 msv1_0 ChangeCachedPassword --domain {name} --account {name} --oldpass {password} --newpass {password}
@@ -92,7 +92,7 @@ Appears at first to be coercible, but LSASS will impersonate itself and remove t
 === ClearCachedCredentials
 
 Clear the credentials in the local NTLM logon cache.
-The `SeTcbPrivilege` is required.
+`SeTcbPrivilege` is required.
 
 ```
 msv1_0 ClearCachedCredentials
@@ -118,7 +118,7 @@ msv1_0 DeleteTbalSecrets
 
 Get the [SHA1 HMAC](https://en.wikipedia.org/wiki/HMAC) for a provided message using an NT OWF or SHA1 OWF password as the key, specified by the logon session id.
 The `--sha1v2` argument specifies to use the SHA1 OWF password instead of the NT OWF password.
-The `SeTcbPrivilege` may be required when specifying an id for another logon session but still need to verify that.
+`SeTcbPrivilege` may be required when specifying an id for another logon session but still need to verify that.
 
 ```
 msv1_0 DeriveCredential --luid {session id} [--sha1v2] --message {ascii hex}
@@ -146,7 +146,7 @@ msv1_0 -d {function name} [function arguments]...
 
 Get the primary credential keys for a logon session.
 The keys will either be the NT and SHA OWF hashes or the SHA hash and the DPAPI key.
-The `SeTcbPrivilege` is required and credential isolation must also not be enabled.
+`SeTcbPrivilege` is required and credential isolation must also not be enabled.
 
 ```
 msv1_0 GetCredentialKey --luid {session id}
@@ -189,7 +189,7 @@ msv1_0 ProvisionTbal --luid {session id}
 === SetProcessOption
 
 Enable or disable an option for the calling process.
-The `SeTcbPrivilege` is required.
+`SeTcbPrivilege` is required.
 The currently known set of process options include:
 
 - `AllowBlankPassword`
@@ -208,7 +208,7 @@ msv1_0 SetProcessOption --option {process option} [--disable]
 
 Enable or disable an option for the calling thread.
 The set of options are the same as with the `SetProcessOption` command but they will take precedence over process options.
-The `SeTcbPrivilege` is required.
+`SeTcbPrivilege` is required.
 
 ```
 msv1_0 SetThreadOption --option {thread option} [--disable]
@@ -216,8 +216,9 @@ msv1_0 SetThreadOption --option {thread option} [--disable]
 
 === TransferCred
 
-Transfer data from one logon session to another logon session.
+Transfer data between two msv1_0 logon sessions.
 The specific data that is transferred and privileges that may be required are still being determined.
+The function will ignore any flags that are provided.
 
 ```
 msv1_0 TransferCred --sluid {session id} --dluid {session id}

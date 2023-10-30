@@ -11,16 +11,30 @@ namespace Pku2u {
         : lsa(lsa) {
     }
 
-    bool Proxy::PurgeTicketEx() const {
-        return false;
+    bool Proxy::PurgeTicketEx(PLUID luid, ULONG flags, PKERB_TICKET_CACHE_INFO_EX ticketCacheInfo) const {
+        PURGE_TICKET_EX_REQUEST request;
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
+        request.Flags = flags;
+        ticketCacheInfo = ticketCacheInfo;
+        KERB_QUERY_TKT_CACHE_EX2_RESPONSE* response{ nullptr };
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::QueryTicketCacheEx2(PLUID luid) const {
         QUERY_TICKET_CACHE_EX2_REQUEST request;
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
-        void* response;
-        return CallPackage(request, &response);
+        KERB_QUERY_TKT_CACHE_EX2_RESPONSE* response{ nullptr };
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     template<typename _Request, typename _Response>

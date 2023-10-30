@@ -1,18 +1,14 @@
 // The message format for security package manager (SPM) API calls
 // An SPM API message may include a authentication package (AP) API call message, which is also defined here
 #pragma once
-#define SECURITY_WIN32
-#define WIN32_NO_STATUS
-#include <Security.h>
-
+#include <pch.hpp>
 #define MAX_BUFFERS_IN_CALL 8
-typedef struct _SECURITY_USER_DATA {
-    SECURITY_STRING UserName; // User name
-    SECURITY_STRING LogonDomainName; // Domain the user logged on to
-    SECURITY_STRING LogonServer; // Server that logged the user on
-    PSID pSid; // SID of user
-} SECURITY_USER_DATA, *PSECURITY_USER_DATA;
+
 typedef SECURITY_USER_DATA SecurityUserData, *PSecurityUserData;
+
+// LPC definitions
+
+#define LPC_KERNELMODE_MESSAGE (unsigned short)0x8000
 
 typedef struct _PORT_MESSAGE {
     union {
@@ -43,7 +39,11 @@ typedef struct _PORT_MESSAGE {
 } PORT_MESSAGE, *PPORT_MESSAGE;
 
 // The authentication package message format, which may be included as a component of an SPM API call
-namespace ApApi {
+namespace AuApi {
+    constexpr auto AddressLength() {
+        return 32;
+    }
+
     constexpr auto MaxLogonProcNameLength() {
         return 127;
     }
@@ -66,13 +66,20 @@ namespace ApApi {
         CHAR LogonProcessName[MaxPackageNameLength() + 1];
     } REGISTER_CONNECT_INFO, *PREGISTER_CONNECT_INFO;
 
-    // Messages originally supported 4 AP API calls
-    // The only call that was removed was the logon user API
+#undef LogonUser
+
+    enum class NUMBER_PRE_NT61 : DWORD {
+        LookupPackage,
+        LogonUser,
+        CallPackage,
+        DeregisterLogonProcess,
+        MaxApiNumber
+    };
+
     enum class NUMBER : DWORD {
-        LookupPackageApi,
-        //LogonUserApi,
-        CallPackageApi,
-        DeregisterLogonProcessApi,
+        LookupPackage,
+        CallPackage,
+        DeregisterLogonProcess,
         MaxApiNumber
     };
 
@@ -91,10 +98,33 @@ namespace ApApi {
             PVOID ProtocolReturnBuffer; // OUT
             ULONG ReturnBufferLength; // OUT
         } CALL_PACKAGE, *PCALL_PACKAGE;
+
+        // Albeit not available anymore via an AuApi call afaik, the
+        // original args struct for logon user is included due to it
+        // being useful for determining type information for ms-sspir.idl
+        typedef struct _LOGON_USER {
+            STRING OriginName;
+            SECURITY_LOGON_TYPE LogonType;
+            ULONG AuthenticationPackage;
+            PVOID AuthenticationInformation;
+            ULONG AuthenticationInformationLength;
+            ULONG LocalGroupsCount;
+            PVOID LocalGroups;
+            TOKEN_SOURCE SourceContext;
+            NTSTATUS SubStatus; // OUT parameter
+            PVOID ProfileBuffer; // OUT parameter
+            ULONG ProfileBufferLength; // OUT parameter
+            ULONG DummySpacer; // Spacer to force LUID to 8 byte alignment
+            LUID LogonId; // OUT parameter
+            HANDLE Token; // OUT parameter
+            QUOTA_LIMITS Quotas; // OUT parameter
+            CHAR IpAddress[AddressLength()]; // At the end to avoid compat problems with clients
+                //   built with older versions of lsadll.lib
+        } LOGON_USER, *PLOGON_USER;
     }
 
     typedef struct _MESSAGE {
-        PORT_MESSAGE PortMessage;
+        PORT_MESSAGE pmMessage;
         union {
             REGISTER_CONNECT_INFO ConnectionRequest;
             struct {
@@ -106,6 +136,9 @@ namespace ApApi {
                 } Arguments;
             };
         };
+
+        _MESSAGE() = default;
+        _MESSAGE(AuApi::NUMBER api);
     } MESSAGE, *PMESSAGE;
 }
 
@@ -215,7 +248,7 @@ namespace SpmApi {
         // EnumeratePackages API
         typedef struct _SPMEnumPackagesAPI {
             ULONG cPackages; // OUT
-            PSecPkgInfo pPackages; // OUT
+            PSecPkgInfoW pPackages; // OUT
         } SPMEnumPackagesAPI;
 
         // Credential APIs
@@ -312,7 +345,7 @@ namespace SpmApi {
 
         typedef struct _SPMQueryPackageAPI {
             SECURITY_STRING ssPackageName;
-            PSecPkgInfo pPackageInfo;
+            PSecPkgInfoW pPackageInfo;
         } SPMQueryPackageAPI;
 
         // GetSecurityUserInfo
@@ -446,7 +479,6 @@ namespace SpmApi {
         } SPMGetUserNameXAPI;
 
 #define SPM_NAME_OPTION_MASK 0xFFFF0000
-
 #define SPM_NAME_OPTION_NT4_ONLY 0x00010000 // GetUserNameX only, not Ex
 #define SPM_NAME_OPTION_FLUSH    0x00020000
 
@@ -500,8 +532,8 @@ namespace SpmApi {
         } SPMLookupWellKnownSidAPI;
     }
 
-    typedef enum _NUMBER {
-        GetBinding = (static_cast<DWORD>(ApApi::NUMBER::MaxApiNumber) + 1),
+    enum class NUMBER_PRE_NT61 {
+        GetBinding = (static_cast<DWORD>(AuApi::NUMBER::MaxApiNumber) + 1),
         SetSession,
         FindPackage,
         EnumPackages,
@@ -534,9 +566,42 @@ namespace SpmApi {
         LookupAccountNameX,
         LookupAccountSidX,
         LookupWellKnownSid,
-        MaxApiNumber
-    } NUMBER,
-        *PNUMBER;
+        // MaxApiNumber
+    };
+
+#undef QueryContextAttributes
+#undef SetContextAttributes
+#undef LookupAccountName
+#undef ChangeAccountPassword
+
+    enum class NUMBER {
+        GetBinding = (static_cast<DWORD>(AuApi::NUMBER::MaxApiNumber) + 1),
+        SetSession,
+        FindPackage,
+        EnumPackages,
+        QueryPackage,
+        GetUserInfo,
+        QueryCredAttributes,
+        AddPackage,
+        EfsGenerateKey,
+        // The next 3 entries of the SPM function table are duplicates like so:
+        // EfsGenerateKey,
+        // EfsGenerateKey,
+        // EfsGenerateKey,
+        Callback = 16,
+        QueryContextAttributes,
+        LsaPolicyChangeNotify,
+        AddCredential,
+        EnumLogonSessions,
+        GetLogonSessionData,
+        SetContextAttributes,
+        LookupAccountName,
+        LookupAccountSidX,
+        LookupWellKnownSid,
+        SetCredAttributes,
+        ChangeAccountPassword,
+        // MaxApiNumber
+    };
 
 #pragma push_macro("CALLBACK")
 #undef CALLBACK
@@ -557,14 +622,14 @@ namespace SpmApi {
 
     typedef union _API_ARGUMENTS {
         union {
-            ApApi::Args::LOOKUP_PACKAGE LookupPackage;
-            ApApi::Args::CALL_PACKAGE CallPackage;
+            AuApi::Args::LOOKUP_PACKAGE LookupPackage;
+            AuApi::Args::CALL_PACKAGE CallPackage;
         } ApArguments;
         struct _SPM_API_ARGUMENTS {
             USHORT fAPI; // Set using FLAG
             USHORT VMOffset;
             PVOID ContextPointer;
-            typedef union {
+            union {
                 Args::SPMGetBindingAPI GetBinding;
                 Args::SPMSetSessionAPI SetSession;
                 Args::SPMFindPackageAPI FindPackage;
@@ -614,92 +679,45 @@ namespace SpmApi {
     // problems with an LPC message.
     //
 
-#define CBAPIHDR (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(HRESULT) + \
-                  sizeof(API_ARGUMENTS))
+    constexpr auto ApiHeaderSize() {
+        return sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(HRESULT) + sizeof(API_ARGUMENTS);
+    }
 
-#define PORT_MAXIMUM_MESSAGE_LENGTH 256
-#define CBPREPACK                   (PORT_MAXIMUM_MESSAGE_LENGTH - CBAPIHDR - sizeof(PVOID))
+    constexpr auto MaxPortMessageLength() {
+        return 256;
+    }
 
-#define NUM_SECBUFFERS (CBPREPACK / sizeof(SecBuffer))
+    constexpr auto PrePackSize() {
+        return MaxPortMessageLength() - ApiHeaderSize() - sizeof(PVOID);
+    }
+
+    constexpr auto SecBufferCount() {
+        return PrePackSize() / sizeof(SecBuffer);
+    }
 
     // This structure is sent over during an API call rather than a connect message
     typedef struct _API_CALL_INFO {
         NUMBER dwAPI;
         HRESULT scRet;
         API_ARGUMENTS Args;
-        UCHAR bData[CBPREPACK];
+        UCHAR bData[ApiHeaderSize()];
     } API_CALL_INFO, *PAPI_CALL_INFO;
 
-#define SecBaseMessageSize(Api)                    \
-    (sizeof(SPM_API_NUMBER) + sizeof(HRESULT) +    \
-        (sizeof(API_ARGUMENTS) - sizeof(SPM_API) + \
-            sizeof(SPM##Api##API)))
+    inline auto SecBaseMessageSize(size_t argSize) {
+        return sizeof(NUMBER) + sizeof(HRESULT) + sizeof(API_ARGUMENTS) - sizeof(API_ARGUMENTS::SpmArguments.Arguments) + argSize;
+    }
 
     // This is the message that was originally sent over LPC and processed by DispatchAPI in lsasrv
     // It is still processed by DispatchAPI, but it is now sent over SspirCallRpc
-    // It is binary compatible with ApApi::MESSAGE
+    // It is binary compatible with AuApi::MESSAGE
     typedef struct _MESSAGE {
         PORT_MESSAGE pmMessage;
         union {
-            ApApi::REGISTER_CONNECT_INFO ConnectionRequest;
+            AuApi::REGISTER_CONNECT_INFO ConnectionRequest;
             API_CALL_INFO ApiCallRequest;
         };
+
+        _MESSAGE() = default;
+        _MESSAGE(SpmApi::NUMBER api, size_t argSize = 0, unsigned short flags = 0, void* context = nullptr, bool kernelMode = false);
     } MESSAGE, *PMESSAGE;
-
-    //
-    // Macros to help prepare LPC messages
-    //
-
-#ifdef SECURITY_USERMODE
-    #define PREPARE_MESSAGE_EX(Message, Api, Flags, Context)                           \
-        RtlZeroMemory(&(Message), sizeof(API_ARGUMENTS) + sizeof(PORT_MESSAGE));       \
-        (Message).pmMessage.u1.s1.DataLength =                                         \
-            (sizeof(SPM_API_NUMBER) + sizeof(HRESULT) +                                \
-                (sizeof(API_ARGUMENTS) - sizeof(SPM_API) +                             \
-                    sizeof(SPM##Api##API)));                                           \
-        (Message).pmMessage.u1.s1.TotalLength = (Message).pmMessage.u1.s1.DataLength + \
-                                                sizeof(PORT_MESSAGE);                  \
-        (Message).pmMessage.u2.ZeroInit = 0L;                                          \
-        (Message).ApiMessage.scRet = 0L;                                               \
-        (Message).ApiMessage.dwAPI = SPMAPI_##Api;                                     \
-        (Message).ApiMessage.Args.SpmArguments.fAPI = (USHORT)(Flags);                 \
-        (Message).ApiMessage.Args.SpmArguments.ContextPointer = (Context);
-#else
-    #define PREPARE_MESSAGE_EX(Message, Api, Flags, Context)                           \
-        RtlZeroMemory(&(Message), sizeof(API_ARGUMENTS) + sizeof(PORT_MESSAGE));       \
-        (Message).pmMessage.u1.s1.DataLength =                                         \
-            (sizeof(SPM_API_NUMBER) + sizeof(HRESULT) +                                \
-                (sizeof(API_ARGUMENTS) - sizeof(SPM_API) +                             \
-                    sizeof(SPM##Api##API)));                                           \
-        (Message).pmMessage.u1.s1.TotalLength = (Message).pmMessage.u1.s1.DataLength + \
-                                                sizeof(PORT_MESSAGE);                  \
-        (Message).pmMessage.u2.ZeroInit = 0L;                                          \
-        (Message).ApiMessage.scRet = 0L;                                               \
-        (Message).ApiMessage.dwAPI = SPMAPI_##Api;                                     \
-        (Message).ApiMessage.Args.SpmArguments.fAPI = (USHORT)(Flags);                 \
-        (Message).ApiMessage.Args.SpmArguments.ContextPointer = (Context);             \
-        (Message).pmMessage.u2.s2.Type |= LPC_KERNELMODE_MESSAGE;
-#endif
-
-#define PREPARE_MESSAGE(Message, Api) PREPARE_MESSAGE_EX(Message, Api, 0, 0)
-
-#define LPC_MESSAGE_ARGS(Message, Api) \
-    (&(Message).ApiMessage.Args.SpmArguments.API.Api)
-
-#define LPC_MESSAGE_ARGSP(Message, Api) \
-    (&(Message)->ApiMessage.Args.SpmArguments.API.Api)
-
-#define DECLARE_ARGS(ArgPointer, Message, Api) \
-    SPM##Api##API* ArgPointer = &(Message).ApiMessage.Args.SpmArguments.API.Api
-
-#define DECLARE_ARGSP(ArgPointer, Message, Api) \
-    SPM##Api##API* ArgPointer = &(Message)->ApiMessage.Args.SpmArguments.API.Api
-
-#define PREPACK_START FIELD_OFFSET(SPM_LPC_MESSAGE, ApiMessage.bData)
-
-#define LPC_DATA_LENGTH(Length) \
-    (USHORT)((PREPACK_START) + (Length) - sizeof(PORT_MESSAGE))
-
-#define LPC_TOTAL_LENGTH(Length) \
-    (USHORT)((PREPACK_START) + (Length))
 }

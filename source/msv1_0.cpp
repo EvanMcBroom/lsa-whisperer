@@ -280,10 +280,10 @@ namespace Msv1_0 {
 
     bool Proxy::TransferCred(PLUID sourceLuid, PLUID destinationLuid) const {
         TRANSFER_CRED_REQUEST request;
-        request.SourceLuid.LowPart = sourceLuid->LowPart;
-        request.SourceLuid.HighPart = sourceLuid->HighPart;
-        request.DestinationLuid.LowPart = destinationLuid->LowPart;
-        request.DestinationLuid.HighPart = destinationLuid->HighPart;
+        request.OriginLogonId.LowPart = sourceLuid->LowPart;
+        request.OriginLogonId.HighPart = sourceLuid->HighPart;
+        request.DestinationLogonId.LowPart = destinationLuid->LowPart;
+        request.DestinationLogonId.HighPart = destinationLuid->HighPart;
         void* response;
         return CallPackage(request, &response);
     }

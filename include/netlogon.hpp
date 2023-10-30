@@ -1,6 +1,7 @@
 #pragma once
+#include <pch.hpp>
+
 #include <MsChapp.h>
-#include <Ntsecapi.h>
 #include <crypt.hpp>
 
 // Sam definitions included with netlogon.hpp for convenience

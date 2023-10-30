@@ -1,8 +1,6 @@
 #pragma once
-#define _NTDEF_ // Required to include both Ntsecapi and Winternl
-#include <Winternl.h>
+#include <pch.hpp>
 
-#include <NTSecAPI.h>
 #include <iostream>
 #include <ms-sspir_c.h>
 #include <rpc.hpp>
@@ -31,6 +29,12 @@ private:
     } nullBuffer;
 };
 
+enum class TransferCredFlag {
+    OptimisticLogon = 1, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_OPTIMISTIC_LOGON
+    CleanupCredentials = 2, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_CLEANUP_CREDENTIALS
+    ToSsoSession = 4, // SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST_FLAG_TO_SSO_SESSION
+};
+
 // Reimplements Windows functions that use the SSPI RPC interface
 class Sspi {
 public:
@@ -40,6 +44,9 @@ public:
     Sspi(const std::wstring& portName, const std::string& logonProcessName);
     // Will call LsaDeregisterLogonProcess/SspirDisconnectRpc
     ~Sspi();
+
+    // Call a security package manager (SPM) API
+    NTSTATUS CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output);
 
     bool Connected();
 
@@ -57,8 +64,6 @@ private:
     long packageCount{ 0 };
     std::unique_ptr<Rpc::Client> rpcClient{ nullptr };
 
-    // Call a security package manager (SPM) API
-    NTSTATUS CallSpmApi(PORT_MESSAGE* message, size_t* outputSize, void** output);
     void RpcBind(const std::wstring& portName);
 };
 
@@ -66,9 +71,9 @@ class Lsa {
 public:
     std::ostream& out;
 
-    Lsa(std::ostream& out = NullStream(), bool useRpc = true);
+    Lsa(std::ostream& out = NullStream(), bool useRpc = true, const std::wstring& portName = std::wstring(L"lsasspirpc"));
     ~Lsa();
-    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer) const;
+    bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength = nullptr) const;
     // Uses the GenericPassthrough message implemented by msv1_0
     // Data will be used as an input and output argument. It's original values will be cleared if the call is successful
     bool CallPackagePassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;
@@ -76,9 +81,16 @@ public:
         return connected;
     };
 
+    // Exposes the SPM API
+    // Currently only supports issuing calls via the SSPI RPC interface
+    bool EnumLogonSessions() const;
+    bool EnumPackages() const;
+
 private:
     bool connected{ false };
     HANDLE lsaHandle;
+    bool preNt61{ false };
+    bool useBroker;
     bool useRpc;
     std::unique_ptr<Sspi> sspi;
 };

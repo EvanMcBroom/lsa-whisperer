@@ -38,7 +38,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
 | `0x11` | `AddExtraCredentials`          |                    | `>=5.0`    | `KerbAddExtraCredential`
 | `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
-| `0x13` | `TransferCredentials`          | _Planned_          | `>=6.0`    | `KerbTransferCredentials`
+| `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
 | `0x14` | `QueryTicketCacheEx2`          |                    | `>=6.0`    | `KerbQueryTicketCacheEx2`
 | `0x15` | `SubmitTicket`                 |                    | `>=6.0`    | `KerbSubmitTicket`
 | `0x16` | `AddExtraCredentialsEx`        |                    | `>=6.0`    | `KerbAddExtraCredentialEx`
@@ -49,8 +49,8 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
 | `0x1c` | `QueryBindingCache`            |                    | `>=6.2`    | `KerbQueryBindingCache`
 | `0x1d` | `PurgeBindingCache`            |                    | `>=6.2`    | `KerbPurgeBindingCache`
-| `0x1e` | `PinKdc`                       |                    | `>=6.2`    | `KerbPinKdc`
-| `0x1f` | `UnpinAllKdcs`                 |                    | `>=6.2`    | `KerbUnpinAllKdcs`
+| `0x1e` | `PinKdc`                       | _Planned_          | `>=6.2`    | `KerbPinKdc`
+| `0x1f` | `UnpinAllKdcs`                 | _Planned_          | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  |                    | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
 | `0x21` | `QueryS4U2ProxyCache`          |                    | `>=6.2`    | `KerbQueryS4U2ProxyCache`
 | `0x22` | `RetrieveKeyTab`               |                    | `>=10.0`   | `KerbRetrieveKeyTab`
@@ -69,4 +69,14 @@ Get the tickets for a logon session.
 
 ```
 kerberos QueryTicketCache --luid {session id}
+```
+
+=== TransferCredentials
+
+Transfer data between two kerberos logon sessions.
+The specific data that is transferred and privileges that may be required are still being determined.
+The function only accepts the cleanup credentials and optimistic logon flags.
+
+```
+kerberos TransferCredentials --sluid {session id} --dluid {session id} [--cleanup-credentials] [--optimistic-logon]
 ```

@@ -12,11 +12,13 @@ namespace Cloudap {
         unparsedOptions.add_options("Command arguments")
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
-            ("aad", "Azure Active Directory", cxxopts::value<bool>()->default_value("false"))
+            ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
+            ("authreq", "RDP authentication request (MS-RDPBCGR 4.11.2)", cxxopts::value<std::string>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
-            ("msa", "Microsoft Account (e.g. Windows Live ID)", cxxopts::value<bool>()->default_value("false"))
+            ("nonce", "Cookie nonce", cxxopts::value<std::string>())
+            ("server", "Who to request a SSO cookie from", cxxopts::value<std::string>()->default_value("login.microsoftonline.com"))
             ("sluid", "Source logon session", cxxopts::value<unsigned int>());
         // clang-format on
         auto options{ unparsedOptions.parse(args.size(), args.data()) };
@@ -24,65 +26,110 @@ namespace Cloudap {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
         }
-        auto proxy{ Proxy(lsa) };
-
-        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
-            return proxy.ReinitPlugin();
-        case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetTokenBlob(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
-            return false;
-        case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
-            return proxy.ProfileDeleted();
-        case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetAuthenticatingProvider(&luid);
-        }
-        case PROTOCOL_MESSAGE_TYPE::RenameAccount:
-            return proxy.RenameAccount();
-        case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
-            return proxy.RefreshTokenBlob();
-        case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
-            return proxy.GenARSOPwd();
-        case PROTOCOL_MESSAGE_TYPE::SetTestParas:
-            return proxy.SetTestParas(0);
-        case PROTOCOL_MESSAGE_TYPE::TransferCreds:
-            if (options.count("sluid") && options.count("dluid")) {
-                LUID source;
-                source.LowPart = options["sluid"].as<DWORD>();
-                LUID destination;
-                destination.LowPart = options["dluid"].as<DWORD>();
-                return proxy.TransferCreds(&source, &destination);
-            } else {
-                std::cout << "A source or destination LUID was not specified." << std::endl;
-                return false;
+        if (magic_enum::enum_contains<Aad::CALL>(args[1])) {
+            auto proxy{ Aad::Proxy(lsa) };
+            switch (magic_enum::enum_cast<Aad::CALL>(args[1]).value()) {
+            case Aad::CALL::CheckDeviceKeysHealth:
+                return proxy.CheckDeviceKeysHealth();
+            case Aad::CALL::CreateBindingKey:
+                return proxy.CreateBindingKey();
+            case Aad::CALL::CreateDeviceSSOCookie:
+                return proxy.CreateDeviceSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
+            case Aad::CALL::CreateEnterpriseSSOCookie:
+                return proxy.CreateEnterpriseSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
+            case Aad::CALL::CreateNonce:
+                return proxy.CreateNonce();
+            case Aad::CALL::CreateSSOCookie:
+                return proxy.CreateSSOCookie(options["server"].as<std::string>(), options["nonce"].as<std::string>());
+            case Aad::CALL::DeviceAuth:
+                return proxy.DeviceAuth();
+            case Aad::CALL::DeviceValidityCheck:
+                return proxy.DeviceValidityCheck();
+            case Aad::CALL::GenerateBindingClaims:
+                break;
+            case Aad::CALL::GetPrtAuthority:
+                return proxy.GetPrtAuthority(static_cast<Aad::AUTHORITY_TYPE>(options["authority"].as<unsigned int>()));
+            case Aad::CALL::RefreshP2PCACert:
+                return proxy.RefreshP2PCACert();
+            case Aad::CALL::RefreshP2PCerts:
+                return proxy.RefreshP2PCerts();
+            case Aad::CALL::SignPayload:
+                return proxy.SignPayload();
+            case Aad::CALL::ValidateRdpAssertionRequest:
+                return proxy.ValidateRdpAssertionRequest(options["authreq"].as<std::string>());
+            default:
+                break;
             }
-            break;
-        case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
-            return proxy.ProvisionNGCNode();
-        case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo:
-            return proxy.GetPwdExpiryInfo(nullptr, nullptr);
-        case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon:
-            return proxy.DisableOptimizedLogon();
-        case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType:
-            return proxy.GetUnlockKeyType();
-        case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
-            return proxy.GetPublicCachedInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
-            return proxy.GetAccountInfo();
-        case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus:
-            return proxy.GetDpApiCredKeyDecryptStatus();
-        case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache:
-            return proxy.IsCloudToOnPremTgtPresentInCache();
-        default:
-            break;
+            return false;
+        } else {
+            auto proxy{ Proxy(lsa) };
+            switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+            case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
+                return false;
+            case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.DisableOptimizedLogon(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
+                return proxy.GenARSOPwd();
+            case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
+                return proxy.GetAccountInfo();
+            case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetAuthenticatingProvider(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetDpApiCredKeyDecryptStatus: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetDpApiCredKeyDecryptStatus(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
+                return proxy.GetPublicCachedInfo();
+            case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetPwdExpiryInfo(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetTokenBlob(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GetUnlockKeyType(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.IsCloudToOnPremTgtPresentInCache(&luid);
+            }
+            case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
+                return proxy.ProfileDeleted();
+            case PROTOCOL_MESSAGE_TYPE::ProvisionNGCNode:
+                return proxy.ProvisionNGCNode();
+            case PROTOCOL_MESSAGE_TYPE::RefreshTokenBlob:
+                return proxy.RefreshTokenBlob();
+            case PROTOCOL_MESSAGE_TYPE::ReinitPlugin:
+                return proxy.ReinitPlugin();
+            case PROTOCOL_MESSAGE_TYPE::RenameAccount:
+                return proxy.RenameAccount();
+            case PROTOCOL_MESSAGE_TYPE::SetTestParas:
+                return proxy.SetTestParas(0);
+            case PROTOCOL_MESSAGE_TYPE::TransferCreds: {
+                LUID sourceLuid, destinationLuid;
+                reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+                reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+                return proxy.TransferCreds(&sourceLuid, &destinationLuid);
+            }
+            default:
+                break;
+            }
+            return false;
         }
-        return false;
     }
 }
 
@@ -93,7 +140,15 @@ namespace Kerberos {
         unparsedOptions.allow_unrecognised_options();
         // clang-format off
         unparsedOptions.add_options("Function arguments")
-            ("luid", "Logon session", cxxopts::value<long long>())("cacheoption", "cacheOption field for KerbRetrieveTicketMessage", cxxopts::value<long long>())("targetname", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())("ticketflag", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>())("encryptiontype", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long >());
+            ("cacheoption", "cacheOption field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
+            ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("dluid", "Destination logon session", cxxopts::value<long long>())
+            ("encryptiontype", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long >())
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("sluid", "Source logon session", cxxopts::value<long long>())
+            ("targetname", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())
+            ("ticketflag", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -103,15 +158,16 @@ namespace Kerberos {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::QueryTicketCache:
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.QueryTicketCache(&luid);
         case PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };
             auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
             return proxy.ChangeMachinePassword(oldPassword, newPassword);
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryTicketCache: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.QueryTicketCache(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket: {
             LUID luid;
@@ -125,6 +181,15 @@ namespace Kerberos {
             encryptionType = (Kerberos::EncryptionType)options["encryptiontype"].as<long long>();
             auto targetName{ converter.from_bytes(options["targetname"].as<std::string>()) };
             return proxy.RetrieveEncodedTicket(&luid, targetName, ticketFlags, cacheOptions, encryptionType);
+        }
+        case PROTOCOL_MESSAGE_TYPE::TransferCredentials: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            ULONG flags{ 0 };
+            flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
+            flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
+            return proxy.TransferCreds(&sourceLuid, &destinationLuid, flags);
         }
         default:
             std::cout << "Unsupported function" << std::endl;
@@ -269,7 +334,10 @@ namespace Negotiate {
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
         unparsedOptions.add_options("Command arguments")
-            ("luid", "Logon session", cxxopts::value<long long>());
+            ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("to-sso-session", "To SSO session flag", cxxopts::value<bool>()->default_value("false"));
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -286,6 +354,16 @@ namespace Negotiate {
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetCallerName(&luid);
         }
+        case PROTOCOL_MESSAGE_TYPE::TransferCred: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            ULONG flags{ 0 };
+            flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
+            flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
+            flags += (options.count("to-sso-session")) ? static_cast<ULONG>(TransferCredFlag::ToSsoSession) : 0;
+            return proxy.TransferCreds(&sourceLuid, &destinationLuid, flags);
+        }
         default:
             std::cout << "Unsupported function" << std::endl;
             return false;
@@ -298,7 +376,8 @@ namespace Pku2u {
         char* command{ "pku2u" };
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
-        unparsedOptions.add_options("Command arguments")\
+        unparsedOptions.add_options("Command arguments")
+            ("all", "Purge all tickets flag", cxxopts::value<bool>()->default_value("false"))
             ("luid", "Logon session", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
@@ -309,8 +388,12 @@ namespace Pku2u {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx:
-            return proxy.PurgeTicketEx();
+        case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            auto flags{ (options.count("all")) ? KERB_PURGE_ALL_TICKETS : 0 };
+            return proxy.PurgeTicketEx(&luid, flags);
+        }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
@@ -369,6 +452,32 @@ namespace Schannel {
             std::cout << "Unsupported function" << std::endl;
             return false;
         }
+    }
+}
+
+namespace Spm {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "spm" };
+        cxxopts::Options unparsedOptions{ command };
+        // clang-format off
+        unparsedOptions.add_options("Spm Function")
+            ("f,function", "Function name", cxxopts::value<std::string>());
+        // clang-format on
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+
+        switch (magic_enum::enum_cast<SpmApi::NUMBER>(args[1]).value()) {
+        case SpmApi::NUMBER::EnumLogonSessions:
+            return lsa->EnumLogonSessions();
+        case SpmApi::NUMBER::EnumPackages:
+            return lsa->EnumPackages();
+        default:
+            break;
+        }
+        return false;
     }
 }
 
