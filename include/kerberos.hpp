@@ -126,11 +126,6 @@ namespace Kerberos {
     typedef struct _RETRIEVE_TKT_RESPONSE {
         KERB_EXTERNAL_TICKET Ticket;
     } RETRIEVE_TKT_RESPONSE, *PRETRIEVE_TKT_RESPONSE;
-
-    typedef struct _QUERY_TKT_CACHE_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::QueryTicketCache };
-        LUID LogonId;
-    } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
   
     typedef struct _PIN_KDC : _SECPKG_CALL_PACKAGE_PIN_DC_REQUEST {
         _PIN_KDC() {
@@ -189,7 +184,12 @@ namespace Kerberos {
 
     private:
         // You must free all returnBuffer outputs with LsaFreeReturnBuffer
+        bool CallPackage(const std::string& submitBuffer, void** returnBuffer) const;
+
         template<typename _Request, typename _Response>
         bool CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const;
+
+        template<typename _Request, typename _Response>
+        bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
 }

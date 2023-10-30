@@ -97,24 +97,23 @@ namespace Kerberos {
         void* response;
         return CallPackage(request, &response);
     }
-  
-    template<typename _Request, typename _Response>
-    bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
+
+    bool Proxy::CallPackage(const std::string& submitBuffer, void** returnBuffer) const {
         if (lsa->Connected()) {
-            return lsa->CallPackage(MICROSOFT_KERBEROS_NAME_A, submitBuffer, reinterpret_cast<void**>(returnBuffer));
+            return lsa->CallPackage(MICROSOFT_KERBEROS_NAME_A, submitBuffer, returnBuffer);
         }
         return false;
     }
 
+    template<typename _Request, typename _Response>
     bool Proxy::CallPackage(const _Request& submitBuffer, _Response** returnBuffer) const {
         std::string stringSubmitBuffer(reinterpret_cast<const char*>(&submitBuffer), sizeof(decltype(submitBuffer)));
-        return CallPackage(submitBuffer, reinterpret_cast<void**>(returnBuffer));
+        return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
     }
 
     template<typename _Request, typename _Response>
     bool Proxy::CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const {
         std::string stringSubmitBuffer(reinterpret_cast<const char*>(submitBuffer), submitBufferLength);
-        std::cout << "The address of stringSubmitBuffer is: " << static_cast<void*>(&stringSubmitBuffer[0]) << std::endl;
         return CallPackage(stringSubmitBuffer, reinterpret_cast<void**>(returnBuffer));
     }
 }
