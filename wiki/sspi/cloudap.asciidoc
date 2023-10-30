@@ -29,7 +29,7 @@ It is not known on which version of NT these functions were originally introduce
 | Id     | Message Type                       | CLI Support
 | `0x00` | `ReinitPlugin`                     | :heavy_check_mark:
 | `0x01` | `GetTokenBlob`                     | :heavy_check_mark:
-| `0x02` | `CallPluginGeneric`                | _Planned_
+| `0x02` | `CallPluginGeneric`                | :heavy_check_mark:
 | `0x03` | `ProfileDeleted`                   | _Planned_
 | `0x04` | `GetAuthenticatingProvider`        | :heavy_check_mark:
 | `0x05` | `RenameAccount`                    | :x:
@@ -46,6 +46,8 @@ It is not known on which version of NT these functions were originally introduce
 | `0x10` | `GetDpApiCredKeyDecryptStatus`     | :heavy_check_mark:
 | `0x11` | `IsCloudToOnPremTgtPresentInCache` | :heavy_check_mark:
 |===
+
+NOTE: Function `CallPluginGeneric` will be called if you use a plugin function.
 
 === CallPluginGeneric
 
@@ -207,21 +209,100 @@ The version numbers are anecdotal and will not account for all NT builds for whi
 |===
 | Id     | Message Type                  | NT Build  | CLI Support
 | `0x01` | `SignPayload`                 | `>=19045` | _Planned_
-| `0x02` | `CreateSSOCookie`             | `>=19045` | _Planned_
-| `0x03` | `GetPrtAuthority`             | `>=19045` | _Planned_
-| `0x04` | `CheckDeviceKeysHealth`       | `>=19045` | _Planned_
+| `0x02` | `CreateSSOCookie`             | `>=19045` | :heavy_check_mark:
+| `0x03` | `GetPrtAuthority`             | `>=19045` | :heavy_check_mark:
+| `0x04` | `CheckDeviceKeysHealth`       | `>=19045` | :heavy_check_mark:
 | `0x05` | `DeviceAuth`                  | `>=19045` | _Planned_
-| `0x06` | `RefreshP2PCACert`            | `>=19045` | _Planned_
-| `0x07` | `DeviceValidityCheck`         | `>=19045` | _Planned_
-| `0x08` | `CreateDeviceSSOCookie`       | `>=19045` | _Planned_
-| `0x09` | `CreateNonce`                 | `>=19045` | _Planned_
-| `0x0a` | `ValidateRdpAssertionRequest` | `>=19045` | _Planned_
-| `0x0b` | `RefreshP2PCerts`             | `>=19045` | _Planned_
-| `0x0c` | `CreateBindingKey`            | `>=22621` | _Planned_
-| `0x0d` | `GenerateBindingClaims`       | `>=22621` | _Planned_
+| `0x06` | `RefreshP2PCACert`            | `>=19045` | :heavy_check_mark:
+| `0x07` | `DeviceValidityCheck`         | `>=19045` | :heavy_check_mark:
+| `0x08` | `CreateDeviceSSOCookie`       | `>=19045` | :heavy_check_mark:
+| `0x09` | `CreateNonce`                 | `>=19045` | :heavy_check_mark:
+| `0x0a` | `ValidateRdpAssertionRequest` | `>=19045` | :heavy_check_mark:
+| `0x0b` | `RefreshP2PCerts`             | `>=19045` | :heavy_check_mark:
+| `0x0c` | `CreateBindingKey`            | `>=22621` | :x:
+| `0x0d` | `GenerateBindingClaims`       | `>=22621` | :x:
 | `0x0e` | _Reserved_                    |           | :x:
-| `0x0f` | `CreateEnterpriseSSOCookie`   | `>=19045` | _Planned_
+| `0x0f` | `CreateEnterpriseSSOCookie`   | `>=19045` | :heavy_check_mark:
 |===
+
+==== CheckDeviceKeysHealth
+
+Will perform the following actions:
+
+. Attempt to acquire the private key for the enterprise Device Registration Service (DRS) certificate in the current user's certificate store
+. Attempt to acquire the NGC symmetric PoP key transport key
+. Check if either action returned an error code matching a predefined list of error codes
+. Set the `RunRecovery` value in the `HKLMSOFTWARE\Microsoft\IdentityStore\LoadParameters\{B16898C6-A148-4967-9171-64D755DA8520}` to true if an error code does match the list
+. Return the error codes for the first two actions
+
+==== CreateBindingKey
+
+Always returns `E_NOTIMPL`.
+
+==== CreateDeviceSSOCookie
+
+Create a signed JWT for the current device which may be specified in web requests using the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oapxbc/71d4b3c8-2720-4bfa-84c5-67ac2cd5db59[`x-ms-DeviceCredential`] header.
+The JWT is used to authenticate the client device and its contents are described https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oapxbc/f6d4a084-4c7f-4d0c-8c47-9456a7debbe0[here].
+The caller must be System and the host must be cloud domain joined for the call to succeed.
+
+==== CreateEnterpriseSSOCookie
+
+The `CreateEnterpriseSSOCookie` command has not been fully tested, but should provide an 
+https://identitypro.blog/enterprise-primary-refresh-tokens-prt-and-ad-fs-403e4d7fc7f2[Enterprise PRT] cookie for the current logon session to use for single sign on (SSO) with AD FS.
+The host device must be authenticated with AD FS for the call to succeed.
+
+==== CreateNonce
+
+Create a https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/43e8dd31-7324-4578-bf10-5eb93dd6f4df[Server Nonce PDU] as defined in the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/8f62058b-c7e5-4244-8f14-ed7d76618cb5[RDS AAD Auth Connection Sequence] section of the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/5073f4ed-1e93-45e1-b039-6e30c385867c[MS-RDPBCGR] documentation.
+The call is also listed as a protocol example in the section https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/74b5513f-08d4-4807-b899-5e03dc9c8d6e["Generating a Server Nonce."]
+The caller must be System and the host must be cloud domain joined for the call to succeed.
+If the call succeeds the returned nonce may be used when creating an https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/411b3a90-d186-4090-890a-6b6eb29cbf4f[Authentication Request PDU] to use with the `ValidateRdpAssertion` command.
+
+==== CreateSSOCookie
+
+Create a proof of possession (PoP) cookie for the current logon session to use for single sign on (SSO) with Azure AD.
+The command requires a nonce value which may be acquired with the `.nonce` command or with https://github.com/dirkjanm/ROADtools/wiki/Getting-started-with-ROADrecon#using-a-prt-cookie[`roadrecon`] and it's `auth --prt-init` command.
+The returned assertion (e.g., the cookie) may be used with several `roadrecon` and https://github.com/dirkjanm/ROADtools/wiki/ROADtools-Token-eXchange-(roadtx)[`roadtx`] commands by specifying the assertion with the `--prt-cookie` argument.
+
+==== DeviceAuth
+
+_Planned._
+
+==== DeviceValidityCheck
+
+Issues a device token request to Azure AD and validates that a bearer token was successfully recieved.
+An empty json dictionary is returned on success and an error on failure.
+Although the API does not return the bearer token it may be viewed with the assistance of an HTTPS proxy such as https://mitmproxy.org/[mitmproxy].
+
+==== GenerateBindingClaim
+
+Always returns `E_NOTIMPL`.
+
+==== GetPrtAuthority
+
+Get information about any PRT authorities the current device may be registered with.
+The current device may be registered with Azure AD, an AD FS instance (e.g., "Enterprise"), or both.
+
+==== RefreshP2PCACert
+
+Updates the workplace CA certificate for the current user, if any.
+
+==== RefreshP2PCerts
+
+Updates the workplace CA certificate for the current user, if any, in the same way as the `RefreshP2PCACert` command.
+Also updates the current device's P2P certificate if the current user is an administrator.
+
+==== SignPayload
+
+_Planned._
+
+==== ValidateRdpAssertion
+
+Validate an https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/411b3a90-d186-4090-890a-6b6eb29cbf4f[Authentication Request PDU] as defined in the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/8f62058b-c7e5-4244-8f14-ed7d76618cb5[RDS AAD Auth Connection Sequence] section of the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/5073f4ed-1e93-45e1-b039-6e30c385867c[MS-RDPBCGR].
+The call is also listed as a protocol example in the section https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/25861219-8546-4780-a9c3-1f709daf4dde["Validating an Authentication Request."]
+The Authentication Request PDU will contain an https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/ba819b6b-257a-466f-b8e5-f262d78677f7[RDP Assertion] (e.g., a JWT) which functions as a user credential.
+The caller must be System and the host must be cloud domain joined for the call to succeed.
+If the call succeeds the returned Base64 URL string may be used as a credential blob with `LsaLogonUser` to create a new logon session.
 
 === Microsoft Account Functions
 
