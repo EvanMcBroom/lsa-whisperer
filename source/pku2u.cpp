@@ -1,8 +1,11 @@
 #define _NTDEF_ // Required to include both Ntsecapi and Winternl
 #include <Winternl.h>
 #include <crypt.hpp>
+#include <iomanip>
 #include <iostream>
+#include <kerberos.hpp>
 #include <lsa.hpp>
+#include <magic_enum.hpp>
 #include <pku2u.hpp>
 #include <string>
 
@@ -26,12 +29,28 @@ namespace Pku2u {
     }
 
     bool Proxy::QueryTicketCacheEx2(PLUID luid) const {
-        QUERY_TICKET_CACHE_EX2_REQUEST request;
+        QUERY_TKT_CACHE_EX2_REQUEST request;
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
-        KERB_QUERY_TKT_CACHE_EX2_RESPONSE* response{ nullptr };
+        PKERB_QUERY_TKT_CACHE_EX2_RESPONSE response{ nullptr };
         auto result{ CallPackage(request, &response) };
+        std::wcout << std::hex;
         if (result) {
+            for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
+                auto& ticket{ response->Tickets[index] };
+                std::wcout << index << ": " << std::endl;
+                std::wcout << "    ClientName    : " << ticket.ClientName.Buffer << std::endl;
+                std::wcout << "    ClientRealm   : " << ticket.ClientRealm.Buffer << std::endl;
+                std::wcout << "    ServerName    : " << ticket.ServerName.Buffer << std::endl;
+                std::wcout << "    ServerRealm   : " << ticket.ServerRealm.Buffer << std::endl;
+                std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
+                std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
+                std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
+                std::cout  << "    EncryptionType: " << magic_enum::enum_name(static_cast<Kerberos::EncryptionType>(ticket.EncryptionType)) << std::endl;
+                std::wcout << "    TicketFlags   : 0x" << std::hex << std::setw(4) << std::setfill(L'0') << ticket.TicketFlags << std::endl;
+                std::cout  << "    SessionKeyType: " << magic_enum::enum_name(static_cast<Kerberos::EncryptionType>(ticket.SessionKeyType)) << std::endl;
+                std::wcout << "    BranchId      : " << ticket.BranchId << std::endl;
+            }
             LsaFreeReturnBuffer(response);
         }
         return result;

@@ -418,8 +418,10 @@ namespace Pku2u {
             return proxy.PurgeTicketEx(&luid, flags);
         }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
             return proxy.QueryTicketCacheEx2(&luid);
         }
         default:
