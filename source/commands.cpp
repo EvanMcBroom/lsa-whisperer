@@ -165,9 +165,32 @@ namespace Kerberos {
             return proxy.ChangeMachinePassword(oldPassword, newPassword);
         }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCache: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
             return proxy.QueryTicketCache(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.QueryTicketCacheEx(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.QueryTicketCacheEx2(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx3: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.QueryTicketCacheEx3(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket: {
             LUID luid;

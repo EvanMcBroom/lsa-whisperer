@@ -33,18 +33,18 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0D` | `VerifyCredentials`            |                    | `>=5.1`    | `KerbVerifyCredentials`
-| `0x0E` | `QueryTicketCacheEx`           |                    | `>=5.1`    | `KerbQueryTicketCacheEx`
+| `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
 | `0x0F` | `PurgeTicketCacheEx`           |                    | `>=5.1`    | `KerbPurgeTicketEx`
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
 | `0x11` | `AddExtraCredentials`          |                    | `>=5.0`    | `KerbAddExtraCredential`
 | `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
 | `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
-| `0x14` | `QueryTicketCacheEx2`          |                    | `>=6.0`    | `KerbQueryTicketCacheEx2`
+| `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`    | `KerbQueryTicketCacheEx2`
 | `0x15` | `SubmitTicket`                 |                    | `>=6.0`    | `KerbSubmitTicket`
 | `0x16` | `AddExtraCredentialsEx`        | _Planned_          | `>=6.0`    | `KerbAddExtraCredentialEx`
 | `0x17` | `QueryKdcProxyCache`           |                    | `>=6.2`    | `KerbQueryKdcProxyCache`
 | `0x18` | `PurgeKdcProxyCache`           |                    | `>=6.2`    | `KerbPurgeKdcProxyCache`
-| `0x19` | `QueryTicketCacheEx3`          |                    | `>=6.2`    | `KerbQueryTicketCacheEx3`
+| `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryTicketCacheEx3`
 | `0x1a` | `CleanupMachinePkinitCreds`    |                    | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
 | `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
 | `0x1c` | `QueryBindingCache`            |                    | `>=6.2`    | `KerbQueryBindingCache`
@@ -65,10 +65,35 @@ The `RefreshPolicy` message is also not available in release builds of `kerberos
 
 === QueryTicketCache
 
-Get the tickets for a logon session.
+Show the server name, realm name, start time, end time, renew time, encryption type, and flags for each ticket in the ticket cache for the current logon session.
+`SeTcbPrivilege` is required to specify another logon session.
 
 ```
-kerberos QueryTicketCache --luid {session id}
+kerberos QueryTicketCache [--luid {session id}]
+```
+
+=== QueryTicketCacheEx
+
+Functions the same as the `QueryTicketCache` but will return additionally return the client name and realm for each ticket.
+
+```
+kerberos QueryTicketCacheEx [--luid {session id}]
+```
+
+=== QueryTicketCacheEx2
+
+Functions the same as the `QueryTicketCacheEx` but will return additionally return the session key type and branch ID for each ticket.
+
+```
+kerberos QueryTicketCacheEx2 [--luid {session id}]
+```
+
+=== QueryTicketCacheEx3
+
+Functions the same as the `QueryTicketCacheEx2` but will return additionally return the cache flags and KDC name for each ticket.
+
+```
+kerberos QueryTicketCacheEx3 [--luid {session id}]
 ```
 
 === TransferCredentials

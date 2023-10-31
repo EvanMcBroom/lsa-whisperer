@@ -151,6 +151,24 @@ namespace Kerberos {
         }
     } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
 
+    typedef struct _QUERY_TKT_CACHE_EX_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
+        _QUERY_TKT_CACHE_EX_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx);
+        }
+    } QUERY_TKT_CACHE_EX_REQUEST, *PQUERY_TKT_CACHE_EX_REQUEST;
+
+    typedef struct _QUERY_TKT_CACHE_EX2_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
+        _QUERY_TKT_CACHE_EX2_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2);
+        }
+    } QUERY_TKT_CACHE_EX2_REQUEST, *PQUERY_TKT_CACHE_EX2_REQUEST;
+
+    typedef struct _QUERY_TKT_CACHE_EX3_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
+        _QUERY_TKT_CACHE_EX3_REQUEST() {
+            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx3);
+        }
+    } QUERY_TKT_CACHE_EX3_REQUEST, *PQUERY_TKT_CACHE_EX3_REQUEST;
+
     typedef struct _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {
         ULONG MessageType;
         ULONG Flags; // reserved, must be 0
@@ -174,8 +192,14 @@ namespace Kerberos {
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // A subset of the supported functions in Kerberos
-        bool QueryTicketCache(PLUID luid) const;
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
+        bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& realmName) const;
+        bool PurgeTicketCacheEx(PLUID luid, const std::wstring& serverName, const std::wstring& realmName) const;
+        bool QueryTicketCache(PLUID luid) const;
+        bool QueryTicketCacheEx(PLUID luid) const;
+        bool QueryTicketCacheEx2(PLUID luid) const;
+        bool QueryTicketCacheEx3(PLUID luid) const;
+        bool RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type) const;
         bool RetrieveEncodedTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type) const;
         bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const;
 
