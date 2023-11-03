@@ -25,9 +25,9 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x03` | `VerifyPac`                    |                    | `>=5.0`    | `KerbVerifyPac`
 | `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveTicket`
 | `0x05` | `UpdateAddresses`              |                    | `>=5.0`    | `KerbSetIpAddresses`
-| `0x06` | `PurgeTicketCache`             | _Planned_          | `>=5.0`    | `KerbPurgeTicket`
+| `0x06` | `PurgeTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbPurgeTicket`
 | `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
-| `0x08` | `RetrieveEncodedTicket`        | _Planned_          | `>=5.0`    | `KerbRetrieveEncodedTicket`
+| `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveEncodedTicket`
 | `0x09` | `DecryptData`                  | :heavy_minus_sign: | `>=5.0`    | `KerbDecryptMessage`
 | `0x0A` | `AddBindingCacheEntry`         |                    | `>=5.0`    | `KerbAddBindingCacheEntry`
 | `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`

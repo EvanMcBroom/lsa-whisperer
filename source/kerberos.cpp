@@ -86,24 +86,23 @@ namespace Kerberos {
 
     bool Proxy::PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& serverRealm) const {
         auto requestSize{ sizeof(KERB_PURGE_TKT_CACHE_REQUEST) + ((serverName.length() + serverRealm.length() + 2) * sizeof(wchar_t)) };
-        requestSize *= 2;
-        auto request{ reinterpret_cast<PKERB_PURGE_TKT_CACHE_REQUEST>(std::malloc(requestSize)) };
-        std::memset(request, 0, requestSize);
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_PURGE_TKT_CACHE_REQUEST>(requestBytes.data()) };
         request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCache);
         request->LogonId.LowPart = luid->LowPart;
         request->LogonId.HighPart = luid->HighPart;
         if (!serverName.empty()) {
-            auto ptrServerName{ reinterpret_cast<std::byte*>(request) + sizeof(KERB_PURGE_TKT_CACHE_REQUEST) };
+            auto ptrServerName{ reinterpret_cast<std::byte*>(request + 1) };
             std::memcpy(ptrServerName, serverName.data(), serverName.size() * sizeof(wchar_t));
             request->ServerName = WCharToUString(reinterpret_cast<wchar_t*>(ptrServerName));
         }
         if (!serverRealm.empty()) {
-            auto ptrRealmName{ reinterpret_cast<std::byte*>(request) + sizeof(KERB_PURGE_TKT_CACHE_REQUEST) + ((serverName.length() + 1) * sizeof(wchar_t)) };
+            auto ptrRealmName{ reinterpret_cast<std::byte*>(request + 1) + ((serverName.length() + 1) * sizeof(wchar_t)) };
             std::memcpy(ptrRealmName, serverRealm.data(), serverRealm.size() * sizeof(wchar_t));
             request->RealmName = WCharToUString(reinterpret_cast<wchar_t*>(ptrRealmName));
         }
         void* response{ nullptr };
-        auto result{ CallPackage(request, requestSize, &response) };
+        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
         if (result) {
             LsaFreeReturnBuffer(response);
         }
@@ -281,7 +280,7 @@ namespace Kerberos {
     }
 
     bool Proxy::RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type, bool encoded) const {
-        std::vector<byte> requestBytes(sizeof(KERB_RETRIEVE_TKT_REQUEST) + (targetName.size() * sizeof(wchar_t) + 2), 0);
+        std::string requestBytes(sizeof(KERB_RETRIEVE_TKT_REQUEST) + (targetName.size() * sizeof(wchar_t) + 2), '\0');
         auto request{ reinterpret_cast<PKERB_RETRIEVE_TKT_REQUEST>(requestBytes.data()) };
         request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>((encoded) ? PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket : PROTOCOL_MESSAGE_TYPE::RetrieveTicket);
         request->LogonId.LowPart = luid->LowPart;
@@ -296,7 +295,9 @@ namespace Kerberos {
         request->EncryptionType = static_cast<ULONG>(type);
         request->CredentialsHandle = { 0 };
         KERB_RETRIEVE_TKT_RESPONSE* response{ nullptr };
-        auto result{ CallPackage(requestBytes.data(), requestBytes.size(), &response) };
+        // The CallPackage(const std::string&, void**) function must be used
+        // Otherwise a new string will be implicitly constructed and the buffer's internal addresses will not be correct
+        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
         if (result) {
             auto& ticket{ response->Ticket };
             std::wcout << "ServiceName         : ";
