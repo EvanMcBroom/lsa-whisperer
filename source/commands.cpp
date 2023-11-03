@@ -13,7 +13,7 @@ namespace Cloudap {
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
             ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
-            ("authreq", "RDP authentication request (MS-RDPBCGR 4.11.2)", cxxopts::value<std::string>())
+            ("auth-req", "RDP authentication request (MS-RDPBCGR 4.11.2)", cxxopts::value<std::string>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
@@ -56,7 +56,7 @@ namespace Cloudap {
             case Aad::CALL::SignPayload:
                 return proxy.SignPayload();
             case Aad::CALL::ValidateRdpAssertionRequest:
-                return proxy.ValidateRdpAssertionRequest(options["authreq"].as<std::string>());
+                return proxy.ValidateRdpAssertionRequest(options["auth-req"].as<std::string>());
             default:
                 break;
             }
@@ -140,15 +140,20 @@ namespace Kerberos {
         unparsedOptions.allow_unrecognised_options();
         // clang-format off
         unparsedOptions.add_options("Function arguments")
-            ("cacheoption", "cacheOption field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
+            ("all", "Purge all tickets flag", cxxopts::value<bool>()->default_value("false"))
+            ("cache-option", "cacheOption field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
             ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("client-name", "The client name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("client-realm", "The client realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
-            ("encryptiontype", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long >())
+            ("enc-type", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
             ("luid", "Logon session", cxxopts::value<long long>())
             ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("server-name", "The server name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("server-realm", "The server realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("sluid", "Source logon session", cxxopts::value<long long>())
-            ("targetname", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())
-            ("ticketflag", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>());
+            ("target-name", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())
+            ("ticket-flags", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -157,12 +162,60 @@ namespace Kerberos {
         auto options{ unparsedOptions.parse(args.size(), args.data()) };
         auto proxy{ Proxy(lsa) };
 
+        // Flag for ticket retrieval commands
+        bool retrieveEncoded{ false };
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
         case PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };
             auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
             return proxy.ChangeMachinePassword(oldPassword, newPassword);
+        }
+        case PROTOCOL_MESSAGE_TYPE::PrintCloudKerberosDebug: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.PrintCloudKerberosDebug(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::PurgeKdcProxyCache: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.PurgeKdcProxyCache(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::PurgeTicketCache: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            return proxy.PurgeTicketCache(
+                &luid,
+                converter.from_bytes(options["server-name"].as<std::string>()),
+                converter.from_bytes(options["server-realm"].as<std::string>()));
+        }
+        case PROTOCOL_MESSAGE_TYPE::PurgeTicketCacheEx: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            return proxy.PurgeTicketCacheEx(
+                &luid,
+                (options["all"].count()) ? KERB_PURGE_ALL_TICKETS : 0,
+                converter.from_bytes(options["client-name"].as<std::string>()),
+                converter.from_bytes(options["client-realm"].as<std::string>()),
+                converter.from_bytes(options["server-name"].as<std::string>()),
+                converter.from_bytes(options["server-realm"].as<std::string>()));
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryKdcProxyCache: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.QueryKdcProxyCache(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCache: {
             LUID luid = { 0 };
@@ -192,18 +245,33 @@ namespace Kerberos {
             }
             return proxy.QueryTicketCacheEx3(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket: {
-            LUID luid;
-            Kerberos::EncryptionType encryptionType;
-            Kerberos::TicketFlags ticketFlags;
-            Kerberos::CacheOptions cacheOptions;
+        case PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket:
+            retrieveEncoded = true;
+            [[fallthrough]];
+        case PROTOCOL_MESSAGE_TYPE::RetrieveTicket: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            cacheOptions = (Kerberos::CacheOptions)options["cacheoption"].as<long long>();
-            ticketFlags = (Kerberos::TicketFlags)options["ticketflag"].as<long long>();
-            encryptionType = (Kerberos::EncryptionType)options["encryptiontype"].as<long long>();
-            auto targetName{ converter.from_bytes(options["targetname"].as<std::string>()) };
-            return proxy.RetrieveEncodedTicket(&luid, targetName, ticketFlags, cacheOptions, encryptionType);
+            auto targetName{ converter.from_bytes(options["target-name"].as<std::string>()) };
+            TicketFlags flags{ TicketFlags::None };
+            if (options["ticket-flags"].count()) {
+                flags = static_cast<TicketFlags>(options["ticket-flags"].as<long long>());
+            }
+            CacheOptions cacheOption{ CacheOptions::AsKerbCred };
+            if (options["cache-option"].count()) {
+                cacheOption = static_cast<CacheOptions>(options["cache-option"].as<long long>());
+            }
+            EncryptionType encType{ EncryptionType::Null };
+            if (options["enc-type"].count()) {
+                encType = static_cast<EncryptionType>(options["enc-type"].as<long long>());
+            }
+            if (retrieveEncoded) {
+                return proxy.RetrieveEncodedTicket(&luid, targetName, flags, cacheOption, encType);
+            } else {
+                return proxy.RetrieveTicket(&luid, targetName, flags, cacheOption, encType);
+            }
         }
         case PROTOCOL_MESSAGE_TYPE::TransferCredentials: {
             LUID sourceLuid, destinationLuid;
@@ -213,6 +281,9 @@ namespace Kerberos {
             flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
             flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
             return proxy.TransferCreds(&sourceLuid, &destinationLuid, flags);
+        }
+        case PROTOCOL_MESSAGE_TYPE::UnpinAllKdcs: {
+            return proxy.UnpinAllKdcs();
         }
         default:
             std::cout << "Unsupported function" << std::endl;
@@ -293,11 +364,11 @@ namespace Msv1_0 {
         case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
             break;
         case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
-            //auto domain{ options["domain"].as<std::string>() };
-            //auto account{ options["account"].as<std::string>() };
-            //auto oldpass{ options["oldpass"].as<std::string>() };
-            //auto newpass{ options["newpass"].as<std::string>() };
-            //return ChangeCachedPassword(domain, account, oldpass, newpass, options["imp"].as<bool>());
+            // auto domain{ options["domain"].as<std::string>() };
+            // auto account{ options["account"].as<std::string>() };
+            // auto oldpass{ options["oldpass"].as<std::string>() };
+            // auto newpass{ options["newpass"].as<std::string>() };
+            // return ChangeCachedPassword(domain, account, oldpass, newpass, options["imp"].as<bool>());
         }
         case PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials:
             return proxy.ClearCachedCredentials();

@@ -83,6 +83,7 @@ namespace Kerberos {
     };
 
     enum class TicketFlags : ULONG {
+        None = 0,
         Reserved1 = 0x00000001,
         NameCanonicalize = 0x00010000,
         EncPaRep = 0x00010000,
@@ -102,90 +103,12 @@ namespace Kerberos {
         Feserved = 0x80000000
     };
 
-    /*
-                required structure for call KerbChangeMachinePasswordMessage
-
-    */
+    // required structure for call KerbChangeMachinePasswordMessage
     typedef struct _CHANGE_MACH_PWD_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword };
         UNICODE_STRING NewPassword;
         UNICODE_STRING OldPassword;
     } CHANGE_MACH_PWD_REQUEST, * PCHANGE_MACH_PWD_REQUEST;
-
-
-    typedef struct _RETRIEVE_TKT_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::RetrieveEncodedTicket };
-        LUID LogonId;
-        UNICODE_STRING TargetName;
-        ULONG TicketFlags;
-        ULONG CacheOptions;
-        LONG EncryptionType;
-        SecHandle CredentialsHandle{ 0 };
-    } RETRIEVE_TKT_REQUEST, *PRETRIEVE_TKT_REQUEST;
-
-    typedef struct _RETRIEVE_TKT_RESPONSE {
-        KERB_EXTERNAL_TICKET Ticket;
-    } RETRIEVE_TKT_RESPONSE, *PRETRIEVE_TKT_RESPONSE;
-  
-    typedef struct _PIN_KDC : _SECPKG_CALL_PACKAGE_PIN_DC_REQUEST {
-        _PIN_KDC() {
-            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::PinKdc);
-        }
-    } PIN_KDC, *PPIN_KDC;
-
-    typedef struct _PURGE_TKT_CACHE_REQUEST : KERB_PURGE_TKT_CACHE_REQUEST {
-        _PURGE_TKT_CACHE_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCache);
-        }
-    } PURGE_TKT_CACHE_REQUEST, *PPURGE_TKT_CACHE_REQUEST;
-
-    typedef struct _PURGE_TKT_CACHE_EX_REQUEST : KERB_PURGE_TKT_CACHE_EX_REQUEST {
-        _PURGE_TKT_CACHE_EX_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCacheEx);
-        }
-    } PURGE_TKT_CACHE_EX_REQUEST, *PPURGE_TKT_CACHE_EX_REQUEST;
-
-    typedef struct _QUERY_TKT_CACHE_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
-        _QUERY_TKT_CACHE_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCache);
-        }
-    } QUERY_TKT_CACHE_REQUEST, *PQUERY_TKT_CACHE_REQUEST;
-
-    typedef struct _QUERY_TKT_CACHE_EX_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
-        _QUERY_TKT_CACHE_EX_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx);
-        }
-    } QUERY_TKT_CACHE_EX_REQUEST, *PQUERY_TKT_CACHE_EX_REQUEST;
-
-    typedef struct _QUERY_TKT_CACHE_EX2_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
-        _QUERY_TKT_CACHE_EX2_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2);
-        }
-    } QUERY_TKT_CACHE_EX2_REQUEST, *PQUERY_TKT_CACHE_EX2_REQUEST;
-
-    typedef struct _QUERY_TKT_CACHE_EX3_REQUEST : KERB_QUERY_TKT_CACHE_REQUEST {
-        _QUERY_TKT_CACHE_EX3_REQUEST() {
-            MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx3);
-        }
-    } QUERY_TKT_CACHE_EX3_REQUEST, *PQUERY_TKT_CACHE_EX3_REQUEST;
-
-    typedef struct _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {
-        ULONG MessageType;
-        ULONG Flags; // reserved, must be 0
-    } SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST, *PSECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST;
-
-    // TRANSFER_CRED_REQUEST::Flags may be CleanupCredentials or OptimisticLogon
-    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
-        _TRANSFER_CRED_REQUEST() {
-            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCredentials);
-        }
-    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
-
-    typedef struct _UNPIN_ALL_KDCS : _SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST {
-        _UNPIN_ALL_KDCS() {
-            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::UnpinAllKdcs);
-        }
-    } UNPIN_ALL_KDCS, *PUNPIN_ALL_KDCS;
 
     class Proxy {
     public:
@@ -193,15 +116,21 @@ namespace Kerberos {
 
         // A subset of the supported functions in Kerberos
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
-        bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& realmName) const;
-        bool PurgeTicketCacheEx(PLUID luid, const std::wstring& serverName, const std::wstring& realmName) const;
+        bool PinKdc() const;
+        bool PrintCloudKerberosDebug(PLUID luid) const;
+        bool PurgeKdcProxyCache(PLUID luid) const;
+        bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& serverRealm) const;
+        bool PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const;
+        bool QueryKdcProxyCache(PLUID luid) const;
         bool QueryTicketCache(PLUID luid) const;
         bool QueryTicketCacheEx(PLUID luid) const;
-        bool QueryTicketCacheEx2(PLUID luid) const;
+        bool QueryTicketCacheEx2(PLUID lRetrieveTicketuid) const;
         bool QueryTicketCacheEx3(PLUID luid) const;
-        bool RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type) const;
-        bool RetrieveEncodedTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type) const;
-        bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const;
+        bool RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags = TicketFlags::None, CacheOptions options = CacheOptions::AsKerbCred, EncryptionType type = EncryptionType::Null, bool encoded = false) const;
+        bool RetrieveEncodedTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags = TicketFlags::None, CacheOptions options = CacheOptions::AsKerbCred, EncryptionType type = EncryptionType::Null) const;
+        bool RetrieveKeyTab() const;
+        bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const; // Flags may be CleanupCredentials or OptimisticLogon
+        bool UnpinAllKdcs() const;
 
     protected:
         std::shared_ptr<Lsa> lsa;

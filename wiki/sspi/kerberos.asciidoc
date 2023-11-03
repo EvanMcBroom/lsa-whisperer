@@ -23,7 +23,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x01` | `QueryTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbQueryTicketCache`
 | `0x02` | `ChangeMachinePassword`        |                    | `>=5.0`    | `KerbChangeMachinePassword`
 | `0x03` | `VerifyPac`                    |                    | `>=5.0`    | `KerbVerifyPac`
-| `0x04` | `RetrieveTicket`               | _Planned_          | `>=5.0`    | `KerbRetrieveTicket`
+| `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveTicket`
 | `0x05` | `UpdateAddresses`              |                    | `>=5.0`    | `KerbSetIpAddresses`
 | `0x06` | `PurgeTicketCache`             | _Planned_          | `>=5.0`    | `KerbPurgeTicket`
 | `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
@@ -36,21 +36,21 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
 | `0x0F` | `PurgeTicketCacheEx`           |                    | `>=5.1`    | `KerbPurgeTicketEx`
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
-| `0x11` | `AddExtraCredentials`          |                    | `>=5.0`    | `KerbAddExtraCredential`
+| `0x11` | `AddExtraCredentials`          | _Planned_          | `>=5.0`    | `KerbAddExtraCredential`
 | `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
 | `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
 | `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`    | `KerbQueryTicketCacheEx2`
 | `0x15` | `SubmitTicket`                 |                    | `>=6.0`    | `KerbSubmitTicket`
 | `0x16` | `AddExtraCredentialsEx`        | _Planned_          | `>=6.0`    | `KerbAddExtraCredentialEx`
-| `0x17` | `QueryKdcProxyCache`           |                    | `>=6.2`    | `KerbQueryKdcProxyCache`
-| `0x18` | `PurgeKdcProxyCache`           |                    | `>=6.2`    | `KerbPurgeKdcProxyCache`
+| `0x17` | `QueryKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbQueryKdcProxyCache`
+| `0x18` | `PurgeKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbPurgeKdcProxyCache`
 | `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryTicketCacheEx3`
 | `0x1a` | `CleanupMachinePkinitCreds`    |                    | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
 | `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
 | `0x1c` | `QueryBindingCache`            |                    | `>=6.2`    | `KerbQueryBindingCache`
 | `0x1d` | `PurgeBindingCache`            |                    | `>=6.2`    | `KerbPurgeBindingCache`
 | `0x1e` | `PinKdc`                       | _Planned_          | `>=6.2`    | `KerbPinKdc`
-| `0x1f` | `UnpinAllKdcs`                 | _Planned_          | `>=6.2`    | `KerbUnpinAllKdcs`
+| `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  |                    | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
 | `0x21` | `QueryS4U2ProxyCache`          |                    | `>=6.2`    | `KerbQueryS4U2ProxyCache`
 | `0x22` | `RetrieveKeyTab`               | _Planned_          | `>=10.0`   | `KerbRetrieveKeyTab`
@@ -62,6 +62,65 @@ NOTE: The internal function for each message type will be located in `kerberos.d
 
 Messages `DebugRequest` and `DecryptData` and their internal functions are only available in debug builds of `kerberos.dll`.
 The `RefreshPolicy` message is also not available in release builds of `kerberos.dll`, likely due to the same reason, but this could not be confirmed.
+
+=== AddExtraCredentials
+
+Documented in `NTSecApi.h` as adding "server credentials" to a given logon session, only applicable during AcceptSecurityContext, and requiring TCB to alter "other" credentials.
+The structure also contains a flags field that allows a user to add, replace, or removed the additional credential.
+
+=== AddExtraCredentialsEx
+
+Behaves the same as the `AddExtraCredentials` command but allows a user to add a list of "principal names" to the credential.
+
+=== PinKdc
+
+https://i.blackhat.com/USA-22/Wednesday/US-22-Forshaw-Taking-Kerberos-To-The-Next-Level.pdf[Pin a KDC.]
+The command may not be called from WOW64 clients.
+
+```
+kerberos PinKdc [--luid {session id}]
+```
+
+=== PurgeKdcProxyCache
+
+The `PurgeKdcProxyCache` command has not been fully tested, but should should remove cached KDC proxy tickets.
+`SeTcbPrivilege` is required to specify another logon session.
+
+```
+kerberos PurgeKdcProxyCache [--luid {session id}]
+```
+
+=== PurgeTicketCache
+
+Purge tickets in the ticket cache for the current logon session.
+A server name and realm may be used to filter which tickets should be purged.
+The server name and realm must both be specified to be used.
+If both are not specified then all tickets will be purged.
+`SeTcbPrivilege` is required to specify another logon session.
+
+```
+kerberos PurgeTicketCache [--luid {session id}] [--server-name {name}] [--server-realm {name}]
+```
+
+=== PurgeTicketCacheEx
+
+Functions the same as the `PurgeTicketCache` but allows you to specify a client name and realm to filter tickets by.
+The client name and realm must both be specified to be used.
+The command also allows you to explicitly purge all tickets.
+If purging all tickets is explicitly specified then all ticket filters will be ignored.
+
+```
+kerberos PurgeTicketCacheEx [--luid {session id}] [--all] [--client-name {name}] [--client-realm {name}] [--server-name {name}] [--server-realm {name}]
+```
+
+=== QueryKdcProxyCache
+
+The `QueryKdcProxyCache` command has not been fully tested, but should provide information about KDC proxy cached tickets.
+`SeTcbPrivilege` is required to specify another logon session.
+
+```
+kerberos QueryKdcProxyCache [--luid {session id}]
+```
 
 === QueryTicketCache
 

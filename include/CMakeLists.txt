@@ -3,6 +3,7 @@ target_include_directories(sspi PUBLIC
 )
 # Absolute paths are used to allow the USE_STAMP_FILE option to be used with doxygen_add_docs
 set(SSPI_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/all.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cloudap.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crypt.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lsa.hpp
@@ -23,7 +24,6 @@ target_sources(sspi PRIVATE ${SSPI_HEADERS})
 target_precompile_headers(sspi PUBLIC <pch.hpp>)
 
 target_sources(lsa-whisperer PRIVATE
-    aad.hpp
     appcontainer.hpp
     cli.hpp
     commands.hpp
