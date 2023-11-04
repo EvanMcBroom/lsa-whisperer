@@ -145,13 +145,16 @@ namespace Kerberos {
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // A subset of the supported functions in Kerberos
+        bool AddBindingCacheEntry(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType) const;
         bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const;
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
         bool PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const;
         bool PrintCloudKerberosDebug(PLUID luid) const;
+        bool PurgeBindingCache() const;
         bool PurgeKdcProxyCache(PLUID luid) const;
         bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& serverRealm) const;
         bool PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const;
+        bool QueryBindingCache() const;
         bool QueryDomainExtendedPolicies(const std::wstring& domainName) const;
         bool QueryKdcProxyCache(PLUID luid) const;
         bool QueryS4U2ProxyCache(PLUID luid) const;

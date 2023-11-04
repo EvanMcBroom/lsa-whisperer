@@ -146,6 +146,7 @@ namespace Kerberos {
             ("client-name", "The client name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("client-realm", "The client realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("dc-flags", "Dc flags to use with PinKdc", cxxopts::value<long long>())
+            ("dc-address", "", cxxopts::value<std::string>())
             ("dc-name", "The KDC name to use with PinKdc", cxxopts::value<std::string>()->default_value(""))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain-name", "", cxxopts::value<std::string>())
@@ -172,6 +173,13 @@ namespace Kerberos {
         // Flag for ticket retrieval commands
         bool retrieveEncoded{ false };
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntry: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto realmName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
+            auto kdcAddress{ converter.from_bytes(options["dc-address"].as<std::string>()) };
+            auto addressType{ options.count("dc-flags") ? options["dc-flags"].as<long long>() : 0 };
+            return proxy.AddBindingCacheEntry(realmName, kdcAddress, addressType);
+        }
         case PROTOCOL_MESSAGE_TYPE::AddExtraCredentials: {
             LUID luid = { 0 };
             if (options["luid"].count()) {
@@ -210,6 +218,8 @@ namespace Kerberos {
             }
             return proxy.PrintCloudKerberosDebug(&luid);
         }
+        case PROTOCOL_MESSAGE_TYPE::PurgeBindingCache:
+            return proxy.PurgeBindingCache();
         case PROTOCOL_MESSAGE_TYPE::PurgeKdcProxyCache: {
             LUID luid = { 0 };
             if (options["luid"].count()) {
@@ -242,6 +252,8 @@ namespace Kerberos {
                 converter.from_bytes(options["server-name"].as<std::string>()),
                 converter.from_bytes(options["server-realm"].as<std::string>()));
         }
+        case PROTOCOL_MESSAGE_TYPE::QueryBindingCache:
+            return proxy.QueryBindingCache();
         case PROTOCOL_MESSAGE_TYPE::QueryDomainExtendedPolicies: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             return proxy.QueryDomainExtendedPolicies(converter.from_bytes(options["domain-name"].as<std::string>()));

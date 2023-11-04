@@ -32,6 +32,25 @@ namespace Kerberos {
         : lsa(lsa) {
     }
 
+    bool Proxy::AddBindingCacheEntry(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType) const {
+        auto requestSize{ sizeof(KERB_ADD_BINDING_CACHE_ENTRY_REQUEST) + ((realmName.length() + kdcAddress.length() + 2) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_ADD_BINDING_CACHE_ENTRY_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntry);
+        request->AddressType = addressType;
+
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, realmName.data(), realmName.size() * sizeof(wchar_t));
+        request->RealmName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((realmName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, kdcAddress.data(), kdcAddress.size() * sizeof(wchar_t));
+        request->KdcAddress = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        void* response{ nullptr };
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
+    }
+
     bool Proxy::AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const {
         auto requestSize{ sizeof(KERB_ADD_CREDENTIALS_REQUEST) + ((domainName.length() + userName.length() + password.length() + 3) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');
@@ -112,6 +131,12 @@ namespace Kerberos {
         return result;
     }
 
+    bool Proxy::PurgeBindingCache() const {
+        KERB_PURGE_BINDING_CACHE_REQUEST request{ static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeBindingCache) };
+        void* response{ nullptr };
+        return CallPackage(request, &response);
+    }
+
     bool Proxy::PurgeKdcProxyCache(PLUID luid) const {
         KERB_PURGE_KDC_PROXY_CACHE_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeKdcProxyCache) };
         request.Flags = 0;
@@ -180,6 +205,29 @@ namespace Kerberos {
         return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
     
+    bool Proxy::QueryBindingCache() const {
+        KERB_QUERY_BINDING_CACHE_REQUEST request{ static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryBindingCache) };
+        PKERB_QUERY_BINDING_CACHE_RESPONSE response{ nullptr };
+        auto result{ CallPackage(request, &response) };
+        std::wcout << std::hex;
+        if (result) {
+            for (size_t index{ 0 }; index < response->CountOfEntries; index++) {
+                auto& entry{ response->Entries[index] };
+                std::wcout << index << ": " << std::endl;
+                std::wcout << "    DiscoveryTime: 0x" << entry.DiscoveryTime << std::endl;
+                std::wcout << "    RealmName    : " << std::wstring(entry.RealmName.Buffer, entry.RealmName.Buffer + (entry.RealmName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    KdcAddress   : " << std::wstring(entry.KdcAddress.Buffer, entry.KdcAddress.Buffer + (entry.KdcAddress.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    AddressType  : 0x" << entry.AddressType << std::endl;
+                std::wcout << "    Flags        : 0x" << entry.Flags << std::endl;
+                std::wcout << "    DcFlags      : 0x" << entry.DcFlags << std::endl;
+                std::wcout << "    CacheFlags   : 0x" << entry.CacheFlags << std::endl;
+                std::wcout << "    KdcName      : " << std::wstring(entry.KdcName.Buffer, entry.KdcName.Buffer + (entry.KdcName.Length / sizeof(wchar_t))) << std::endl;
+            }
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
     bool Proxy::QueryDomainExtendedPolicies(const std::wstring& domainName) const {
         auto requestSize{ sizeof(KERB_QUERY_DOMAIN_EXTENDED_POLICIES_REQUEST) + ((domainName.length() + 1) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');

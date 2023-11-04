@@ -29,7 +29,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
 | `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveEncodedTicket`
 | `0x09` | `DecryptData`                  | :heavy_minus_sign: | `>=5.0`    | `KerbDecryptMessage`
-| `0x0A` | `AddBindingCacheEntry`         |                    | `>=5.0`    | `KerbAddBindingCacheEntry`
+| `0x0A` | `AddBindingCacheEntry`         | :heavy_minus_sign: | `>=5.0`    | `KerbAddBindingCacheEntry`
 | `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0D` | `VerifyCredentials`            |                    | `>=5.1`    | `KerbVerifyCredentials`
@@ -47,8 +47,8 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryTicketCacheEx3`
 | `0x1a` | `CleanupMachinePkinitCreds`    |                    | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
 | `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
-| `0x1c` | `QueryBindingCache`            |                    | `>=6.2`    | `KerbQueryBindingCache`
-| `0x1d` | `PurgeBindingCache`            |                    | `>=6.2`    | `KerbPurgeBindingCache`
+| `0x1c` | `QueryBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbQueryBindingCache`
+| `0x1d` | `PurgeBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbPurgeBindingCache`
 | `0x1e` | `PinKdc`                       | :heavy_check_mark: | `>=6.2`    | `KerbPinKdc`
 | `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  | :heavy_check_mark: | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
