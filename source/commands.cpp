@@ -242,6 +242,10 @@ namespace Kerberos {
                 converter.from_bytes(options["server-name"].as<std::string>()),
                 converter.from_bytes(options["server-realm"].as<std::string>()));
         }
+        case PROTOCOL_MESSAGE_TYPE::QueryDomainExtendedPolicies: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            return proxy.QueryDomainExtendedPolicies(converter.from_bytes(options["domain-name"].as<std::string>()));
+        }
         case PROTOCOL_MESSAGE_TYPE::QueryKdcProxyCache: {
             LUID luid = { 0 };
             if (options["luid"].count()) {

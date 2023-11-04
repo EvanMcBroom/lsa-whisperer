@@ -179,6 +179,27 @@ namespace Kerberos {
         void* response{ nullptr };
         return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
+    
+    bool Proxy::QueryDomainExtendedPolicies(const std::wstring& domainName) const {
+        auto requestSize{ sizeof(KERB_QUERY_DOMAIN_EXTENDED_POLICIES_REQUEST) + ((domainName.length() + 1) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_QUERY_DOMAIN_EXTENDED_POLICIES_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryDomainExtendedPolicies);
+        request->Flags = 0;
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, domainName.data(), domainName.size() * sizeof(wchar_t));
+        request->DomainName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        PKERB_QUERY_DOMAIN_EXTENDED_POLICIES_RESPONSE response{ nullptr };
+        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
+        std::wcout << std::hex;
+        if (result) {
+            std::wcout << "Flags           : " << response->Flags << std::endl;
+            std::cout  << "ExtendedPolicies: " << magic_enum::enum_name(static_cast<ExtendedPolicies>(response->ExtendedPolicies)) << std::endl;
+            std::wcout << "DsFlags         : " << response->DsFlags << std::endl;
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
 
     bool Proxy::QueryKdcProxyCache(PLUID luid) const {
         KERB_QUERY_KDC_PROXY_CACHE_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryKdcProxyCache) };

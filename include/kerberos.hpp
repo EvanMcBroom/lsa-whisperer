@@ -67,6 +67,11 @@ namespace Kerberos {
         Rc4PlainExp = -141
     };
 
+    enum class ExtendedPolicies {
+        None = 0,
+        DacDisabled = 1
+    };
+
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
         DebugRequest = 0,
         QueryTicketCache,
@@ -147,6 +152,7 @@ namespace Kerberos {
         bool PurgeKdcProxyCache(PLUID luid) const;
         bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& serverRealm) const;
         bool PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const;
+        bool QueryDomainExtendedPolicies(const std::wstring& domainName) const;
         bool QueryKdcProxyCache(PLUID luid) const;
         bool QueryS4U2ProxyCache(PLUID luid) const;
         bool QueryTicketCache(PLUID luid) const;
