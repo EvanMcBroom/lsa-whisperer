@@ -145,6 +145,8 @@ namespace Kerberos {
             ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
             ("client-name", "The client name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("client-realm", "The client realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("dc-flags", "Dc flags to use with PinKdc", cxxopts::value<long long>())
+            ("dc-name", "The KDC name to use with PinKdc", cxxopts::value<std::string>()->default_value(""))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain-name", "", cxxopts::value<std::string>())
             ("enc-type", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
@@ -194,6 +196,13 @@ namespace Kerberos {
             auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
             return proxy.ChangeMachinePassword(oldPassword, newPassword);
         }
+        case PROTOCOL_MESSAGE_TYPE::PinKdc: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto domainName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
+            auto dcName{ converter.from_bytes(options["dc-name"].as<std::string>()) };
+            auto dcFlags{ options.count("dc-flags") ? options["dc-flags"].as<long long>() : 0 };
+            return proxy.PinKdc(domainName, dcName, dcFlags);
+        }
         case PROTOCOL_MESSAGE_TYPE::PrintCloudKerberosDebug: {
             LUID luid = { 0 };
             if (options["luid"].count()) {
@@ -239,6 +248,13 @@ namespace Kerberos {
                 reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             }
             return proxy.QueryKdcProxyCache(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::QueryS4U2ProxyCache: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return proxy.QueryS4U2ProxyCache(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCache: {
             LUID luid = { 0 };

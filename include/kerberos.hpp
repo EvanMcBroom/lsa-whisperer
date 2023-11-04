@@ -22,6 +22,31 @@ namespace Kerberos {
         MAX_LIFETIME = 0x40
     };
 
+    // Defined here for reference. Originally defined in DsGetDC.h
+    enum class DcFlags : ULONG {
+        Pdc = 0x00000001, // DC is PDC of Domain
+        Gc = 0x00000004, // DC is a GC of forest
+        Ldap = 0x00000008, // Server supports an LDAP server
+        Ds = 0x00000010, // DC supports a DS and is a Domain Controller
+        Kdc = 0x00000020, // DC is running KDC service
+        Timeserv = 0x00000040, // DC is running time service
+        Closest = 0x00000080, // DC is in closest site to client
+        Writable = 0x00000100, // DC has a writable DS
+        GoodTimeserv = 0x00000200, // DC is running time service (and has clock hardware)
+        Ndnc = 0x00000400, // DomainName is non-domain NC serviced by the LDAP server
+        SelectSecretDomain6 = 0x00000800, // DC has some secrets
+        FullSecretDomain6 = 0x00001000, // DC has all secrets
+        Ws = 0x00002000, // DC is running web service
+        Ds8 = 0x00004000, // DC is running Win8 or later
+        Ds9 = 0x00008000, // DC is running Win8.1 or later
+        Ds10 = 0x00010000, // DC is running WinThreshold or later
+        KeyList = 0x00020000, // DC supports key list requests
+        Pings = 0x000FFFFF, // Flags returned on ping
+        DnsController = 0x20000000, // DomainControllerName is a DNS name
+        DnsDomain = 0x40000000, // DomainName is a DNS name
+        DnsForest = 0x80000000 // DnsForestName is a DNS name
+    };
+
     enum class EncryptionType {
         Null = 0,
         DesCbcCrc = 1,
@@ -115,14 +140,15 @@ namespace Kerberos {
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // A subset of the supported functions in Kerberos
-        bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, DWORD flags) const;
+        bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const;
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
-        bool PinKdc() const;
+        bool PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const;
         bool PrintCloudKerberosDebug(PLUID luid) const;
         bool PurgeKdcProxyCache(PLUID luid) const;
         bool PurgeTicketCache(PLUID luid, const std::wstring& serverName, const std::wstring& serverRealm) const;
         bool PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const;
         bool QueryKdcProxyCache(PLUID luid) const;
+        bool QueryS4U2ProxyCache(PLUID luid) const;
         bool QueryTicketCache(PLUID luid) const;
         bool QueryTicketCacheEx(PLUID luid) const;
         bool QueryTicketCacheEx2(PLUID lRetrieveTicketuid) const;

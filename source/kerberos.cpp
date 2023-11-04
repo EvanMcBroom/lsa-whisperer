@@ -26,12 +26,13 @@ namespace {
         return { 0, 0, nullptr };
     }
 }
+
 namespace Kerberos {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
-    bool Proxy::AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, DWORD flags) const {
+    bool Proxy::AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const {
         auto requestSize{ sizeof(KERB_ADD_CREDENTIALS_REQUEST) + ((domainName.length() + userName.length() + password.length() + 3) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');
         auto request{ reinterpret_cast<PKERB_ADD_CREDENTIALS_REQUEST>(requestBytes.data()) };
@@ -64,19 +65,24 @@ namespace Kerberos {
         return CallPackage(request, &response);
     }
 
-    bool Proxy::PinKdc() const {
-        // SECPKG_CALL_PACKAGE_PIN_DC_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PinKdc) };
-        // request.Flags = 0;
-        // request.LogonId.LowPart = luid->LowPart;
-        // request.LogonId.HighPart = luid->HighPart;
-        // PKERB_PURGE_KDC_PROXY_CACHE_RESPONSE response{ nullptr };
-        // auto result{ CallPackage(request, &response) };
-        // if (result) {
-        //     std::wcout << "CountOfPurged: " << response->CountOfPurged << std::endl;
-        //     LsaFreeReturnBuffer(response);
-        // }
-        // return result;
-        return false;
+    bool Proxy::PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const {
+        auto requestSize{ sizeof(SECPKG_CALL_PACKAGE_PIN_DC_REQUEST) + ((domainName.length() + dcName.length() + 2) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PSECPKG_CALL_PACKAGE_PIN_DC_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::PinKdc);
+        request->Flags = 0; // Ignored
+        request->DcFlags = dcFlags;
+
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, domainName.data(), domainName.size() * sizeof(wchar_t));
+        request->DomainName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((domainName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, dcName.data(), dcName.size() * sizeof(wchar_t));
+        request->DcName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        void* response{ nullptr };
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
     bool Proxy::PrintCloudKerberosDebug(PLUID luid) const {
@@ -195,6 +201,37 @@ namespace Kerberos {
                 std::wcout << "    CredUserName   : " << std::wstring(entry.CredUserName.Buffer, entry.CredUserName.Buffer + (entry.CredUserName.Length / sizeof(wchar_t))) << std::endl;
                 std::wcout << "    CredDomainName : " << std::wstring(entry.CredDomainName.Buffer, entry.CredDomainName.Buffer + (entry.CredDomainName.Length / sizeof(wchar_t))) << std::endl;
                 std::wcout << "    GlobalCache    : " << entry.GlobalCache << std::endl;
+            }
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
+    bool Proxy::QueryS4U2ProxyCache(PLUID luid) const {
+        KERB_QUERY_S4U2PROXY_CACHE_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryS4U2ProxyCache) };
+        request.Flags = 0;
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
+        PKERB_QUERY_S4U2PROXY_CACHE_RESPONSE response{ nullptr };
+        auto result{ CallPackage(request, &response) };
+        std::wcout << std::hex;
+        if (result) {
+            for (size_t index{ 0 }; index < response->CountOfCreds; index++) {
+                auto& cred{ response->Creds[index] };
+                std::wcout << index << ": " << std::endl;
+                std::wcout << "    UserName  : " << std::wstring(cred.UserName.Buffer, cred.UserName.Buffer + (cred.UserName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    DomainName: " << std::wstring(cred.DomainName.Buffer, cred.DomainName.Buffer + (cred.DomainName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    Flags     : " << cred.Flags << std::endl;
+                std::wcout << "    LastStatus: " << cred.LastStatus << std::endl;
+                std::wcout << "    Expiry    : " << cred.Expiry.QuadPart << std::endl;
+                for (size_t index{ 0 }; index < cred.CountOfEntries; index++) {
+                    std::wcout << "    Entry " << index << ": " << std::endl;
+                    auto& entry{ cred.Entries[index] };
+                    std::wcout << "        ServerName: " << std::wstring(entry.ServerName.Buffer, entry.ServerName.Buffer + (entry.ServerName.Length / sizeof(wchar_t))) << std::endl;
+                    std::wcout << "        Flags     : " << entry.Flags << std::endl;
+                    std::wcout << "        LastStatus: " << entry.LastStatus << std::endl;
+                    std::wcout << "        Expiry    : " << entry.Expiry.QuadPart << std::endl;
+                }
             }
             LsaFreeReturnBuffer(response);
         }

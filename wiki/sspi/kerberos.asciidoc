@@ -49,10 +49,10 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
 | `0x1c` | `QueryBindingCache`            |                    | `>=6.2`    | `KerbQueryBindingCache`
 | `0x1d` | `PurgeBindingCache`            |                    | `>=6.2`    | `KerbPurgeBindingCache`
-| `0x1e` | `PinKdc`                       | _Planned_          | `>=6.2`    | `KerbPinKdc`
+| `0x1e` | `PinKdc`                       | :heavy_check_mark: | `>=6.2`    | `KerbPinKdc`
 | `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  |                    | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
-| `0x21` | `QueryS4U2ProxyCache`          |                    | `>=6.2`    | `KerbQueryS4U2ProxyCache`
+| `0x21` | `QueryS4U2ProxyCache`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryS4U2ProxyCache`
 | `0x22` | `RetrieveKeyTab`               | :heavy_minus_sign: | `>=10.0`   | `KerbRetrieveKeyTab`
 | `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`   | ?
 | `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`   | `KerbPrintCloudKerberosDebug`
