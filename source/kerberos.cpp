@@ -35,10 +35,8 @@ namespace Kerberos {
         CHANGE_MACH_PWD_REQUEST request;
         RtlInitUnicodeString(&request.OldPassword, oldPassword.data());
         RtlInitUnicodeString(&request.NewPassword, newPassword.data());
-
         void* response{ nullptr };
-        auto result{ CallPackage(request, &response) };
-        return result;
+        return CallPackage(request, &response);
     }
 
     bool Proxy::PinKdc() const {
@@ -64,7 +62,20 @@ namespace Kerberos {
         auto result{ CallPackage(request, &response) };
         if (result) {
             std::wcout << "Version: " << response->Version << std::endl;
-            OutputHex(lsa->out, "Data", std::string{ response->Data, response->Data + response->Length });
+            auto version0{ reinterpret_cast<PKERB_CLOUD_KERBEROS_DEBUG_DATA_V0>(&response->Data) };
+            std::wcout << "EnabledByPolicy          : " << version0->EnabledByPolicy << std::endl;
+            std::wcout << "AsRepCallbackPresent     : " << version0->AsRepCallbackPresent << std::endl;
+            std::wcout << "AsRepCallbackUsed        : " << version0->AsRepCallbackUsed << std::endl;
+            std::wcout << "CloudReferralTgtAvailable: " << version0->CloudReferralTgtAvailable << std::endl;
+            std::wcout << "SpnOracleConfigured      : " << version0->SpnOracleConfigured << std::endl;
+            std::wcout << "KdcProxyPresent          : " << version0->KdcProxyPresent << std::endl;
+            if (response->Version >= 1) {
+                auto version1{ reinterpret_cast<PKERB_CLOUD_KERBEROS_DEBUG_DATA>(&response->Data) };
+                std::wcout << "PublicKeyCredsPresent    : " << version1->PublicKeyCredsPresent << std::endl;
+                std::wcout << "PasswordKeysPresent      : " << version1->PasswordKeysPresent << std::endl;
+                std::wcout << "PasswordPresent          : " << version1->PasswordPresent << std::endl;
+                std::wcout << "AsRepSourceCred          : " << version1->AsRepSourceCred << std::endl;
+            }
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -314,7 +325,7 @@ namespace Kerberos {
         request->TargetName.Length = targetName.size() * sizeof(wchar_t);
         request->TargetName.MaximumLength = request->TargetName.Length + sizeof(wchar_t);
         auto targetNameData{ reinterpret_cast<wchar_t*>(request + 1) };
-        std::memcpy(targetNameData, targetName.data(), request->TargetName.Length);
+        std::memcpy(targetNameData, targetName.data(), request->TargetName.MaximumLength); //
         request->TargetName.Buffer = targetNameData;
         request->TicketFlags = static_cast<ULONG>(flags);
         request->CacheOptions = static_cast<ULONG>(options);

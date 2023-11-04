@@ -81,6 +81,14 @@ The command may not be called from WOW64 clients.
 kerberos PinKdc [--luid {session id}]
 ```
 
+=== PrintCloudKerberosDebug
+
+Get cloud kerberos configuration information.
+
+```
+kerberos PrintCloudKerberosDebug
+```
+
 === PurgeKdcProxyCache
 
 The `PurgeKdcProxyCache` command has not been fully tested, but should should remove cached KDC proxy tickets.
