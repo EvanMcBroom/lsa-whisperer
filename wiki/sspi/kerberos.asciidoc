@@ -21,7 +21,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | Id     | Message Type                   | CLI Support        | NT Version | Internal Function
 | `0x00` | `DebugRequest`                 | :heavy_minus_sign: | `>=5.0`    | `KerbDebugRequest`
 | `0x01` | `QueryTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbQueryTicketCache`
-| `0x02` | `ChangeMachinePassword`        |                    | `>=5.0`    | `KerbChangeMachinePassword`
+| `0x02` | `ChangeMachinePassword`        | :heavy_check_mark: | `>=5.0`    | `KerbChangeMachinePassword`
 | `0x03` | `VerifyPac`                    |                    | `>=5.0`    | `KerbVerifyPac`
 | `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveTicket`
 | `0x05` | `UpdateAddresses`              |                    | `>=5.0`    | `KerbSetIpAddresses`
@@ -34,7 +34,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0D` | `VerifyCredentials`            |                    | `>=5.1`    | `KerbVerifyCredentials`
 | `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
-| `0x0F` | `PurgeTicketCacheEx`           |                    | `>=5.1`    | `KerbPurgeTicketEx`
+| `0x0F` | `PurgeTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbPurgeTicketEx`
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
 | `0x11` | `AddExtraCredentials`          | _Planned_          | `>=5.0`    | `KerbAddExtraCredential`
 | `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
@@ -53,9 +53,9 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  |                    | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
 | `0x21` | `QueryS4U2ProxyCache`          |                    | `>=6.2`    | `KerbQueryS4U2ProxyCache`
-| `0x22` | `RetrieveKeyTab`               | _Planned_          | `>=10.0`   | `KerbRetrieveKeyTab`
+| `0x22` | `RetrieveKeyTab`               | :heavy_minus_sign: | `>=10.0`   | `KerbRetrieveKeyTab`
 | `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`   | ?
-| `0x24` | `PrintCloudKerberosDebug`      |                    | `>=10.0`   | `KerbPrintCloudKerberosDebug`
+| `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`   | `KerbPrintCloudKerberosDebug`
 |===
 
 NOTE: The internal function for each message type will be located in `kerberos.dll`.
@@ -154,6 +154,10 @@ Functions the same as the `QueryTicketCacheEx2` but will return additionally ret
 ```
 kerberos QueryTicketCacheEx3 [--luid {session id}]
 ```
+
+=== RetrieveKeyTab
+
+Flags is ignored.
 
 === TransferCredentials
 

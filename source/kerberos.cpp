@@ -12,16 +12,16 @@
 namespace {
     UNICODE_STRING WCharToUString(wchar_t* string) {
         if (string) {
-            auto size{ decltype(UNICODE_STRING::Length)((lstrlenW(string) + 1) * sizeof(wchar_t)) };
-            return { size, size, string };
+            auto size{ lstrlenW(string) * sizeof(wchar_t) };
+            return { (USHORT)size, (USHORT)(size + sizeof(wchar_t)), string };
         }
         return { 0, 0, nullptr };
     }
 
     UNICODE_STRING WStringToUString(const std::wstring& string) {
         if (!string.empty()) {
-            auto size{ decltype(UNICODE_STRING::Length)(string.size() * sizeof(wchar_t)) };
-            return { size, size, const_cast<wchar_t*>(string.data()) };
+            auto size{ string.size() * sizeof(wchar_t) };
+            return { (USHORT)size, (USHORT)(size + sizeof(wchar_t)), const_cast<wchar_t*>(string.data()) };
         }
         return { 0, 0, nullptr };
     }
@@ -42,17 +42,17 @@ namespace Kerberos {
     }
 
     bool Proxy::PinKdc() const {
-        //SECPKG_CALL_PACKAGE_PIN_DC_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PinKdc) };
-        //request.Flags = 0;
-        //request.LogonId.LowPart = luid->LowPart;
-        //request.LogonId.HighPart = luid->HighPart;
-        //PKERB_PURGE_KDC_PROXY_CACHE_RESPONSE response{ nullptr };
-        //auto result{ CallPackage(request, &response) };
-        //if (result) {
-        //    std::wcout << "CountOfPurged: " << response->CountOfPurged << std::endl;
-        //    LsaFreeReturnBuffer(response);
-        //}
-        //return result;
+        // SECPKG_CALL_PACKAGE_PIN_DC_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PinKdc) };
+        // request.Flags = 0;
+        // request.LogonId.LowPart = luid->LowPart;
+        // request.LogonId.HighPart = luid->HighPart;
+        // PKERB_PURGE_KDC_PROXY_CACHE_RESPONSE response{ nullptr };
+        // auto result{ CallPackage(request, &response) };
+        // if (result) {
+        //     std::wcout << "CountOfPurged: " << response->CountOfPurged << std::endl;
+        //     LsaFreeReturnBuffer(response);
+        // }
+        // return result;
         return false;
     }
 
@@ -102,30 +102,40 @@ namespace Kerberos {
             request->RealmName = WCharToUString(reinterpret_cast<wchar_t*>(ptrRealmName));
         }
         void* response{ nullptr };
-        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
-        if (result) {
-            LsaFreeReturnBuffer(response);
-        }
-        return result;
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
     bool Proxy::PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const {
-        // PURGE_TKT_CACHE_EX_REQUEST request;
-        // request.LogonId.LowPart = luid->LowPart;
-        // request.LogonId.HighPart = luid->HighPart;
-        // request.Flags = flags;
-        // request.TicketTemplate = { 0 };
-        // request.TicketTemplate.ClientName = WCharToUString(clientName);
-        // request.TicketTemplate.ClientRealm = WCharToUString(clientRealm);
-        // request.TicketTemplate.ServerName = WCharToUString(serverName);
-        // request.TicketTemplate.ServerRealm = WCharToUString(serverRealm);
-        // void* response{ nullptr };
-        // auto result{ CallPackage(request, &response) };
-        // if (result) {
-        //     LsaFreeReturnBuffer(response);
-        // }
-        // return result;
-        return false;
+        auto requestSize{ sizeof(KERB_PURGE_TKT_CACHE_EX_REQUEST) + ((clientName.length() + clientRealm.length() + serverName.length() + serverRealm.length() + 4) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_PURGE_TKT_CACHE_EX_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCache);
+        request->LogonId.LowPart = luid->LowPart;
+        request->LogonId.HighPart = luid->HighPart;
+        request->Flags = flags;
+        request->TicketTemplate = { 0 };
+        if (!clientName.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+            std::memcpy(ptrUstring, clientName.data(), clientName.size() * sizeof(wchar_t));
+            request->TicketTemplate.ClientName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        if (!clientRealm.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + 1) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, clientRealm.data(), clientRealm.size() * sizeof(wchar_t));
+            request->TicketTemplate.ClientRealm = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        if (!serverName.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + clientRealm.size() + 2) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, serverName.data(), serverName.size() * sizeof(wchar_t));
+            request->TicketTemplate.ServerName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        if (!serverRealm.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + clientRealm.size() + serverName.size() + 3) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, serverRealm.data(), serverRealm.size() * sizeof(wchar_t));
+            request->TicketTemplate.ServerRealm = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        void* response{ nullptr };
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
     bool Proxy::QueryKdcProxyCache(PLUID luid) const {
@@ -144,7 +154,7 @@ namespace Kerberos {
                 std::wcout << "    DomainName     : " << std::wstring(entry.DomainName.Buffer, entry.DomainName.Buffer + (entry.DomainName.Length / sizeof(wchar_t))) << std::endl;
                 std::wcout << "    ProxyServerName: " << std::wstring(entry.ProxyServerName.Buffer, entry.ProxyServerName.Buffer + (entry.ProxyServerName.Length / sizeof(wchar_t))) << std::endl;
                 std::wcout << "    ProxyServerVdir: " << std::wstring(entry.ProxyServerVdir.Buffer, entry.ProxyServerVdir.Buffer + (entry.ProxyServerVdir.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ProxyServerPort: " << entry.ProxyServerPort << std::endl;\
+                std::wcout << "    ProxyServerPort: " << entry.ProxyServerPort << std::endl;
                 std::cout << "    LogonId        : " << std::setfill('0') << std::setw(8) << entry.LogonId.HighPart << "-" << std::setw(8) << entry.LogonId.LowPart << std::endl;
                 std::wcout << "    CredUserName   : " << std::wstring(entry.CredUserName.Buffer, entry.CredUserName.Buffer + (entry.CredUserName.Length / sizeof(wchar_t))) << std::endl;
                 std::wcout << "    CredDomainName : " << std::wstring(entry.CredDomainName.Buffer, entry.CredDomainName.Buffer + (entry.CredDomainName.Length / sizeof(wchar_t))) << std::endl;
@@ -267,16 +277,32 @@ namespace Kerberos {
         return RetrieveTicket(luid, targetName, flags, options, type, true);
     }
 
-    bool Proxy::RetrieveKeyTab() const {
-        // PKERB_RETRIEVE_KEY_TAB_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::RetrieveKeyTab) };
-        // request.OriginLogonId.LowPart = sourceLuid->LowPart;
-        // request.OriginLogonId.HighPart = sourceLuid->HighPart;
-        // request.DestinationLogonId.LowPart = destinationLuid->LowPart;
-        // request.DestinationLogonId.HighPart = destinationLuid->HighPart;
-        // request.Flags = flags;
-        // void* response;
-        // return CallPackage(request, &response);
-        return false;
+    bool Proxy::RetrieveKeyTab(const std::wstring& domainName, const std::wstring& userName, const std::wstring& password) const {
+        auto requestSize{ sizeof(KERB_RETRIEVE_KEY_TAB_REQUEST) + ((domainName.length() + userName.length() + password.length() + 3) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_RETRIEVE_KEY_TAB_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::RetrieveKeyTab);
+        request->Flags = 0; // The flags field is ignored
+
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, domainName.data(), domainName.size() * sizeof(wchar_t));
+        request->DomainName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((domainName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, userName.data(), userName.size() * sizeof(wchar_t));
+        request->UserName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((userName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, password.data(), password.size() * sizeof(wchar_t));
+        request->Password = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        PKERB_RETRIEVE_KEY_TAB_RESPONSE response{ nullptr };
+        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
+        if (result) {
+            OutputHex(lsa->out, "KeyTab", std::string{ response->KeyTab, response->KeyTab + response->KeyTabLength });
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags, CacheOptions options, EncryptionType type, bool encoded) const {
@@ -362,11 +388,7 @@ namespace Kerberos {
         SECPKG_CALL_PACKAGE_UNPIN_ALL_DCS_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::UnpinAllKdcs) };
         request.Flags = 0;
         void* response{ nullptr };
-        auto result{ CallPackage(request, &response) };
-        if (result) {
-            LsaFreeReturnBuffer(response);
-        }
-        return result;
+        return CallPackage(request, &response);
     }
 
     bool Proxy::CallPackage(const std::string& submitBuffer, void** returnBuffer) const {

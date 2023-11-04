@@ -146,14 +146,17 @@ namespace Kerberos {
             ("client-name", "The client name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("client-realm", "The client realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
+            ("domain-name", "", cxxopts::value<std::string>())
             ("enc-type", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
             ("luid", "Logon session", cxxopts::value<long long>())
             ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("password", "", cxxopts::value<std::string>())
             ("server-name", "The server name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("server-realm", "The server realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("sluid", "Source logon session", cxxopts::value<long long>())
             ("target-name", "TargetName field for KerbRetrieveTicketMessage", cxxopts::value<std::string>())
-            ("ticket-flags", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>());
+            ("ticket-flags", "TicketFlags field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
+            ("user-name", "", cxxopts::value<std::string>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -272,6 +275,13 @@ namespace Kerberos {
             } else {
                 return proxy.RetrieveTicket(&luid, targetName, flags, cacheOption, encType);
             }
+        }
+        case PROTOCOL_MESSAGE_TYPE::RetrieveKeyTab: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto domainName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
+            auto userName{ converter.from_bytes(options["user-name"].as<std::string>()) };
+            auto password{ converter.from_bytes(options["password"].as<std::string>()) };
+            return proxy.RetrieveKeyTab(domainName, userName, password);
         }
         case PROTOCOL_MESSAGE_TYPE::TransferCredentials: {
             LUID sourceLuid, destinationLuid;

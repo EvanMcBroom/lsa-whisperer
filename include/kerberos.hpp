@@ -128,7 +128,7 @@ namespace Kerberos {
         bool QueryTicketCacheEx3(PLUID luid) const;
         bool RetrieveTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags = TicketFlags::None, CacheOptions options = CacheOptions::AsKerbCred, EncryptionType type = EncryptionType::Null, bool encoded = false) const;
         bool RetrieveEncodedTicket(PLUID luid, const std::wstring& targetName, TicketFlags flags = TicketFlags::None, CacheOptions options = CacheOptions::AsKerbCred, EncryptionType type = EncryptionType::Null) const;
-        bool RetrieveKeyTab() const;
+        bool RetrieveKeyTab(const std::wstring& domainName, const std::wstring& userName, const std::wstring& password) const;
         bool TransferCreds(PLUID sourceLuid, PLUID destinationLuid, ULONG flags) const; // Flags may be CleanupCredentials or OptimisticLogon
         bool UnpinAllKdcs() const;
 
