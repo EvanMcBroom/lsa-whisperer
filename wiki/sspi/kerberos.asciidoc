@@ -36,7 +36,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
 | `0x0F` | `PurgeTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbPurgeTicketEx`
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
-| `0x11` | `AddExtraCredentials`          | _Planned_          | `>=5.0`    | `KerbAddExtraCredential`
+| `0x11` | `AddExtraCredentials`          | :heavy_check_mark: | `>=5.0`    | `KerbAddExtraCredential`
 | `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
 | `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
 | `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`    | `KerbQueryTicketCacheEx2`

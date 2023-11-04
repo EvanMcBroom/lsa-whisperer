@@ -115,6 +115,7 @@ namespace Kerberos {
         Proxy(const std::shared_ptr<Lsa>& lsa);
 
         // A subset of the supported functions in Kerberos
+        bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, DWORD flags) const;
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
         bool PinKdc() const;
         bool PrintCloudKerberosDebug(PLUID luid) const;

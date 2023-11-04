@@ -151,6 +151,8 @@ namespace Kerberos {
             ("luid", "Logon session", cxxopts::value<long long>())
             ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
             ("password", "", cxxopts::value<std::string>())
+            ("remove-cred", "To use with AddExtraCredentials", cxxopts::value<bool>()->default_value("false"))
+            ("replace-cred", "To use with AddExtraCredentials", cxxopts::value<bool>()->default_value("false"))
             ("server-name", "The server name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("server-realm", "The server realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
             ("sluid", "Source logon session", cxxopts::value<long long>())
@@ -168,6 +170,24 @@ namespace Kerberos {
         // Flag for ticket retrieval commands
         bool retrieveEncoded{ false };
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::AddExtraCredentials: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            if (options.count("replace-cred") && options.count("remove-cred")) {
+                std::cout << "You should only specify either --replace-cred or --remove-cred." << std::endl;
+                return false;
+            }
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto domainName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
+            auto userName{ converter.from_bytes(options["user-name"].as<std::string>()) };
+            auto password{ converter.from_bytes(options["password"].as<std::string>()) };
+            auto flags{ options.count("replace-cred")  ? KERB_REQUEST_REPLACE_CREDENTIAL
+                         : options.count("remove-cred") ? KERB_REQUEST_REMOVE_CREDENTIAL
+                                                        : KERB_REQUEST_ADD_CREDENTIAL };
+            return proxy.AddExtraCredentials(&luid, domainName, userName, password, flags);
+        }
         case PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };

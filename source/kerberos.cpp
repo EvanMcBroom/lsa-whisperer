@@ -13,7 +13,7 @@ namespace {
     UNICODE_STRING WCharToUString(wchar_t* string) {
         if (string) {
             auto size{ lstrlenW(string) * sizeof(wchar_t) };
-            return { (USHORT)size, (USHORT)(size + sizeof(wchar_t)), string };
+            return { (USHORT)size, (USHORT)((size) ? size + sizeof(wchar_t) : 0), (size) ? string : nullptr };
         }
         return { 0, 0, nullptr };
     }
@@ -29,6 +29,31 @@ namespace {
 namespace Kerberos {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
+    }
+
+    bool Proxy::AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, DWORD flags) const {
+        auto requestSize{ sizeof(KERB_ADD_CREDENTIALS_REQUEST) + ((domainName.length() + userName.length() + password.length() + 3) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_ADD_CREDENTIALS_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::AddExtraCredentials);
+        request->LogonId.LowPart = luid->LowPart;
+        request->LogonId.HighPart = luid->HighPart;
+        request->Flags = flags;
+
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, domainName.data(), domainName.size() * sizeof(wchar_t));
+        request->DomainName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((domainName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, userName.data(), userName.size() * sizeof(wchar_t));
+        request->UserName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((userName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, password.data(), password.size() * sizeof(wchar_t));
+        request->Password = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        void* response{ nullptr };
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
     bool Proxy::ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const {
