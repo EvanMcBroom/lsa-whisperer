@@ -33,10 +33,19 @@ namespace Kerberos {
     }
 
     bool Proxy::AddBindingCacheEntry(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType) const {
-        auto requestSize{ sizeof(KERB_ADD_BINDING_CACHE_ENTRY_REQUEST) + ((realmName.length() + kdcAddress.length() + 2) * sizeof(wchar_t)) };
+        return AddBindingCacheEntryEx(realmName, kdcAddress, addressType, 0, false);
+    }
+
+    bool Proxy::AddBindingCacheEntryEx(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType, ULONG dcFlags, bool useEx) const {
+        auto requestSize{ sizeof(KERB_ADD_BINDING_CACHE_ENTRY_EX_REQUEST) + ((realmName.length() + kdcAddress.length() + 2) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');
-        auto request{ reinterpret_cast<PKERB_ADD_BINDING_CACHE_ENTRY_REQUEST>(requestBytes.data()) };
-        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntry);
+        auto request{ reinterpret_cast<PKERB_ADD_BINDING_CACHE_ENTRY_EX_REQUEST>(requestBytes.data()) };
+        if (useEx) {
+            request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntryEx);
+            request->DcFlags = dcFlags;
+        } else {
+            request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntry);
+        }
         request->AddressType = addressType;
 
         auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
@@ -80,6 +89,14 @@ namespace Kerberos {
         CHANGE_MACH_PWD_REQUEST request;
         RtlInitUnicodeString(&request.OldPassword, oldPassword.data());
         RtlInitUnicodeString(&request.NewPassword, newPassword.data());
+        void* response{ nullptr };
+        return CallPackage(request, &response);
+    }
+
+    bool Proxy::CleanupMachinePkinitCreds(PLUID luid) const {
+        KERB_CLEANUP_MACHINE_PKINIT_CREDS_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::CleanupMachinePkinitCreds) };
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
         void* response{ nullptr };
         return CallPackage(request, &response);
     }

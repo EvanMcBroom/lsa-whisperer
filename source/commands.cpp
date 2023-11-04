@@ -1,3 +1,4 @@
+#include <DsGetDC.h>
 #include <codecvt>
 #include <commands.hpp>
 #include <locale>
@@ -172,12 +173,22 @@ namespace Kerberos {
 
         // Flag for ticket retrieval commands
         bool retrieveEncoded{ false };
+        bool useAddBindingCacheEntryEx{ false };
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntryEx:
+            useAddBindingCacheEntryEx = true;
+            [[fallthrough]];
         case PROTOCOL_MESSAGE_TYPE::AddBindingCacheEntry: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto realmName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
             auto kdcAddress{ converter.from_bytes(options["dc-address"].as<std::string>()) };
-            auto addressType{ options.count("dc-flags") ? options["dc-flags"].as<long long>() : 0 };
+            // Assume the address is of type inet if it contains a '.' (IPv4) or a ':' (IPv6)
+            // Otherwise assume it is a NetBIOS address
+            auto addressType{ (kdcAddress.find(L'.') != std::string::npos || kdcAddress.find(L':') != std::string::npos) ? DS_INET_ADDRESS : DS_NETBIOS_ADDRESS };
+            if (useAddBindingCacheEntryEx) {
+                auto dcFlags{ options.count("dc-flags") ? options["dc-flags"].as<long long>() : 0 };
+                return proxy.AddBindingCacheEntryEx(realmName, kdcAddress, addressType, dcFlags);
+            }
             return proxy.AddBindingCacheEntry(realmName, kdcAddress, addressType);
         }
         case PROTOCOL_MESSAGE_TYPE::AddExtraCredentials: {
@@ -203,6 +214,11 @@ namespace Kerberos {
             auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };
             auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
             return proxy.ChangeMachinePassword(oldPassword, newPassword);
+        }
+        case PROTOCOL_MESSAGE_TYPE::CleanupMachinePkinitCreds: {
+            LUID luid = { 0 };
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.CleanupMachinePkinitCreds(&luid);
         }
         case PROTOCOL_MESSAGE_TYPE::PinKdc: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

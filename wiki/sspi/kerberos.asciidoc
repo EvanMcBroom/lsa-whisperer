@@ -45,8 +45,8 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x17` | `QueryKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbQueryKdcProxyCache`
 | `0x18` | `PurgeKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbPurgeKdcProxyCache`
 | `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryTicketCacheEx3`
-| `0x1a` | `CleanupMachinePkinitCreds`    |                    | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
-| `0x1b` | `AddBindingCacheEntryEx`       |                    | `>=6.2`    | `KerbAddBindingCacheEntryEx`
+| `0x1a` | `CleanupMachinePkinitCreds`    | :heavy_check_mark: | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
+| `0x1b` | `AddBindingCacheEntryEx`       | :heavy_check_mark: | `>=6.2`    | `KerbAddBindingCacheEntryEx`
 | `0x1c` | `QueryBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbQueryBindingCache`
 | `0x1d` | `PurgeBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbPurgeBindingCache`
 | `0x1e` | `PinKdc`                       | :heavy_check_mark: | `>=6.2`    | `KerbPinKdc`
@@ -71,6 +71,10 @@ The structure also contains a flags field that allows a user to add, replace, or
 === AddExtraCredentialsEx
 
 Behaves the same as the `AddExtraCredentials` command but allows a user to add a list of "principal names" to the credential.
+
+=== CleanupMachinePkinitCreds
+
+Luid must be SYSTEM_LUID (999) or NETWORKSERVICE_LUID (996).
 
 === PinKdc
 

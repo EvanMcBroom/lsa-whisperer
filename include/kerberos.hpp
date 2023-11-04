@@ -146,8 +146,10 @@ namespace Kerberos {
 
         // A subset of the supported functions in Kerberos
         bool AddBindingCacheEntry(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType) const;
+        bool AddBindingCacheEntryEx(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType, ULONG dcFlags, bool useEx = true) const;
         bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const;
         bool ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const;
+        bool CleanupMachinePkinitCreds(PLUID luid) const;
         bool PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const;
         bool PrintCloudKerberosDebug(PLUID luid) const;
         bool PurgeBindingCache() const;
