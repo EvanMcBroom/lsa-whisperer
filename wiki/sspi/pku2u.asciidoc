@@ -21,7 +21,7 @@ As such, the message type names were choosen to align with how Microsoft named t
 [%header]
 |===
 | Id     | Message Type        | CLI Support        | NT Version | Internal Function
-| `0x0f` | PurgeTicketCacheEx  | _Planned_          | `>=6.1`    | Pku2uPurgeTicketEx
+| `0x0f` | PurgeTicketCacheEx  | :heavy_check_mark: | `>=6.1`    | Pku2uPurgeTicketEx
 | `0x14` | QueryTicketCacheEx2 | :heavy_check_mark: | `>=6.1`    | Pku2uQueryTicketCacheEx2
 |===
 
