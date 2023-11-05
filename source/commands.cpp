@@ -550,7 +550,11 @@ namespace Pku2u {
         // clang-format off
         unparsedOptions.add_options("Command arguments")
             ("all", "Purge all tickets flag", cxxopts::value<bool>()->default_value("false"))
-            ("luid", "Logon session", cxxopts::value<long long>());
+            ("client-name", "The client name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("client-realm", "The client realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("server-name", "The server name data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""))
+            ("server-realm", "The server realm data for a kerberos ticket", cxxopts::value<std::string>()->default_value(""));
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -560,11 +564,19 @@ namespace Pku2u {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::PurgeTicketEx: {
-            LUID luid;
-            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            auto flags{ (options.count("all")) ? KERB_PURGE_ALL_TICKETS : 0 };
-            return proxy.PurgeTicketEx(&luid, flags);
+        case PROTOCOL_MESSAGE_TYPE::PurgeTicketCacheEx: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            return proxy.PurgeTicketCacheEx(
+                &luid,
+                (options["all"].count()) ? KERB_PURGE_ALL_TICKETS : 0,
+                converter.from_bytes(options["client-name"].as<std::string>()),
+                converter.from_bytes(options["client-realm"].as<std::string>()),
+                converter.from_bytes(options["server-name"].as<std::string>()),
+                converter.from_bytes(options["server-realm"].as<std::string>()));
         }
         case PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2: {
             LUID luid = { 0 };

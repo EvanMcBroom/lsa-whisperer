@@ -9,27 +9,56 @@
 #include <pku2u.hpp>
 #include <string>
 
+namespace {
+    UNICODE_STRING WCharToUString(wchar_t* string) {
+        if (string) {
+            auto size{ lstrlenW(string) * sizeof(wchar_t) };
+            return { (USHORT)size, (USHORT)((size) ? size + sizeof(wchar_t) : 0), (size) ? string : nullptr };
+        }
+        return { 0, 0, nullptr };
+    }
+}
+
 namespace Pku2u {
     Proxy::Proxy(const std::shared_ptr<Lsa>& lsa)
         : lsa(lsa) {
     }
 
-    bool Proxy::PurgeTicketEx(PLUID luid, ULONG flags, PKERB_TICKET_CACHE_INFO_EX ticketCacheInfo) const {
-        PURGE_TICKET_EX_REQUEST request;
-        request.LogonId.LowPart = luid->LowPart;
-        request.LogonId.HighPart = luid->HighPart;
-        request.Flags = flags;
-        ticketCacheInfo = ticketCacheInfo;
-        KERB_QUERY_TKT_CACHE_EX2_RESPONSE* response{ nullptr };
-        auto result{ CallPackage(request, &response) };
-        if (result) {
-            LsaFreeReturnBuffer(response);
+    bool Proxy::PurgeTicketCacheEx(PLUID luid, ULONG flags, const std::wstring& clientName, const std::wstring& clientRealm, const std::wstring& serverName, const std::wstring& serverRealm) const {
+        auto requestSize{ sizeof(KERB_PURGE_TKT_CACHE_EX_REQUEST) + ((clientName.length() + clientRealm.length() + serverName.length() + serverRealm.length() + 4) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PKERB_PURGE_TKT_CACHE_EX_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::PurgeTicketCacheEx);
+        request->LogonId.LowPart = luid->LowPart;
+        request->LogonId.HighPart = luid->HighPart;
+        request->Flags = flags;
+        request->TicketTemplate = { 0 };
+        if (!clientName.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+            std::memcpy(ptrUstring, clientName.data(), clientName.size() * sizeof(wchar_t));
+            request->TicketTemplate.ClientName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
         }
-        return result;
+        if (!clientRealm.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + 1) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, clientRealm.data(), clientRealm.size() * sizeof(wchar_t));
+            request->TicketTemplate.ClientRealm = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        if (!serverName.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + clientRealm.size() + 2) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, serverName.data(), serverName.size() * sizeof(wchar_t));
+            request->TicketTemplate.ServerName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        if (!serverRealm.empty()) {
+            auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) + ((clientName.length() + clientRealm.size() + serverName.size() + 3) * sizeof(wchar_t)) };
+            std::memcpy(ptrUstring, serverRealm.data(), serverRealm.size() * sizeof(wchar_t));
+            request->TicketTemplate.ServerRealm = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+        }
+        void* response{ nullptr };
+        return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
     bool Proxy::QueryTicketCacheEx2(PLUID luid) const {
-        QUERY_TKT_CACHE_EX2_REQUEST request;
+        KERB_QUERY_TKT_CACHE_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::QueryTicketCacheEx2) };
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
         PKERB_QUERY_TKT_CACHE_EX2_RESPONSE response{ nullptr };

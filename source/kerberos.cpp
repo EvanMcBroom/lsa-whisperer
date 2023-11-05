@@ -37,6 +37,7 @@ namespace Kerberos {
     }
 
     bool Proxy::AddBindingCacheEntryEx(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType, ULONG dcFlags, bool useEx) const {
+        // We can use the EX version of the struct for both message types because it's only an extension of the original struct format
         auto requestSize{ sizeof(KERB_ADD_BINDING_CACHE_ENTRY_EX_REQUEST) + ((realmName.length() + kdcAddress.length() + 2) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');
         auto request{ reinterpret_cast<PKERB_ADD_BINDING_CACHE_ENTRY_EX_REQUEST>(requestBytes.data()) };
