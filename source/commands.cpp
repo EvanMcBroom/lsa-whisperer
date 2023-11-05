@@ -209,12 +209,6 @@ namespace Kerberos {
                                                         : KERB_REQUEST_ADD_CREDENTIAL };
             return proxy.AddExtraCredentials(&luid, domainName, userName, password, flags);
         }
-        case PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword: {
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            auto oldPassword{ converter.from_bytes(options["oldpass"].as<std::string>()) };
-            auto newPassword{ converter.from_bytes(options["newpass"].as<std::string>()) };
-            return proxy.ChangeMachinePassword(oldPassword, newPassword);
-        }
         case PROTOCOL_MESSAGE_TYPE::CleanupMachinePkinitCreds: {
             LUID luid = { 0 };
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();

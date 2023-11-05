@@ -86,14 +86,6 @@ namespace Kerberos {
         return CallPackage(requestBytes, reinterpret_cast<void**>(&response));
     }
 
-    bool Proxy::ChangeMachinePassword(const std::wstring& oldPassword, const std::wstring& newPassword) const {
-        CHANGE_MACH_PWD_REQUEST request;
-        RtlInitUnicodeString(&request.OldPassword, oldPassword.data());
-        RtlInitUnicodeString(&request.NewPassword, newPassword.data());
-        void* response{ nullptr };
-        return CallPackage(request, &response);
-    }
-
     bool Proxy::CleanupMachinePkinitCreds(PLUID luid) const {
         KERB_CLEANUP_MACHINE_PKINIT_CREDS_REQUEST request = { static_cast<KERB_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::CleanupMachinePkinitCreds) };
         request.LogonId.LowPart = luid->LowPart;

@@ -21,10 +21,10 @@ The full and correct list of messages that kerberos supports is provided here:
 | Id     | Message Type                   | CLI Support        | NT Version | Internal Function
 | `0x00` | `DebugRequest`                 | :heavy_minus_sign: | `>=5.0`    | `KerbDebugRequest`
 | `0x01` | `QueryTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbQueryTicketCache`
-| `0x02` | `ChangeMachinePassword`        | :heavy_check_mark: | `>=5.0`    | `KerbChangeMachinePassword`
-| `0x03` | `VerifyPac`                    |                    | `>=5.0`    | `KerbVerifyPac`
+| `0x02` | `ChangeMachinePassword`        | :x:                | `>=5.0`    | `KerbChangeMachinePassword`
+| `0x03` | `VerifyPac`                    | _Planned_          | `>=5.0`    | `KerbVerifyPac`
 | `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveTicket`
-| `0x05` | `UpdateAddresses`              |                    | `>=5.0`    | `KerbSetIpAddresses`
+| `0x05` | `UpdateAddresses`              | :x:                | `>=5.0`    | `KerbSetIpAddresses`
 | `0x06` | `PurgeTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbPurgeTicket`
 | `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
 | `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveEncodedTicket`
@@ -32,12 +32,12 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x0A` | `AddBindingCacheEntry`         | :heavy_minus_sign: | `>=5.0`    | `KerbAddBindingCacheEntry`
 | `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
-| `0x0D` | `VerifyCredentials`            |                    | `>=5.1`    | `KerbVerifyCredentials`
+| `0x0D` | `VerifyCredentials`            | :x:                | `>=5.1`    | `KerbVerifyCredentials`
 | `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
 | `0x0F` | `PurgeTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbPurgeTicketEx`
 | `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
 | `0x11` | `AddExtraCredentials`          | :heavy_check_mark: | `>=5.0`    | `KerbAddExtraCredential`
-| `0x12` | `QuerySupplementalCredentials` |                    | `>=5.2`    | `KerbQuerySupplementalCredentials`
+| `0x12` | `QuerySupplementalCredentials` | :x:                | `>=5.2`    | `KerbQuerySupplementalCredentials`
 | `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
 | `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`    | `KerbQueryTicketCacheEx2`
 | `0x15` | `SubmitTicket`                 |                    | `>=6.0`    | `KerbSubmitTicket`
@@ -66,23 +66,56 @@ The `RefreshPolicy` message is also not available in release builds of `kerberos
 === AddExtraCredentials
 
 Documented in `NTSecApi.h` as adding "server credentials" to a given logon session, only applicable during AcceptSecurityContext, and requiring TCB to alter "other" credentials.
-The structure also contains a flags field that allows a user to add, replace, or removed the additional credential.
+The command allows a user to add, replace, or remove the additional credential.
+Only the password is required when removing a credential.
+
+```
+kerberos PinKdc --domain-name {name} --user-name {name} --password {password} [--replace-cred | --remove-cred]
+```
 
 === AddExtraCredentialsEx
 
 Behaves the same as the `AddExtraCredentials` command but allows a user to add a list of "principal names" to the credential.
 
+=== ChangeMachinePassword
+
+The command notifies Kerberos that the password for the machine has changed.
+The command will use client supplied pointers to reference LSASS's own memory without checking if the client is LSASS itself.
+A client is intended to allocate and reference valid memory in LSASS's own process for the command to succeed.
+As such, the command is not currently planned for inclusion in the project.
+
+=== ChangePassword
+
+Changes a user's password in a Windows domain or configured non-Windows Kerberos realm that supports the Kerberos Password Change Protocol.
+
 === CleanupMachinePkinitCreds
 
-Luid must be SYSTEM_LUID (999) or NETWORKSERVICE_LUID (996).
+Purge any PKINIT device credentials from the current machine.
+`SeTcbPrivilege` is required and the luid must be either 996 (e.g., `NETWORKSERVICE_LUID`) or 999 (e.g., `SYSTEM_LUID`).
+
+```
+kerberos CleanupMachinePkinitCreds [--luid {session id}]
+```
+
+=== DebugRequest
+
+The `DebugRequest` command is not included with release builds of Windows.
+The command originally supported allowing users to issue a breakpoint for a kernel debugger, gather statistics about the kerberos ticket cache, and generate a token for the Administrator user.
+Current debug builds of Windows may support additional debug requests.
+
+=== DecryptData
+
+The `DecryptData` command is not included with release builds of Windows.
+The original command allowed users to decrypt a buffer with either a specified key or the primary key a logon session.
 
 === PinKdc
 
-https://i.blackhat.com/USA-22/Wednesday/US-22-Forshaw-Taking-Kerberos-To-The-Next-Level.pdf[Pin a KDC.]
-The command may not be called from WOW64 clients.
+Pin a KDC as described by https://i.blackhat.com/USA-22/Wednesday/US-22-Forshaw-Taking-Kerberos-To-The-Next-Level.pdf[James Forshaw and Nick Landers].
+The command cannot be called from WOW64 clients.
+The `dc-flags` value may be any combination of DC types as described by the DS_* macros in `DsGetDC.h` (ex. 1 for `DS_PDC_FLAG`).
 
 ```
-kerberos PinKdc [--luid {session id}]
+kerberos PinKdc --domain-name {name} --dc-name {name} [--dc-flags {value}]
 ```
 
 === PrintCloudKerberosDebug
@@ -104,14 +137,14 @@ kerberos PurgeKdcProxyCache [--luid {session id}]
 
 === PurgeTicketCache
 
-Purge tickets in the ticket cache for the current logon session.
+Purge tickets in the ticket cache for a logon session.
 A server name and realm may be used to filter which tickets should be purged.
 The server name and realm must both be specified to be used.
 If both are not specified then all tickets will be purged.
 `SeTcbPrivilege` is required to specify another logon session.
 
 ```
-kerberos PurgeTicketCache [--luid {session id}] [--server-name {name}] [--server-realm {name}]
+kerberos PurgeTicketCache [--luid {session id}] [--server-name {name} --server-realm {name}]
 ```
 
 === PurgeTicketCacheEx
@@ -122,7 +155,7 @@ The command also allows you to explicitly purge all tickets.
 If purging all tickets is explicitly specified then all ticket filters will be ignored.
 
 ```
-kerberos PurgeTicketCacheEx [--luid {session id}] [--all] [--client-name {name}] [--client-realm {name}] [--server-name {name}] [--server-realm {name}]
+kerberos PurgeTicketCacheEx [--luid {session id}] [--all] [--client-name {name} --client-realm {name}] [--server-name {name} --server-realm {name}]
 ```
 
 === QueryKdcProxyCache
@@ -145,7 +178,7 @@ kerberos QueryTicketCache [--luid {session id}]
 
 === QueryTicketCacheEx
 
-Functions the same as the `QueryTicketCache` but will return additionally return the client name and realm for each ticket.
+Functions the same as the `QueryTicketCache` but will additionally return the client name and realm for each ticket.
 
 ```
 kerberos QueryTicketCacheEx [--luid {session id}]
@@ -153,7 +186,7 @@ kerberos QueryTicketCacheEx [--luid {session id}]
 
 === QueryTicketCacheEx2
 
-Functions the same as the `QueryTicketCacheEx` but will return additionally return the session key type and branch ID for each ticket.
+Functions the same as the `QueryTicketCacheEx` but will additionally return the session key type and branch ID for each ticket.
 
 ```
 kerberos QueryTicketCacheEx2 [--luid {session id}]
@@ -161,15 +194,38 @@ kerberos QueryTicketCacheEx2 [--luid {session id}]
 
 === QueryTicketCacheEx3
 
-Functions the same as the `QueryTicketCacheEx2` but will return additionally return the cache flags and KDC name for each ticket.
+Functions the same as the `QueryTicketCacheEx2` but will additionally return the cache flags and KDC name for each ticket.
 
 ```
 kerberos QueryTicketCacheEx3 [--luid {session id}]
 ```
 
+=== RetrieveEncodedTicket
+
+Get a ticket either by querying the ticket cache for the current logon session or by requesting the ticket from the current KDC.
+`SeTcbPrivilege` is required to specify another logon session.
+If the requested ticket is a TGT, `SeTcbPrivilege` is required to additionally get the session key for the TGT.
+
+```
+kerberos RetrieveEncodedTicket --target-name {server name} [--luid {session id}] [--ticket-flags {value}] [--cache-option {value}] [--enc-type {type}]
+```
+
 === RetrieveKeyTab
 
-Flags is ignored.
+Return the keytab data for a domain user.
+
+```
+kerberos RetrieveKeyTab --domain-name {name} --user-name {name} --password {password}
+```
+
+=== RetrieveTicket
+
+Get the TGT from the ticket cache of the specified user logon session.
+`SeTcbPrivilege` is required to additionally get the session key for the TGT.
+
+```
+kerberos RetrieveTicket --target-name {server name} [--luid {session id}] [--ticket-flags {value}] [--cache-option {value}] [--enc-type {type}]
+```
 
 === TransferCredentials
 
@@ -180,3 +236,14 @@ The function only accepts the cleanup credentials and optimistic logon flags.
 ```
 kerberos TransferCredentials --sluid {session id} --dluid {session id} [--cleanup-credentials] [--optimistic-logon]
 ```
+
+=== UpdateAddresses
+
+Updates the IP addresses used by netlogon.
+The command will check if the client is LSASS itself.
+As such, the command is not currently planned for inclusion in the project.
+
+=== VerifyPac
+
+Verifies that a PAC was signed by a valid KDC.
+A client is intended to issue the command using a passthrough request to the KDC and it is the only passthrough command that the kerberos package supports.
