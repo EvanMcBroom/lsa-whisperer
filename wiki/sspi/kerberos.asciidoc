@@ -29,7 +29,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
 | `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveEncodedTicket`
 | `0x09` | `DecryptData`                  | :heavy_minus_sign: | `>=5.0`    | `KerbDecryptMessage`
-| `0x0A` | `AddBindingCacheEntry`         | :heavy_minus_sign: | `>=5.0`    | `KerbAddBindingCacheEntry`
+| `0x0A` | `AddBindingCacheEntry`         | :heavy_check_mark: | `>=5.0`    | `KerbAddBindingCacheEntry`
 | `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
 | `0x0D` | `VerifyCredentials`            | :x:                | `>=5.1`    | `KerbVerifyCredentials`
@@ -53,7 +53,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
 | `0x20` | `QueryDomainExtendedPolicies`  | :heavy_check_mark: | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
 | `0x21` | `QueryS4U2ProxyCache`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryS4U2ProxyCache`
-| `0x22` | `RetrieveKeyTab`               | :heavy_minus_sign: | `>=10.0`   | `KerbRetrieveKeyTab`
+| `0x22` | `RetrieveKeyTab`               | :heavy_check_mark: | `>=10.0`   | `KerbRetrieveKeyTab`
 | `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`   | ?
 | `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`   | `KerbPrintCloudKerberosDebug`
 |===
@@ -63,6 +63,23 @@ NOTE: The internal function for each message type will be located in `kerberos.d
 Messages `DebugRequest` and `DecryptData` and their internal functions are only available in debug builds of `kerberos.dll`.
 The `RefreshPolicy` message is also not available in release builds of `kerberos.dll`, likely due to the same reason, but this could not be confirmed.
 
+=== AddBindingCacheEntry
+
+Add an entry to the binding cache for the machine.
+
+```
+kerberos AddBindingCacheEntry --domain-name {name} --dc-address {Inet or NetBIOS address}
+```
+
+=== AddBindingCacheEntryEx
+
+Add an entry to the binding cache for the machine.
+The `dc-flags` value may be any combination of DC types as described by the DS_* macros in `DsGetDC.h` (ex. 1 for `DS_PDC_FLAG`).
+
+```
+kerberos AddBindingCacheEntryEx --domain-name {name} --dc-address {Inet or NetBIOS address} [--dc-flags {value}]
+```
+
 === AddExtraCredentials
 
 Documented in `NTSecApi.h` as adding "server credentials" to a given logon session, only applicable during AcceptSecurityContext, and requiring TCB to alter "other" credentials.
@@ -70,7 +87,7 @@ The command allows a user to add, replace, or remove the additional credential.
 Only the password is required when removing a credential.
 
 ```
-kerberos PinKdc --domain-name {name} --user-name {name} --password {password} [--replace-cred | --remove-cred]
+kerberos AddExtraCredentials --domain-name {name} --user-name {name} --password {password} [--replace-cred | --remove-cred]
 ```
 
 === AddExtraCredentialsEx
@@ -87,6 +104,7 @@ As such, the command is not currently planned for inclusion in the project.
 === ChangePassword
 
 Changes a user's password in a Windows domain or configured non-Windows Kerberos realm that supports the Kerberos Password Change Protocol.
+The caller must know the user's current password to change it.
 
 === CleanupMachinePkinitCreds
 
@@ -126,6 +144,15 @@ Get cloud kerberos configuration information.
 kerberos PrintCloudKerberosDebug
 ```
 
+=== PurgeBindingCache
+
+Remove all binding cache entries for the machine.
+`SeTcbPrivilege` is required.
+
+```
+kerberos PurgeBindingCache
+```
+
 === PurgeKdcProxyCache
 
 The `PurgeKdcProxyCache` command has not been fully tested, but should should remove cached KDC proxy tickets.
@@ -158,6 +185,23 @@ If purging all tickets is explicitly specified then all ticket filters will be i
 kerberos PurgeTicketCacheEx [--luid {session id}] [--all] [--client-name {name} --client-realm {name}] [--server-name {name} --server-realm {name}]
 ```
 
+=== QueryBindingCache
+
+Get information about the binding cache for the machine.
+`SeTcbPrivilege` is required.
+
+```
+kerberos QueryBindingCache
+```
+
+=== QueryDomainExtendedPolicies
+
+Get the extended policy information for a domain.
+
+```
+kerberos QueryDomainExtendedPolicies --domain-name {name}
+```
+
 === QueryKdcProxyCache
 
 The `QueryKdcProxyCache` command has not been fully tested, but should provide information about KDC proxy cached tickets.
@@ -166,6 +210,12 @@ The `QueryKdcProxyCache` command has not been fully tested, but should provide i
 ```
 kerberos QueryKdcProxyCache [--luid {session id}]
 ```
+
+=== QuerySupplementalCredentials
+
+Get the TGT and password information for a credential manager blob.
+The command will check if the client is LSASS itself.
+As such, the command is not currently planned for inclusion in the project.
 
 === QueryTicketCache
 
@@ -200,6 +250,24 @@ Functions the same as the `QueryTicketCacheEx2` but will additionally return the
 kerberos QueryTicketCacheEx3 [--luid {session id}]
 ```
 
+=== QueryS4U2ProxyCache
+
+Get the proxy cache information for a service for user (S4U) logon.
+
+```
+kerberos QueryS4U2ProxyCache [--luid {session id}]
+```
+
+=== RefreshPolicy
+
+The `RefreshPolicy` command is not included with release builds of Windows.
+The use of the command is not currently known.
+
+=== RefreshSmartcardCredentials
+
+Notifies Kerberos when the smart card credentials need to be updated.
+Implemented to allow the Winlogon session to refresh credentials as needed on terminal server connects and re-connects.
+
 === RetrieveEncodedTicket
 
 Get a ticket either by querying the ticket cache for the current logon session or by requesting the ticket from the current KDC.
@@ -227,6 +295,20 @@ Get the TGT from the ticket cache of the specified user logon session.
 kerberos RetrieveTicket --target-name {server name} [--luid {session id}] [--ticket-flags {value}] [--cache-option {value}] [--enc-type {type}]
 ```
 
+=== SetPassword
+
+Changes a user's password in a Windows domain or configured non-Windows Kerberos realm that supports the Kerberos Password Change Protocol.
+The caller does not need to know the user's current password to change it.
+
+=== SetPasswordEx
+
+Behaves the same as the `SetPassword` command but allows a user to specify a client name and realm.
+
+=== SubmitTicket
+
+Request a ticket from the KDC and updates the ticket cache for the current logon session.
+`SeTcbPrivilege` is required to specify another logon session.
+
 === TransferCredentials
 
 Transfer data between two kerberos logon sessions.
@@ -243,7 +325,21 @@ Updates the IP addresses used by netlogon.
 The command will check if the client is LSASS itself.
 As such, the command is not currently planned for inclusion in the project.
 
+=== VerifyCredentials
+
+Verify the user name and password for a domain user.
+The command will check if the client is LSASS itself.
+As such, the command is not currently planned for inclusion in the project.
+
 === VerifyPac
 
 Verifies that a PAC was signed by a valid KDC.
 A client is intended to issue the command using a passthrough request to the KDC and it is the only passthrough command that the kerberos package supports.
+
+=== UnpinAllKdcs
+
+Remove all previously pinned KDCs.
+
+```
+kerberos UnpinAllKdcs
+```
