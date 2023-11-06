@@ -6,6 +6,7 @@ set(SSPI_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/all.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cloudap.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crypt.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/live.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lsa.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.hpp

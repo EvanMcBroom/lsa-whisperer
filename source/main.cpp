@@ -135,6 +135,7 @@ int main(int argc, char** argv) {
     cli.AddCommand(".token", Token::Command);
     cli.AddCommand("cloudap", CommandFactory(lsa, Cloudap::Call));
     cli.AddCommand("kerberos", CommandFactory(lsa, Kerberos::Call));
+    cli.AddCommand("live", CommandFactory(lsa, Live::Call));
     cli.AddCommand("msv1_0", CommandFactory(lsa, Msv1_0::Call));
     cli.AddCommand("negotiate", CommandFactory(lsa, Negotiate::Call));
     cli.AddCommand("pku2u", CommandFactory(lsa, Pku2u::Call));
@@ -151,6 +152,7 @@ int main(int argc, char** argv) {
     cloudapSubCommands.erase(std::remove(cloudapSubCommands.begin(), cloudapSubCommands.end(), "GenerateBindingClaims"), cloudapSubCommands.end());
     cli.AddSubCommandCompletions("cloudap", cloudapSubCommands);
     cli.AddSubCommandCompletions("kerberos", SubCommands<Kerberos::PROTOCOL_MESSAGE_TYPE>());
+    cli.AddSubCommandCompletions("live", SubCommands<Live::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());
     cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());

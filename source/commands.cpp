@@ -364,6 +364,30 @@ namespace Kerberos {
     }
 }
 
+namespace Live {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "live" };
+        cxxopts::Options unparsedOptions{ command };
+        // clang-format off
+        unparsedOptions.add_options("Command arguments");
+        // clang-format on
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::GetSignedProofOfPossessionToken:
+            return proxy.GetSignedProofOfPossessionToken();
+        default:
+            std::cout << "Unsupported function" << std::endl;
+            return false;
+        }
+    }
+}
+
 namespace Msv1_0 {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "msv1_0" };

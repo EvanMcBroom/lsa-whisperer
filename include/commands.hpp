@@ -2,6 +2,7 @@
 #include <cloudap.hpp>
 #include <cxxopts.hpp>
 #include <kerberos.hpp>
+#include <live.hpp>
 #include <msv1_0.hpp>
 #include <negotiate.hpp>
 #include <pku2u.hpp>
@@ -14,6 +15,10 @@ namespace Cloudap {
 
 namespace Kerberos {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
+}
+
+namespace Live {
+    bool Call(const std::shared_ptr<Lsa>& proxy, const std::vector<char*>& args);
 }
 
 namespace Msv1_0 {

@@ -3,6 +3,7 @@ set(SSPI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/all.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cloudap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crypt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/live.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lsa.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.cpp
