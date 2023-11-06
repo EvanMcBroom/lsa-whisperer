@@ -15,12 +15,12 @@ The protocol messages that livessp supports is not documented by Microsoft but i
 
 [%header]
 |===
-| Id     | Message Type                      | NT Version | Internal Function
-| `0x00` | RenameAccount                     | `>=6.2`    | LiveRenameAccount
-| `0x01` | TransferCredential                | `>=6.2`    | LiveTransferCredential
-| `0x02` | GetSignedProofOfPossessionToken   | `>=6.3`    | LiveGetSignedProofOfPossessionToken
-| `0x03` | SetUnsignedProofOfPossessionToken | `>=6.3`    | LiveSetUnsignedProofOfPossessionToken
-| `0x04` | DeleteProofOfPossessionToken      | `>=6.3`    | LiveDeleteProofOfPossessionToken
+| Id     | Message Type                      | CLI Support        | NT Version | Internal Function
+| `0x00` | RenameAccount                     |                    | `>=6.2`    | LiveRenameAccount
+| `0x01` | TransferCredential                | _Planned_          | `>=6.2`    | LiveTransferCredential
+| `0x02` | GetSignedProofOfPossessionToken   | :heavy_check_mark: | `>=6.3`    | LiveGetSignedProofOfPossessionToken
+| `0x03` | SetUnsignedProofOfPossessionToken |                    | `>=6.3`    | LiveSetUnsignedProofOfPossessionToken
+| `0x04` | DeleteProofOfPossessionToken      |                    | `>=6.3`    | LiveDeleteProofOfPossessionToken
 |===
 
 NOTE: The internal function will be located in `livessp.dll`.
@@ -29,23 +29,17 @@ Oddly, the `TransferCredential` command may also be called by using a message id
 In NT 6.2 `SeTcbPrivilege` was required for all calls.
 NT 6.3 removed that requirment for all calls except for `TransferCredential` which still requires `SeTcbPrivilege`.
 
-=== DeleteProofOfPossessionToken
-
-...
-
 === GetSignedProofOfPossessionToken
 
-...
+Get a proof of possession (PoP) token for authentication.
+The token will be serialized and the serialization formation is still being determined.
 
-=== RenameAccount
-
-...
-
-=== SetUnsignedProofOfPossessionToken
-
-...
+```
+live GetSignedProofOfPossessionToken
+```
 
 === TransferCredential
 
 Transfer data from one logon session to another logon session.
 The specific data that is transferred is still being determined.
+`SeTcbPrivilege` is required.

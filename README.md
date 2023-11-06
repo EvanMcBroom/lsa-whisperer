@@ -11,6 +11,7 @@ Support for more authentication packages may be added in the future.
 
 LSA Whisperer uses [CMake](https://cmake.org/) to generate and run the build system files for your platform.
 The project does not rely on any library manager to allow it to be easily built in an offline environment if desired.
+You will need the latest Windows 11 SDK, which at the time of this writing is 10.0.22621.0.
 
 ```
 git clone --recurse-submodules https://github.com/EvanMcBroom/lsa-whisperer.git
