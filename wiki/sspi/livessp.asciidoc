@@ -32,7 +32,7 @@ NT 6.3 removed that requirment for all calls except for `TransferCredential` whi
 === GetSignedProofOfPossessionToken
 
 Get a proof of possession (PoP) token for authentication.
-The token will be serialized and the serialization formation is still being determined.
+The token will be serialized and the serialization formation is still being determined, but it will contain a SSO cookie.
 
 ```
 live GetSignedProofOfPossessionToken
