@@ -1,0 +1,75 @@
+// Only the data for the wlidsvc serialization service
+// Does not include the data for the RPC interface
+//
+// The structures were auto generated using NtObjectManager, livessp, and the MSA plugin for cloudap.
+// https://www.tiraniddo.dev/2020/07/generating-ndr-type-serializers-for-c.html
+//
+// The structure names were applied using named identified through manual analysis.
+// The names may be slightly off from Microsoft's internal IDL due to that, but the formatting should be correct. 
+
+// Unidentified structure names:
+// _LiveSerializedValidationInfo
+// _WLID_CONNECT_PARAM
+// _WLIDAcquireTokenParams
+// _WLIDAcquireTokenResults
+// _WLIDRequestParams
+// _WLIDResponseParams
+
+interface wlidsvc {
+struct _WLIDIdentityProperty {
+    int type;
+    byte[] Value;
+};
+
+struct _WlidPropertyBag { // Serialized
+    int Count;
+    struct _WLIDIdentityProperty[] Properties;
+};
+
+struct _WLIDCredentialAttribute {
+    int Type;
+    wchar_t[] Value;
+};
+
+struct _WLIDCredentialsType {
+    /* ENUM16 */ int Member0;
+    struct _WLIDCredentialAttribute Member8;
+};
+
+struct _WLIDCredentialBag { // Serialized
+    /* ENUM16 */ int Member0;
+    int Count;
+    struct _WLIDCredentialsType[] Credentials;
+};
+
+struct _WLIDTokenParams {
+    char* Member0;
+    char* Member8;
+    char* Member10;
+    char* Member18;
+    int Member20;
+    /* ENUM16 */ int Member24;
+};
+
+struct _UnsignedProofOfPossessionTokenParameter { // Serialized
+    struct _WLIDTokenParams TokenParams;
+    int Member28;
+    int Member2C;
+    int Member30;
+    byte[] Member38;
+};
+
+struct _ProofOfPossessionTokenBag { // Serialized
+    int Count;
+    struct _WLIDSignedTokens[] Tokens;
+};
+
+struct _WLIDSignedTokens {
+    char* Member0;
+    char* Member8;
+    char* Member10;
+    char* Member18;
+    int Member20;
+    int Member24;
+};
+}

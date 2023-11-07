@@ -36,7 +36,7 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 | `0x10` | `ValidateAuth`             | :x:                | `>=6.2`    | `MspValidateAuth`
 | `0x11` | `CacheLookupEx`            | _Planned_          | `>=6.2`    | `MspLm20CacheLookup`
 | `0x12` | `GetCredentialKey`         | :heavy_check_mark: | `>=6.2`    | `MspGetCredentialKey`
-| `0x13` | `SetThreadOption`          | :x:                | `>=6.2`    | `MspSetThreadOption`
+| `0x13` | `SetThreadOption`          | :heavy_check_mark: | `>=6.2`    | `MspSetThreadOption`
 | `0x14` | `DecryptDpapiMasterKey`    | _Planned_          | `>=6.4`    | `MspDecryptDpapiMasterKey`
 | `0x15` | `GetStrongCredentialKey`   | _Planned_          | `>=6.4`    | `MspGetStrongCredentialKey`
 | `0x16` | `TransferCred`             | :heavy_check_mark: | `>=10.0`   | `MspTransferCreds`

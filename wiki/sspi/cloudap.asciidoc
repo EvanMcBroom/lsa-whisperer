@@ -307,7 +307,9 @@ If the call succeeds the returned Base64 URL string may be used as a credential 
 === Microsoft Account Functions
 
 The Microsoft Account (MSA) plugin supports additional functionality through the `GenericCallPkg` plugin function.
-This functionality has not be analyzed.
+This functionality has not been fully analyzed.
+
+If you make an MSA request from an AppContainer, it must have the `liveIdService` capability.
 
 == Key Structures
 
