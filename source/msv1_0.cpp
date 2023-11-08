@@ -44,6 +44,14 @@ namespace {
     constexpr size_t RoundUp(size_t count, size_t powerOfTwo) {
         return (count + powerOfTwo - 1) & (~powerOfTwo - 1);
     }
+
+    UNICODE_STRING WCharToUString(wchar_t* string) {
+        if (string) {
+            auto size{ lstrlenW(string) * sizeof(wchar_t) };
+            return { (USHORT)size, (USHORT)((size) ? size + sizeof(wchar_t) : 0), (size) ? string : nullptr };
+        }
+        return { 0, 0, nullptr };
+    }
 }
 
 namespace Msv1_0 {
@@ -78,19 +86,27 @@ namespace Msv1_0 {
         return 1;
     }
 
-    bool Proxy::ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& oldPassword, const std::wstring& newPassword, bool impersonating) const {
-        CHANGE_CACHED_PASSWORD_REQUEST request;
-        UnicodeString domainNameGuard{ domainName };
-        request.DomainName = domainNameGuard;
-        UnicodeString accountNameGuard{ accountName };
-        request.AccountName = accountNameGuard;
-        UnicodeString oldPasswordGuard{ oldPassword };
-        request.OldPassword = oldPasswordGuard;
-        UnicodeString newPasswordGuard{ newPassword };
-        request.NewPassword = newPasswordGuard;
-        request.Impersonating = impersonating;
-        CHANGE_CACHED_PASSWORD_RESPONSE* response;
-        auto result{ CallPackage(request, &response) };
+    bool Proxy::ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& newPassword) const {
+        // Based off of schedsvc!NotifyLsaOfPasswordChange
+        auto requestSize{ sizeof(MSV1_0_CHANGEPASSWORD_REQUEST) + ((domainName.length() + accountName.length() + newPassword.length() + 3) * sizeof(wchar_t)) };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PMSV1_0_CHANGEPASSWORD_REQUEST>(requestBytes.data()) };
+        request->MessageType = static_cast<MSV1_0_PROTOCOL_MESSAGE_TYPE>(PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword);
+
+        auto ptrUstring{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptrUstring, domainName.data(), domainName.size() * sizeof(wchar_t));
+        request->DomainName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((domainName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, accountName.data(), accountName.size() * sizeof(wchar_t));
+        request->AccountName = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        ptrUstring = ptrUstring + ((accountName.length() + 1) * sizeof(wchar_t));
+        std::memcpy(ptrUstring, newPassword.data(), newPassword.size() * sizeof(wchar_t));
+        request->NewPassword = WCharToUString(reinterpret_cast<wchar_t*>(ptrUstring));
+
+        MSV1_0_CHANGEPASSWORD_RESPONSE* response;
+        auto result{ CallPackage(requestBytes, reinterpret_cast<void**>(&response)) };
         if (result) {
             lsa->out << "PasswordInfoValid    : " << response->PasswordInfoValid << std::endl;
             auto& DomainPasswordInfo{ response->DomainPasswordInfo };
@@ -201,14 +217,14 @@ namespace Msv1_0 {
         GET_CREDENTIAL_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::string shaOwf(reinterpret_cast<const char*>(&response->CredentialData), MSV1_0_SHA_PASSWORD_LENGTH);
+            std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
             OutputHex(lsa->out, "ShaOwf", shaOwf);
             // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
-            if (*reinterpret_cast<DWORD*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH + MSV1_0_OWF_PASSWORD_LENGTH])) {
-                std::string dpapiKey(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_CREDENTIAL_KEY_LENGTH);
+            if (*reinterpret_cast<DWORD*>(&response->DpapiKey[MSV1_0_OWF_PASSWORD_LENGTH])) {
+                std::string dpapiKey(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_CREDENTIAL_KEY_LENGTH);
                 OutputHex(lsa->out, "DpapiKey", dpapiKey);
             } else {
-                std::string ntOwf(reinterpret_cast<const char*>(&response->CredentialData[MSV1_0_SHA_PASSWORD_LENGTH]), MSV1_0_OWF_PASSWORD_LENGTH);
+                std::string ntOwf(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_OWF_PASSWORD_LENGTH);
                 OutputHex(lsa->out, "NtOwf", ntOwf);
             }
             LsaFreeReturnBuffer(response);
@@ -216,17 +232,35 @@ namespace Msv1_0 {
         return result;
     }
 
-    bool Proxy::GetStrongCredentialKey(PLUID luid) const {
+    bool Proxy::GetStrongCredentialKey(PLUID luid, bool isProtectedUser) const {
         GET_STRONG_CREDENTIAL_KEY_REQUEST request;
+        std::memset(&request, '\0', sizeof(request));
+        request.MessageType = PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey;
         request.Version = 0;
         request.LogonId.LowPart = luid->LowPart;
         request.LogonId.HighPart = luid->HighPart;
+        request.IsProtectedUser = isProtectedUser;
         GET_STRONG_CREDENTIAL_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
+            if (*reinterpret_cast<DWORD*>(&response->ShaPassword)) {
+                std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
+                OutputHex(lsa->out, "ShaOwf", shaOwf);
+            }
+            if (*reinterpret_cast<DWORD*>(&response->DpapiKey)) {
+                // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
+                if (*reinterpret_cast<DWORD*>(&response->DpapiKey[MSV1_0_OWF_PASSWORD_LENGTH])) {
+                    std::string dpapiKey(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_CREDENTIAL_KEY_LENGTH);
+                    OutputHex(lsa->out, "DpapiKey", dpapiKey);
+                } else {
+                    std::string ntOwf(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_OWF_PASSWORD_LENGTH);
+                    OutputHex(lsa->out, "NtOwf", ntOwf);
+                }
+            }
             LsaFreeReturnBuffer(response);
         }
         return result;
+
     }
 
     bool Proxy::GetUserInfo(PLUID luid) const {

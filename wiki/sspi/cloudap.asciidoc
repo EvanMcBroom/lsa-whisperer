@@ -310,6 +310,7 @@ The Microsoft Account (MSA) plugin supports additional functionality through the
 This functionality has not been fully analyzed.
 
 If you make an MSA request from an AppContainer, it must have the `liveIdService` capability.
+Input data is a `WlidPropertyBag`.
 
 == Key Structures
 

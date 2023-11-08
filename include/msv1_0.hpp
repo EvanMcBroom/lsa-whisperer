@@ -105,30 +105,6 @@ namespace Msv1_0 {
     typedef struct _CACHE_LOOKUP_EX_RESPONSE : CACHE_LOOKUP_RESPONSE {
     } CACHE_LOOKUP_EX_RESPONSE, *PCACHE_LOOKUP_EX_RESPONSE;
 
-    typedef struct _CHANGE_PASSWORD_REQUEST {
-        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ChangePassword };
-        UNICODE_STRING DomainName;
-        UNICODE_STRING AccountName;
-        UNICODE_STRING OldPassword;
-        UNICODE_STRING NewPassword;
-        BOOLEAN Impersonating;
-    } CHANGE_PASSWORD_REQUEST, *PCHANGE_PASSWORD_REQUEST;
-
-    typedef struct _CHANGE_PASSWORD_RESPONSE {
-        PROTOCOL_MESSAGE_TYPE MessageType;
-        BOOLEAN PasswordInfoValid;
-        DOMAIN_PASSWORD_INFORMATION DomainPasswordInfo;
-    } CHANGE_PASSWORD_RESPONSE, *PCHANGE_PASSWORD_RESPONSE;
-
-    typedef struct _CHANGE_CACHED_PASSWORD_REQUEST : public CHANGE_PASSWORD_REQUEST {
-        _CHANGE_CACHED_PASSWORD_REQUEST() {
-            this->MessageType = PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword;
-        }
-    } CHANGE_CACHED_PASSWORD_REQUEST, *PCHANGE_CACHED_PASSWORD_REQUEST;
-
-    typedef struct _CHANGE_CACHED_PASSWORD_RESPONSE : CHANGE_PASSWORD_RESPONSE {
-    } CHANGE_CACHED_PASSWORD_RESPONSE, *PCHANGE_CACHED_PASSWORD_RESPONSE;
-
     typedef struct _CLEAR_CACHED_CREDENTIALS_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials };
     } CLEAR_CACHED_CREDENTIALS_REQUEST, *PCLEAR_CACHED_CREDENTIALS_REQUEST;
@@ -147,7 +123,7 @@ namespace Msv1_0 {
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
-        DWORD Reserved;
+        DWORD KeySize;
         UCHAR Key[];
     } DECRYPT_DPAPI_MASTER_KEY_RESPONSE, *PDECRYPT_DPAPI_MASTER_KEY_RESPONSE;
 
@@ -189,10 +165,10 @@ namespace Msv1_0 {
     typedef struct _GET_CREDENTIAL_KEY_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         UCHAR Reserved[16];
-        // Will be 0x28
-        DWORD DataLength;
-        // The NT and SHA OWF passwords or the DPAPI key
-        UCHAR CredentialData[1];
+        DWORD CredSize; // <- 0x28
+        UCHAR ShaPassword[MSV1_0_SHA_PASSWORD_LENGTH];
+        UCHAR DpapiKey[16];
+        // 8 bytes of pad
     } GET_CREDENTIAL_KEY_RESPONSE, *PGET_CREDENTIAL_KEY_RESPONSE;
 
     typedef struct _GETUSERINFO_REQUEST {
@@ -219,13 +195,12 @@ namespace Msv1_0 {
         DWORD KeyLength;
         PWSTR Key;
         DWORD SidLength;
-        GUID Sid;
+        PWSTR Sid;
+        DWORD IsProtectedUser; // Determined from lsasrv!LsapGetStrongCredentialKeyFromMSV
     } GET_STRONG_CREDENTIAL_KEY_REQUEST, *PGET_STRONG_CREDENTIAL_KEY_REQUEST;
 
-    typedef struct _GET_STRONG_CREDENTIAL_KEY_RESPONSE {
-        PROTOCOL_MESSAGE_TYPE MessageType;
-        // ...
-    } GET_STRONG_CREDENTIAL_KEY_RESPONSE, *PGET_STRONG_CREDENTIAL_KEY_RESPONSE;
+    using GET_STRONG_CREDENTIAL_KEY_RESPONSE = GET_CREDENTIAL_KEY_RESPONSE;
+    using PGET_STRONG_CREDENTIAL_KEY_RESPONSE = PGET_CREDENTIAL_KEY_RESPONSE;
 
     typedef struct _LM20_CHALLENGE_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest };
@@ -285,7 +260,8 @@ namespace Msv1_0 {
         // A subset of the supported functions in msv1_0
         bool CacheLogon(void* logonInfo, void* validationInfo, const std::vector<byte>& supplementalCacheData, ULONG flags) const;
         bool CacheLookupEx(const std::wstring username, const std::wstring domain, CacheLookupCredType type, const std::string credential) const;
-        bool ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& oldPassword, const std::wstring& newPassword, bool impersonating) const;
+        bool ChangePassword() const;
+        bool ChangeCachedPassword(const std::wstring& domainName, const std::wstring& accountName, const std::wstring& newPassword) const;
         bool ClearCachedCredentials() const;
         bool DecryptDpapiMasterKey() const;
         bool DeleteTbalSecrets() const;
@@ -293,7 +269,7 @@ namespace Msv1_0 {
         bool EnumerateUsers() const;
         bool GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;
         bool GetCredentialKey(PLUID luid) const;
-        bool GetStrongCredentialKey(PLUID luid) const;
+        bool GetStrongCredentialKey(PLUID luid, bool isProtectedUser) const;
         bool GetUserInfo(PLUID luid) const;
         bool Lm20ChallengeRequest() const;
         bool ProvisionTbal(PLUID luid) const;

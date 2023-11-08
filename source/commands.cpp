@@ -397,7 +397,6 @@ namespace Msv1_0 {
         unparsedOptions.add_options()
             ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
         unparsedOptions.add_options("Function arguments")
-            ("account", "Account name", cxxopts::value<std::string>())
             ("computer", "Computer name", cxxopts::value<std::string>())
             ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
             ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
@@ -408,14 +407,16 @@ namespace Msv1_0 {
             ("luid", "Logon session", cxxopts::value<long long>())
             ("mitlogon", "Upn for Mit logon", cxxopts::value<std::string>())
             ("mixingbits", "Asciihex mixing data", cxxopts::value<std::string>())
-            ("newpass", "New password", cxxopts::value<std::string>())
-            ("oldpass", "Old password", cxxopts::value<std::string>())
+            ("new-pass", "New password", cxxopts::value<std::string>())
+            ("old-pass", "Old password", cxxopts::value<std::string>())
             ("option", "Process option", cxxopts::value<std::string>())
             ("pass", "Password", cxxopts::value<std::string>())
+            ("protected-user", "Is the user protected", cxxopts::value<bool>())
             ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
             ("sluid", "Source logon session", cxxopts::value<long long>())
             ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
-            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
+            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
+            ("user", "User name", cxxopts::value<std::string>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -429,7 +430,7 @@ namespace Msv1_0 {
             // Populate the logon info
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto domain{ converter.from_bytes(options["domain"].as<std::string>()) };
-            auto account{ converter.from_bytes(options["account"].as<std::string>()) };
+            auto account{ converter.from_bytes(options["user"].as<std::string>()) };
             auto computer{ std::wstring((options.count("computer")) ? converter.from_bytes(options["computer"].as<std::string>()) : L"") };
             std::vector<byte> hash;
             if (options.count("hash")) {
@@ -460,11 +461,11 @@ namespace Msv1_0 {
         case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
             break;
         case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
-            // auto domain{ options["domain"].as<std::string>() };
-            // auto account{ options["account"].as<std::string>() };
-            // auto oldpass{ options["oldpass"].as<std::string>() };
-            // auto newpass{ options["newpass"].as<std::string>() };
-            // return ChangeCachedPassword(domain, account, oldpass, newpass, options["imp"].as<bool>());
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            return proxy.ChangeCachedPassword(
+                converter.from_bytes(options["domain"].as<std::string>()),
+                converter.from_bytes(options["user"].as<std::string>()),
+                converter.from_bytes(options["new-pass"].as<std::string>()));
         }
         case PROTOCOL_MESSAGE_TYPE::ClearCachedCredentials:
             return proxy.ClearCachedCredentials();
@@ -491,7 +492,11 @@ namespace Msv1_0 {
         case PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
-            return proxy.GetStrongCredentialKey(&luid);
+            bool isProtectedUser{ false };
+            if (options["protected-user"].count()) {
+                isProtectedUser = options["protected-user"].as<bool>();
+            }
+            return proxy.GetStrongCredentialKey(&luid, isProtectedUser);
         }
         case PROTOCOL_MESSAGE_TYPE::GetUserInfo: {
             LUID luid;
