@@ -488,8 +488,11 @@ namespace Msv1_0 {
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.GetCredentialKey(&luid);
         }
-        case PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey:
-            return false;
+        case PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey: {
+            LUID luid;
+            reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetStrongCredentialKey(&luid);
+        }
         case PROTOCOL_MESSAGE_TYPE::GetUserInfo: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();

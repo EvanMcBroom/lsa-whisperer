@@ -216,11 +216,16 @@ namespace Msv1_0 {
         return result;
     }
 
-    bool Proxy::GetStrongCredentialKey() const {
+    bool Proxy::GetStrongCredentialKey(PLUID luid) const {
         GET_STRONG_CREDENTIAL_KEY_REQUEST request;
+        request.Version = 0;
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
         GET_STRONG_CREDENTIAL_KEY_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
-        // Parse response
+        if (result) {
+            LsaFreeReturnBuffer(response);
+        }
         return result;
     }
 

@@ -33,6 +33,14 @@ namespace Msv1_0 {
         AllowOldPassword = 0x08,
         TryCacheFirst = 0x10
     };
+    
+    typedef enum _MSV1_0_CREDENTIAL_KEY_TYPE {
+        InvalidCredKey,
+        IUMCredKey,
+        DomainUserCredKey,
+        LocalUserCredKey,
+        ExternallySuppliedCredKey
+    } MSV1_0_CREDENTIAL_KEY_TYPE;
 
     // Redefines MSV1_0_PROTOCOL_MESSAGE_TYPE to ensure all members are included
     enum class PROTOCOL_MESSAGE_TYPE : ULONG {
@@ -203,13 +211,15 @@ namespace Msv1_0 {
 
     typedef struct _GET_STRONG_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey };
-        DWORD unknown1; // 0X04
-        LUID unknown2; // 0x28
-        DWORD unknown3; // 0x30
-        DWORD unknown4; // 0x34
-        DWORD unknown5; // 0x38
-        DWORD unknown6; // 0x40
-        GUID unknown7; // 0x48
+        DWORD Version; // Must be 0 (Primary) or 1
+        DWORD Reserved[8];
+        LUID LogonId;
+        // Used in version 1 requests
+        MSV1_0_CREDENTIAL_KEY_TYPE KeyType; // Must be DomainUserCredKey or LocalUserCredKey
+        DWORD KeyLength;
+        PWSTR Key;
+        DWORD SidLength;
+        GUID Sid;
     } GET_STRONG_CREDENTIAL_KEY_REQUEST, *PGET_STRONG_CREDENTIAL_KEY_REQUEST;
 
     typedef struct _GET_STRONG_CREDENTIAL_KEY_RESPONSE {
@@ -283,7 +293,7 @@ namespace Msv1_0 {
         bool EnumerateUsers() const;
         bool GenericPassthrough(const std::wstring& domainName, const std::wstring& packageName, std::vector<byte>& data) const;
         bool GetCredentialKey(PLUID luid) const;
-        bool GetStrongCredentialKey() const;
+        bool GetStrongCredentialKey(PLUID luid) const;
         bool GetUserInfo(PLUID luid) const;
         bool Lm20ChallengeRequest() const;
         bool ProvisionTbal(PLUID luid) const;
