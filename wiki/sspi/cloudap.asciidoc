@@ -63,6 +63,13 @@ If no logon session is specified then optimized logons will be disabled for the 
 === GenARSOPwd
 
 Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
+The command will create an LSA secret with the following name:
+
+`M$_CLOUDAP_TBAL_{4416F0BD-3A59-4590-9579-DA6E08AF19B3}_HASH`
+
+The value of HASH should be the sha256 hash the plugin GUID string for your logon session combined with your user's identity name.
+The value of the secret will be the value you provide if specified which must be at least 4 bytes long.
+Otherwise, it will be set to the output of `ext-ms-win-cloudap-tbal-l1-1-0!TbalSealBuffer` if the api set is present.
 
 === GetAccountInfo
 
@@ -366,6 +373,8 @@ Cloudap maintains a `_USER_CACHE_ENTRY` structure for each cloudap user logon se
 | `0x010`      | `LPVOID UpdateCounter;`               | 19041    | A counter for how many times the cloudap updated this structure
 | `0x01C`      | `LPCRITICAL_SECTION CriticalSection;` | 19041    | A synchronization primitive for accessing the structure
 | `0x04C`      | `LPDWORD Counter;`                    | 19041    | 
+| `0x060`      | `LPWSTR IdentityName;`                | 19041    | 
+| `0x0f8`      | `GUID LogonPackageGuid;`              | 19041    | 
 | `0x108`      | `LPVOID CredKey;`                     | 19041    | DPAPI masterkey for the user, protected by LSA's DPAPI masterkey
 | `0x110`      | `LPVOID ProtectedMemory2;`            | 19041    | The data's purpose is unknown
 | `0x118`      | `ULONG ProtectedTokenBlobSize;`       | 19041    |

@@ -58,8 +58,24 @@ namespace Cloudap {
         return CallPackage(request, &response);
     }
 
-    bool Proxy::GenARSOPwd() const {
-        return this->CallPackage(PROTOCOL_MESSAGE_TYPE::GenARSOPwd);
+    bool Proxy::GenARSOPwd(PLUID luid, const std::string& data) const {
+        auto requestSize{ sizeof(GEN_ARSO_PASSWORD_REQUEST) + data.length() };
+        std::string requestBytes(requestSize, '\0');
+        auto request{ reinterpret_cast<PGEN_ARSO_PASSWORD_REQUEST>(requestBytes.data()) };
+        request->MessageType = PROTOCOL_MESSAGE_TYPE::GenARSOPwd;
+        request->Luid.LowPart = luid->LowPart;
+        request->Luid.HighPart = luid->HighPart;
+        request->BufferLength = data.length();
+
+        auto ptr{ reinterpret_cast<std::byte*>(request + 1) };
+        std::memcpy(ptr, data.data(), data.length());
+
+        void* response;
+        auto result{ CallPackage(requestBytes, &response) };
+        if (result) {
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
     }
 
     bool Proxy::GetAccountInfo() const { //xxx
@@ -201,6 +217,13 @@ namespace Cloudap {
         request.DestinationLogonId.HighPart = destinationLuid->HighPart;
         void* response;
         return CallPackage(request, &response);
+    }
+
+    bool Proxy::CallPackage(const std::string& submitBuffer, void** returnBuffer) const {
+        if (lsa->Connected()) {
+            return lsa->CallPackage(CLOUDAP_NAME_A, submitBuffer, returnBuffer);
+        }
+        return false;
     }
 
     bool Proxy::CallPackage(PROTOCOL_MESSAGE_TYPE MessageType) const {

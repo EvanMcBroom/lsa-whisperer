@@ -13,6 +13,7 @@ namespace Cloudap {
         unparsedOptions.add_options("Command arguments")
             ("luid", "Logon session", cxxopts::value<long long>());
         unparsedOptions.add_options("Function arguments")
+            ("arso-data", "Data to store in LSA secret when ARSO password is created", cxxopts::value<std::string>())
             ("authority", "Authority type (1 or 2)", cxxopts::value<unsigned int>())
             ("auth-req", "RDP authentication request (MS-RDPBCGR 4.11.2)", cxxopts::value<std::string>())
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
@@ -72,8 +73,11 @@ namespace Cloudap {
                 reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
                 return proxy.DisableOptimizedLogon(&luid);
             }
-            case PROTOCOL_MESSAGE_TYPE::GenARSOPwd:
-                return proxy.GenARSOPwd();
+            case PROTOCOL_MESSAGE_TYPE::GenARSOPwd: {
+                LUID luid;
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                return proxy.GenARSOPwd(&luid, options["arso-data"].as<std::string>());
+            }
             case PROTOCOL_MESSAGE_TYPE::GetAccountInfo:
                 return proxy.GetAccountInfo();
             case PROTOCOL_MESSAGE_TYPE::GetAuthenticatingProvider: {

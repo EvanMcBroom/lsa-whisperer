@@ -146,7 +146,7 @@ namespace Cloudap {
         // Supported functions in cloudAP!PluginFunctionTable
         bool CallPluginGeneric(const GUID* plugin, const std::string& json, void** returnBuffer, size_t* returnBufferLength) const;
         bool DisableOptimizedLogon(PLUID luid) const;
-        bool GenARSOPwd() const;
+        bool GenARSOPwd(PLUID luid, const std::string& data) const;
         bool GetAccountInfo() const;
         bool GetAuthenticatingProvider(PLUID luid) const;
         bool GetDpApiCredKeyDecryptStatus(PLUID luid) const;
@@ -165,6 +165,8 @@ namespace Cloudap {
 
     protected:
         std::shared_ptr<Lsa> lsa;
+
+        bool CallPackage(const std::string& submitBuffer, void** returnBuffer) const;
 
         bool CallPackage(PROTOCOL_MESSAGE_TYPE MessageType) const;
 
