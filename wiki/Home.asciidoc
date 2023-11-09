@@ -101,6 +101,41 @@ Additionally, the components for the distributed computing environment (DCE), ke
 
 NOTE: The only meaningful functions that vmwsu_v1_0 implements is `SpGetInfo` and `LogonUser`.
 
+=== Package Calls
+
+An authentication package (AP) is any SSP that implements the `LSA_AP_` prefixed function types in its `SECPKG_FUNCTION_TABLE` function table during the package's initialization by LSA.
+Of these, LSA whisperer focuses on the set of "call package" functions which allows 3rd party code to interact with an AP's custom functionality.
+These functions are named `CallPackage`, `CallPackageUntrusted`, and `CallPackagePassthrough`.
+
+A client will normally use these functions when calling `LsaCallAuthenticationPackage`.
+That Win32 API will be facilitated by an AP's `CallPackage` or `CallPackageUntrusted` function depending on if the client has the TCB privilege or not, respectively.
+
+The `CallPackagePassthrough` function is only used when a request is encapsulated in a `GenericPassthrough` message and sent as a package call to msv1_0.
+For a domain joined host, msv1_0 will send the encapsulated request via NetLogon to the LSA on the DC for processing.
+For a workgroup host, msv1_0 will issue the encapsulated request itself within LSA.
+Once an LSA receives the request it will be processed by the requested AP's `CallPackagePassthrough` function.
+
+NOTE: A domain joined host may be tricked into believing it is a workgroup host to have it process passthrough requests locally.
+
+An AP may not support passthough requests and the ones that do will typically limit clients to a small set of request types.
+The current list of allowable passthrough requests is provided here.
+
+.Passthrough Requests
+[%header]
+|===
+| Dll       | Ids    | Message Types
+| cloudap   |        | _Unsupported_
+| kerberos  | `0x03` | `VerifyPac`
+| livessp   |        | _Unsupported_
+| msv1_0    | `0x09` | `SubAuth`
+| negoexts  |        | _Unsupported_
+| negotiate |        | _None_
+| pku2u     |        | _Unsupported_
+| schannel  | `0x02` | `LookupCert`
+| tspkg     |        | _Unsupported_
+| wdigest   | `0x1a` | `VerifyDigest`
+|===
+
 === SSPI Security
 
 Windows does not register any security callback function when registering the interface.
