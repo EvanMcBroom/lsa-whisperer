@@ -62,8 +62,8 @@ If no logon session is specified then optimized logons will be disabled for the 
 
 === GenARSOPwd
 
-Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
-The command will create LSA secrets with the following names:
+Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it as a pair of LSA secrets.
+The LSA secrets will have the following names:
 
 . `M$_CLOUDAP_TBAL_{4416F0BD-3A59-4590-9579-DA6E08AF19B3}_HASH`
 . `M$_CLOUDAP_TBAL_{8283D8D4-55B6-466F-B7D7-17A1352D9CAB}_HASH`
