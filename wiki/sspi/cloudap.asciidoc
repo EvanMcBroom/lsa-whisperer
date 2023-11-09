@@ -63,13 +63,14 @@ If no logon session is specified then optimized logons will be disabled for the 
 === GenARSOPwd
 
 Generate a Winlogon Automatic Restart Sign-On (ASRO) password and store it on the file system.
-The command will create an LSA secret with the following name:
+The command will create LSA secrets with the following names:
 
-`M$_CLOUDAP_TBAL_{4416F0BD-3A59-4590-9579-DA6E08AF19B3}_HASH`
+. `M$_CLOUDAP_TBAL_{4416F0BD-3A59-4590-9579-DA6E08AF19B3}_HASH`
+. `M$_CLOUDAP_TBAL_{8283D8D4-55B6-466F-B7D7-17A1352D9CAB}_HASH`
 
 The value of HASH should be the sha256 hash the plugin GUID string for your logon session combined with your user's identity name.
-The value of the secret will be the value you provide if specified which must be at least 4 bytes long.
-Otherwise, it will be set to the output of `ext-ms-win-cloudap-tbal-l1-1-0!TbalSealBuffer` if the api set is present.
+The first secret will be the output of `ext-ms-win-cloudap-tbal-l1-1-0!TbalSealBuffer`.
+The second secret will be the value you provide which must be at least 4 bytes long.
 
 === GetAccountInfo
 
