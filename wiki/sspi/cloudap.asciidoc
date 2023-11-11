@@ -5,7 +5,7 @@ endif::[]
 = Cloud AP
 :toc: macro
 
-The cloud authentication package (AP) supports logons with Azure and Microsoft accounts.
+The cloud authentication package (AP) supports logons with Azure, AD FS, and Microsoft accounts.
 It is also the security support provider (SSP) for OAuth 2.0 authentication with Microsoft's cloud services.
 
 toc::[]
@@ -32,10 +32,10 @@ It is not known on which version of NT these functions were originally introduce
 | `0x02` | `CallPluginGeneric`                | :heavy_check_mark:
 | `0x03` | `ProfileDeleted`                   | _Planned_
 | `0x04` | `GetAuthenticatingProvider`        | :heavy_check_mark:
-| `0x05` | `RenameAccount`                    | :x:
-| `0x06` | `RefreshTokenBlob`                 | :heavy_check_mark:
+| `0x05` | `RenameAccount`                    | 
+| `0x06` | `RefreshTokenBlob`                 | _Planned_
 | `0x07` | `GenARSOPwd`                       | :heavy_check_mark:
-| `0x08` | `SetTestParas`                     | :x:
+| `0x08` | `SetTestParas`                     | :heavy_check_mark:
 | `0x09` | `TransferCreds`                    | :heavy_check_mark:
 | `0x0A` | `ProvisionNGCNode`                 | :heavy_check_mark:
 | `0x0B` | `GetPwdExpiryInfo`                 | :heavy_check_mark:
@@ -52,13 +52,17 @@ NOTE: Function `CallPluginGeneric` will be called if you use a plugin function.
 === CallPluginGeneric
 
 Call a CloudAP plugin function.
-The function id and its arguments are serialized as a single JSON object.
+You may not call this function directly with the tool, but it will be implicitly called when running a cloudap plugin command.
 
 === DisableOptimizedLogon
 
 Loads a user's CacheData from their CloudAPCache folder, updates the "cache node flags" to disable optimized logons, then saves the CacheData back to the user's folder.
 Any user logon session may be specified.
-If no logon session is specified then optimized logons will be disabled for the current user.
+If no logon session is specified then optimized logons will be disabled for the logon session.
+
+```
+cloudap DisableOptimizedLogon [--luid {session id}]
+```
 
 === GenARSOPwd
 
@@ -72,23 +76,35 @@ The value of HASH should be the sha256 hash the plugin GUID string for your logo
 The first secret will be the output of `ext-ms-win-cloudap-tbal-l1-1-0!TbalSealBuffer`.
 The second secret will be the value you provide which must be at least 4 bytes long.
 
+```
+cloudap GenARSOPwd --luid {session id} --arso-data {data}
+```
+
 === GetAccountInfo
 
-Todo.
+Needs further auditing.
 
 === GetAuthenticatingProvider
 
 The `_LOGON_SESSION` structure has a GUID entry to identify which cloudap plugin was used (e.g., AzureAD or MicrosoftAccount)
-This function returns that GUID entry.
+This function returns that GUID entry for a specified logon session.
+
+```
+cloudap GetAuthenticatingProvider --luid {session id}
+```
 
 === GetDpApiCredKeyDecryptStatus
 
 Return if the DPAPI cred key for user logon session has been decrypted.
 
+```
+cloudap GetDpApiCredKeyDecryptStatus --luid {session id}
+```
+
 === GetPublicCachedInfo
 
 Retrieve PublicCacheData from disk, deserialize, and return it.
-`code + package guid + uint 6 + (uint + uint) + (uint + uint).`
+Needs further auditing.
 
 === GetPwdExpiryInfo
 
@@ -96,11 +112,19 @@ Get a string and time with information about when password will expire for a log
 A client must have`SeTcbPrivilege` to specify another logon session.
 Otherwise, the specified session will be ignored and the current session will be used instead.
 
+```
+cloudap GetPwdExpiryInfo [--luid {session id}]
+```
+
 === GetTokenBlob
 
 The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, also referred to as the CloudTGT.
-This function unprotects and returns the TokenBlob entry.
+This function unprotects and returns the TokenBlob entry for a specified logon session.
+You may specify a specific logon session, otherwise the current logon session will be used.
 
+```
+cloudap GetTokenBlob [--luid {session id}]
+```
 
 === GetUnlockKeyType
 
@@ -112,11 +136,19 @@ The meaning of each of these values is currently unknown.
 A client must have`SeTcbPrivilege` to specify another logon session.
 Otherwise, the specified session will be ignored and the current session will be used instead.
 
+```
+cloudap GetUnlockKeyType [--luid {session id}]
+```
+
 === IsCloudToOnPremTgtPresentInCache
 
 Inspects the `TicketCache` inside the `_USER_CACHE_ENTRY` structure for a logon session to see if it contains a "cloud to on-prem TGT."
 A client must have`SeTcbPrivilege` to specify another logon session.
 Otherwise, the specified session will be ignored and the current session will be used instead.
+
+```
+cloudap IsCloudToOnPremTgtPresentInCache [--luid {session id}]
+```
 
 === ProfileDeleted
 
@@ -124,8 +156,12 @@ Adds a provided SID as a subkey under `HKLM\Software\Microsoft\IdentityStore\Def
 
 === ProvisionNGCNode
 
-Todo.
-Ngc Prime Cached Logon In Lsa.
+Provision an NGC node in the CloudAPCache for the current logon session.
+Needs further auditing.
+
+```
+cloudap ProvisionNGCNode
+```
 
 === RefreshTokenBlob
 
@@ -135,21 +171,29 @@ Refresh a logon session's TokenBlob using the `RefreshToken` cloudap function pl
 
 Unloads then reloads all cloudap plugins.
 
+```
+cloudap ReinitPlugin
+```
+
 === RenameAccount
 
 Will update the account name in the Security Accounts Manager (SAM).
-Need to finish auditing.
+Needs further auditing.
 
 === SetTestParas
 
-Sets a TestFlags bit.
-A ULONG must be provided after the call ID.
+Sets an internal TestFlags value used by cloudap.
+The following is the value for each currently used TestFlags bit:
 
 |===
 | TestFlags | Description
-| 1         | Enable the internal `FlushIdentityCache` function
-| 2         | Enable the use of the internal `*PreRS2` functions
+| 1         | Disable the internal `FlushIdentityCache` function
+| 2         | Disable the use of the internal `*PreRS2` functions
 |===
+
+```
+cloudap SetTestParas --flags {value}
+```
 
 === TransferCreds
 
@@ -165,6 +209,7 @@ cloudap TransferCreds --sluid {session id} --dluid {session id}
 == Plugins
 
 Cloudap currently only supports 2 plugins to facilitate user logons with Azure AD (AAD) and Microsoft Accounts (MSA).
+The AAD plugin also facilitates logins with AD FS.
 The internal names and IDs for interacting with these plugins may be found in the registry and are provided here for convenience.
 
 .Plugins (HKLM\SOFTWARE\Microsoft\IdentityStore\Providers)

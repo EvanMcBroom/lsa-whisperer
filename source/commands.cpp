@@ -19,6 +19,7 @@ namespace Cloudap {
             ("dluid", "Destination logon session", cxxopts::value<unsigned int>())
             ("disable", "Disable an option", cxxopts::value<std::string>())
             ("enable", "Enable an option", cxxopts::value<std::string>())
+            ("flags", "Cloudap test flags", cxxopts::value<unsigned int>())
             ("nonce", "Cookie nonce", cxxopts::value<std::string>())
             ("server", "Who to request a SSO cookie from", cxxopts::value<std::string>()->default_value("login.microsoftonline.com"))
             ("sluid", "Source logon session", cxxopts::value<unsigned int>());
@@ -69,8 +70,10 @@ namespace Cloudap {
             case PROTOCOL_MESSAGE_TYPE::CallPluginGeneric:
                 return false;
             case PROTOCOL_MESSAGE_TYPE::DisableOptimizedLogon: {
-                LUID luid;
-                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                LUID luid = { 0 };
+                if (options["luid"].count()) {
+                    reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                }
                 return proxy.DisableOptimizedLogon(&luid);
             }
             case PROTOCOL_MESSAGE_TYPE::GenARSOPwd: {
@@ -93,23 +96,31 @@ namespace Cloudap {
             case PROTOCOL_MESSAGE_TYPE::GetPublicCachedInfo:
                 return proxy.GetPublicCachedInfo();
             case PROTOCOL_MESSAGE_TYPE::GetPwdExpiryInfo: {
-                LUID luid;
-                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                LUID luid = { 0 };
+                if (options["luid"].count()) {
+                    reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                }
                 return proxy.GetPwdExpiryInfo(&luid);
             }
             case PROTOCOL_MESSAGE_TYPE::GetTokenBlob: {
-                LUID luid;
-                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                LUID luid = { 0 };
+                if (options["luid"].count()) {
+                    reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                }
                 return proxy.GetTokenBlob(&luid);
             }
             case PROTOCOL_MESSAGE_TYPE::GetUnlockKeyType: {
-                LUID luid;
-                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                LUID luid = { 0 };
+                if (options["luid"].count()) {
+                    reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                }
                 return proxy.GetUnlockKeyType(&luid);
             }
             case PROTOCOL_MESSAGE_TYPE::IsCloudToOnPremTgtPresentInCache: {
-                LUID luid;
-                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                LUID luid = { 0 };
+                if (options["luid"].count()) {
+                    reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+                }
                 return proxy.IsCloudToOnPremTgtPresentInCache(&luid);
             }
             case PROTOCOL_MESSAGE_TYPE::ProfileDeleted:
@@ -123,7 +134,7 @@ namespace Cloudap {
             case PROTOCOL_MESSAGE_TYPE::RenameAccount:
                 return proxy.RenameAccount();
             case PROTOCOL_MESSAGE_TYPE::SetTestParas:
-                return proxy.SetTestParas(0);
+                return proxy.SetTestParas(options["flags"].as<unsigned int>());
             case PROTOCOL_MESSAGE_TYPE::TransferCreds: {
                 LUID sourceLuid, destinationLuid;
                 reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();

@@ -210,11 +210,12 @@ namespace Cloudap {
     }
 
     bool Proxy::TransferCreds(PLUID sourceLuid, PLUID destinationLuid) const {
-        TRANSFER_CRED_REQUEST request;
+        SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST request = { static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCreds) };
         request.OriginLogonId.LowPart = sourceLuid->LowPart;
         request.OriginLogonId.HighPart = sourceLuid->HighPart;
         request.DestinationLogonId.LowPart = destinationLuid->LowPart;
         request.DestinationLogonId.HighPart = destinationLuid->HighPart;
+        request.Flags = 0; // Ignored by cloudap
         void* response;
         return CallPackage(request, &response);
     }

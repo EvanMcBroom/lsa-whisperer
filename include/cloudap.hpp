@@ -79,6 +79,7 @@ namespace Cloudap {
     } GET_DP_API_CRED_KEY_DECRYPT_STATUS_RESPONSE, *PGET_DP_API_CRED_KEY_DECRYPT_STATUS_RESPONSE;
 
     typedef struct _GET_PUBLIC_CACHED_INFO_REQUEST { // wip
+        // code + package guid + uint 6 + (uint + uint) + (uint + uint).
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GenARSOPwd };
         GUID PackageGuid{ 0 };
         ULONG StringLength{ 6 }; // Length must be 6
@@ -131,13 +132,6 @@ namespace Cloudap {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::SetTestParas };
         ULONG Flags{ 0 };
     } SET_TEST_PARAS_REQUEST, *PSET_TEST_PARAS_REQUEST;
-
-    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
-        _TRANSFER_CRED_REQUEST() {
-            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCreds);
-            Flags = 0; // must be 0
-        }
-    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {
     public:
