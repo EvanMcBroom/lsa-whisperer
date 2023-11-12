@@ -278,6 +278,8 @@ The version numbers are anecdotal and will not account for all NT builds for whi
 | `0x0f` | `CreateEnterpriseSSOCookie`   | `>=19045` | :heavy_check_mark:
 |===
 
+NOTE: Reserved fields are likely for functions that are only present in debug builds.
+
 ==== CheckDeviceKeysHealth
 
 Will perform the following actions:

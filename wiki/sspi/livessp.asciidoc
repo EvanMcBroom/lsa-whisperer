@@ -5,7 +5,9 @@ endif::[]
 = Live SSP
 :toc: macro
 
-...
+Livessp is a legacy SSP that supported authenticating users using their Microsoft Account.
+Microsoft has since ported and updated the livessp code as a cloudap plugin.
+The cloudap plugin is documented on the https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap#microsoft-account-functions[cloudap wiki page].
 
 toc::[]
 
@@ -25,7 +27,6 @@ The protocol messages that livessp supports is not documented by Microsoft but i
 
 NOTE: The internal function will be located in `livessp.dll`.
 
-Oddly, the `TransferCredential` command may also be called by using a message id of `0x402`.
 In NT 6.2 `SeTcbPrivilege` was required for all calls.
 NT 6.3 removed that requirment for all calls except for `TransferCredential` which still requires `SeTcbPrivilege`.
 
