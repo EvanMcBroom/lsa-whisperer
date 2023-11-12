@@ -24,9 +24,9 @@ Supporting negoexts commands is currently not a priority for Lsa Whisperer.
 
 [%header]
 |===
-| Id    | Message Type           | NT Version
-| `0x1` | `WSTGetCredUIContext`  | `>=6.1`
-| `0x2` | `WSTUpdateCredentials` | `>=6.1`
-| `0x3` | `WSTLookupContext`     | `>=6.1`
-| `0x4` | `WSTFlushContext`      | `>=6.1`
+| Id    | Message Type        | CLI Support | NT Version | Internal Function
+| `0x1` | `GetCredUIContext`  |             | `>=6.1`    | `WSTGetCredUIContext`
+| `0x2` | `UpdateCredentials` |             | `>=6.1`    | `WSTUpdateCredentials`
+| `0x3` | `LookupContext`     |             | `>=6.1`    | `WSTLookupContext`
+| `0x4` | `FlushContext`      |             | `>=6.1`    | `WSTFlushContext`
 |===
