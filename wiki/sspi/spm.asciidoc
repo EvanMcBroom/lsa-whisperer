@@ -99,7 +99,7 @@ NOTE: `LogonUser` has now been moved to the SSPI RPC interface.
 
 Each SPM API is linked to the documentation for the higher level API it facilitates (ex. Win32) if identified.
 The SPM APIs that are not implemented are marked by an :x:.
-The remainder are documented here as time permits.
+The remainder are documented here.
 
 .SPM APIs Pre-NT 6.1
 [%header]
