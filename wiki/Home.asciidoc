@@ -110,6 +110,27 @@ These functions are named `CallPackage`, `CallPackageUntrusted`, and `CallPackag
 A client will normally use these functions when calling `LsaCallAuthenticationPackage`.
 That Win32 API will be facilitated by an AP's `CallPackage` or `CallPackageUntrusted` function depending on if the client has the TCB privilege or not, respectively.
 
+A client will need to specify a package ID when making this call which may be obtained with `LsaLookupAuthenticationPackage`.
+A client may alternatively use a special package ID, `SECPKG_ALL_PACKAGES` or `-2`, which LSA will handle by issuing the call to all loaded APs.
+There is a small set of calls that are intended for this feature which each AP may choose to process or ignore.
+These calls and the APs that currently support them are provided here.
+
+.All Package Messages
+[%header]
+|===
+| Id      | Message       | Packages
+| `0x400` | PinDc        a| 
+- kerberos
+| `0x401` | UnpinAllDcs  a| 
+- kerberos
+| `0x402` | TransferCred a|
+- cloudap
+- kerberos
+- livessp
+- msv1_0
+- negotiate
+|===
+
 The `CallPackagePassthrough` function is only used when a request is encapsulated in a `GenericPassthrough` message and sent as a package call to msv1_0.
 For a domain joined host, msv1_0 will send the encapsulated request via NetLogon to the LSA on the DC for processing.
 For a workgroup host, msv1_0 will issue the encapsulated request itself within LSA.
