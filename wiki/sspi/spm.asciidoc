@@ -35,6 +35,11 @@ endif::[]
 :SetContextAttr: https://learn.microsoft.com/en-us/windows/win32/api/sspi/nf-sspi-setcontextattributesw[SetContextAttr]
 :SetContextAttributes: https://learn.microsoft.com/en-us/windows/win32/api/sspi/nf-sspi-setcontextattributesw[SetContextAttributes]
 :SetCredAttributes: https://learn.microsoft.com/en-us/windows/win32/api/sspi/nf-sspi-setcredentialsattributesw[SetCredAttributes]
+//Links for the AU API
+:CallPackage: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsacallauthenticationpackage[CallPackage]
+:DeregisterLogonProcess: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsaderegisterlogonprocess[DeregisterLogonProcess]
+:LogonUser: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsalogonuser[LogonUser]
+:LookupPackage: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsalookupauthenticationpackage[LookupPackage]
 
 The security package manager (SPM) is an undocumented component of LSA.
 The SPM manages both the authentication package and security package DLLs that LSA loads.
@@ -72,27 +77,27 @@ toc::[]
 
 == Authentication API (AU API)
 
+Each AU API is linked to the documentation for the Win32 API it facilitates.
+
 .AU APIs Pre-NT 6.1
 [%header]
 |===
-| Id     | Message Type           | CLI Support        | NT Version | Win32 API
-| `0x00` | LookupPackage          |                    | `>=3.5`    | `LsaLookupAuthenticationPackage`
-| `0x01` | LogonUser              |                    | `>=3.5`    | `LsaLogonUser`
-| `0x02` | CallPackage            |                    | `>=3.5`    | `LsaCallAuthenticationPackage`
-| `0x03` | DeregisterLogonProcess |                    | `>=3.5`    |
-| `0x04` | _Reserved_             | :heavy_minus_sign: | `>=6.1`    |
+| Id     | Message Type             | CLI Support        | NT Version | Notes
+| `0x00` | {LookupPackage}          |                    | `>=3.5`    | 
+| `0x01` | {LogonUser}              |                    | `>=3.5`    | Moved to the SSPI RPC interface
+| `0x02` | {CallPackage}            |                    | `>=3.5`    | The main API used by LSA whisperer
+| `0x03` | {DeregisterLogonProcess} |                    | `>=3.5`    | 
+| `0x04` | _Reserved_               | :heavy_minus_sign: | `>=6.1`    | 
 |===
-
-NOTE: `LogonUser` has now been moved to the SSPI RPC interface.
 
 .AU APIs Post-NT 6.1
 [%header]
 |===
-| Id     | Message Type           | CLI Support        | NT Version | Win32 API
-| `0x00` | LookupPackage          |                    | `>=6.1`    | `LsaLookupAuthenticationPackage`
-| `0x01` | CallPackage            |                    | `>=6.1`    | `LsaCallAuthenticationPackage`
-| `0x02` | DeregisterLogonProcess |                    | `>=6.1`    | `LsaDeregisterLogonProcess`
-| `0x03` | _Reserved_             | :heavy_minus_sign: | `>=6.1`    |
+| Id     | Message Type             | CLI Support        | NT Version | Notes
+| `0x00` | {LookupPackage}          |                    | `>=6.1`    |
+| `0x01` | {CallPackage}            |                    | `>=6.1`    | The main API used by LSA whisperer
+| `0x02` | {DeregisterLogonProcess} |                    | `>=6.1`    |
+| `0x03` | _Reserved_               | :heavy_minus_sign: | `>=6.1`    |
 |===
 
 == SPM API
