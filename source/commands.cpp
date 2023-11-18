@@ -4,6 +4,57 @@
 #include <locale>
 #include <magic_enum.hpp>
 #include <string>
+namespace AllPackages {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "all" };
+        cxxopts::Options unparsedOptions{ command };
+        unparsedOptions.allow_unrecognised_options();
+        // clang-format off
+        unparsedOptions.add_options("Function arguments")
+            ("cleanup-credentials", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"))
+            ("dc-flags", "Dc flags to use with PinKdc", cxxopts::value<long long>())
+            ("dc-name", "The KDC name to use with PinKdc", cxxopts::value<std::string>()->default_value(""))
+            ("dluid", "Destination logon session", cxxopts::value<long long>())
+            ("domain-name", "", cxxopts::value<std::string>())
+            ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
+            ("sluid", "Source logon session", cxxopts::value<long long>())
+            ("to-sso-session", "Cleanup credentials flag", cxxopts::value<bool>()->default_value("false"));
+        // clang-format on
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        // Flag for ticket retrieval commands
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::PinDc: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto domainName{ converter.from_bytes(options["domain-name"].as<std::string>()) };
+            auto dcName{ converter.from_bytes(options["dc-name"].as<std::string>()) };
+            auto dcFlags{ options.count("dc-flags") ? options["dc-flags"].as<long long>() : 0 };
+            return proxy.PinDc(domainName, dcName, dcFlags);
+        }
+        case PROTOCOL_MESSAGE_TYPE::TransferCred: {
+            LUID sourceLuid, destinationLuid;
+            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
+            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
+            ULONG flags{ 0 };
+            flags += (options.count("cleanup-credentials")) ? static_cast<ULONG>(TransferCredFlag::CleanupCredentials) : 0;
+            flags += (options.count("optimistic-logon")) ? static_cast<ULONG>(TransferCredFlag::OptimisticLogon) : 0;
+            flags += (options.count("to-sso-session")) ? static_cast<ULONG>(TransferCredFlag::ToSsoSession) : 0;
+            return proxy.TransferCred(&sourceLuid, &destinationLuid, flags);
+        }
+        case PROTOCOL_MESSAGE_TYPE::UnpinAllDcs: {
+            return proxy.UnpinAllDcs();
+        }
+        default:
+            std::cout << "Unsupported function" << std::endl;
+            return false;
+        }
+    }
+}
 
 namespace Cloudap {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {

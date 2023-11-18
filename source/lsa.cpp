@@ -91,6 +91,11 @@ Lsa::~Lsa() {
     }
 }
 
+
+bool Lsa::CallAllPackages(const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
+    return CallPackage(SECPKG_ALL_PACKAGES, submitBuffer, returnBuffer, returnBufferLength);
+}
+
 bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
     bool result{ false };
     if (returnBuffer) {
@@ -105,35 +110,7 @@ bool Lsa::CallPackage(const std::string& package, const std::string& submitBuffe
             status = LsaLookupAuthenticationPackage(this->lsaHandle, &packageName, &authPackage);
         }
         if (SUCCEEDED(status)) {
-            PVOID returnBuffer2;
-            ULONG returnBufferLength2;
-            NTSTATUS protocolStatus;
-            OutputHex(this->out, "InputData", submitBuffer);
-            auto submitBufferPtr{ submitBuffer.data() };
-            NTSTATUS status;
-            if (useRpc) {
-                status = this->sspi->LsaCallAuthenticationPackage(authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
-            } else {
-                status = LsaCallAuthenticationPackage(lsaHandle, authPackage, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
-            }
-            if (SUCCEEDED(status)) {
-                if (protocolStatus >= 0) {
-                    OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength2));
-                    *returnBuffer = returnBuffer2;
-                    if (returnBufferLength) {
-                        *returnBufferLength = returnBufferLength2;
-                    }
-                    result = true;
-                } else {
-                    out << "OutputData[0]: nullptr" << std::endl;
-                    *returnBuffer = nullptr;
-                    LsaFreeReturnBuffer(returnBuffer);
-                }
-                out << "ProtocolStatus: 0x" << protocolStatus << std::endl
-                    << std::endl;
-            } else {
-                out << "Error: 0x" << status << " - " << FormatNtStatus(status) << std::endl;
-            }
+            result = CallPackage(authPackage, submitBuffer, returnBuffer, returnBufferLength);
         } else {
             out << "Error: Could not find authentication package " << package << std::endl;
         }
@@ -219,6 +196,41 @@ bool Lsa::EnumPackages() const {
         }
     }
     return false;
+}
+
+
+bool Lsa::CallPackage(ULONG package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
+    bool result{ false };
+    PVOID returnBuffer2;
+    ULONG returnBufferLength2;
+    NTSTATUS protocolStatus;
+    OutputHex(this->out, "InputData", submitBuffer);
+    auto submitBufferPtr{ submitBuffer.data() };
+    NTSTATUS status;
+    if (useRpc) {
+        status = this->sspi->LsaCallAuthenticationPackage(package, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
+    } else {
+        status = LsaCallAuthenticationPackage(lsaHandle, package, reinterpret_cast<PVOID>(const_cast<char*>(submitBuffer.data())), submitBuffer.size(), &returnBuffer2, &returnBufferLength2, &protocolStatus);
+    }
+    if (SUCCEEDED(status)) {
+        if (protocolStatus >= 0) {
+            OutputHex(this->out, "OutputData", std::string(reinterpret_cast<const char*>(returnBuffer2), returnBufferLength2));
+            *returnBuffer = returnBuffer2;
+            if (returnBufferLength) {
+                *returnBufferLength = returnBufferLength2;
+            }
+            result = true;
+        } else {
+            out << "OutputData[0]: nullptr" << std::endl;
+            *returnBuffer = nullptr;
+            LsaFreeReturnBuffer(returnBuffer);
+        }
+        out << "ProtocolStatus: 0x" << protocolStatus << std::endl
+            << std::endl;
+    } else {
+        out << "Error: 0x" << status << " - " << FormatNtStatus(status) << std::endl;
+    }
+    return result;
 }
 
 Sspi::Sspi(const std::wstring& portName) {

@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
     auto args = (
         clipp::option("-h", "--help").set(showHelp).doc("Show this help message."),
         clipp::option("--history-file").doc("Specify an alternative command line history file.") & clipp::value("path", historyFile),
-        clipp::option("--no-history").set(noHistory).doc("Do not create an appcontainer process for cloudap support."),
+        clipp::option("--no-history").set(noHistory).doc("Do not create a command line history file."),
         clipp::opt_values("command", commands)
     );
     // clang-format on
@@ -144,6 +144,7 @@ int main(int argc, char** argv) {
             });
             // Pass the command to the appropriate handler
             switch (Hash(argv[0])) {
+            case Hash("all"): AllPackages::Call(lsa, argv); break;
             case Hash("cloudap"): Cloudap::Call(lsa, argv); break;
             case Hash("kerberos"): Kerberos::Call(lsa, argv); break;
             case Hash("live"): Live::Call(lsa, argv); break;
@@ -167,6 +168,7 @@ int main(int argc, char** argv) {
         cli.AddCommand(".history", History);
         cli.AddCommand(".nonce", Nonce);
         cli.AddCommand(".token", Token::Command);
+        cli.AddCommand("all", CommandFactory(lsa, AllPackages::Call));
         cli.AddCommand("cloudap", CommandFactory(lsa, Cloudap::Call));
         cli.AddCommand("kerberos", CommandFactory(lsa, Kerberos::Call));
         cli.AddCommand("live", CommandFactory(lsa, Live::Call));
@@ -178,6 +180,8 @@ int main(int argc, char** argv) {
         cli.AddExitCommand(".exit");
         cli.AddExitCommand(".quit");
         // Add autocompletions for each command's subcommands
+        cli.AddSubCommandCompletions("all", SubCommands<AllPackages::PROTOCOL_MESSAGE_TYPE>());
+        // Cloudap's subcommands are also handled directly to add the plugin commands for AAD
         auto cloudapPluginFunctions{ magic_enum::enum_names<Cloudap::Aad::CALL>() };
         auto cloudapMessages(magic_enum::enum_names<Cloudap::PROTOCOL_MESSAGE_TYPE>());
         std::vector<std::string> cloudapSubCommands{ cloudapMessages.begin(), cloudapMessages.end() };

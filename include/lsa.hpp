@@ -73,6 +73,7 @@ public:
 
     Lsa(std::ostream& out = NullStream(), bool useRpc = true, const std::wstring& portName = std::wstring(L"lsasspirpc"));
     ~Lsa();
+    bool CallAllPackages(const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength = nullptr) const;
     bool CallPackage(const std::string& package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength = nullptr) const;
     // Uses the GenericPassthrough message implemented by msv1_0
     // Data will be used as an input and output argument. It's original values will be cleared if the call is successful
@@ -93,6 +94,8 @@ private:
     bool useBroker;
     bool useRpc;
     std::unique_ptr<Sspi> sspi;
+
+    bool CallPackage(ULONG package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength = nullptr) const;
 };
 
 void OutputHex(std::ostream& out, const std::string& data);

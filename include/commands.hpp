@@ -1,4 +1,5 @@
 #pragma once
+#include <all.hpp>
 #include <cloudap.hpp>
 #include <cxxopts.hpp>
 #include <kerberos.hpp>
@@ -8,6 +9,10 @@
 #include <pku2u.hpp>
 #include <schannel.hpp>
 #include <wdigest.hpp>
+
+namespace AllPackages {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
+}
 
 namespace Cloudap {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
