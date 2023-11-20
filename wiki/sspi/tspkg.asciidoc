@@ -1,7 +1,56 @@
-Basic overview is here:
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
 
-* https://docs.microsoft.com/en-us/windows/security/identity-protection/remote-credential-guard
+= Terminal Services Package
+:toc: macro
 
-Documented auth package methods are here:
+The tspkg authentication package (AP) supports authenticating to a Remote Desktop server, formally known as terminal services.
+The tspkg package does not implement any security protocol but instead uses the credssp package to facilitate communication between a client and server.
 
-* https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpear/7820f8ba-ac44-40d0-9545-73b4cd261dab
+toc::[]
+
+== Functions
+
+Protocal messages were only added to tspkg in NT 10 to support the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpear/a32e17ec-5869-4fad-bdae-d35f342fcb6f["Remote Desktop Protocol Authentication Redirection Virtual Channel"] (MS-RDPEAR), more commonly known as https://learn.microsoft.com/en-us/windows/security/identity-protection/remote-credential-guard[Remote Credential Guard].
+MS-RDPEAR messages are sent from a server to a client over an established RDP session.
+These messages allow a server to authenticate a client to networked resources without the client sending the server certain credential material.
+
+Clients will begin processing any recieved MS-RDPEAR messages as a normal package call to tspkg.
+The tskpg package will first validate the message and then forward it to another AP for further processing.
+The APs a message may be forwarded to and the commands they supported https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpear/7820f8ba-ac44-40d0-9545-73b4cd261dab[are documented by Microsoft] and provided here for convenience.
+
+[%header]
+|===
+| Id              | Message Type                        | CLI Support        | RDPEAR Version  | Internal Function
+| `0x100`         | `KerbNegotiateVersion`              |                    | _All_           | `HandleNegotiateVersion`
+| `0x101`         | `KerbBuildAsReqAuthenticator`       |                    | _All_           | `HandleBuildAsReqAuthenticator`
+| `0x102`         | `KerbVerifyServiceTicket`           |                    | _All_           | `HandleVerifyServiceTicket`
+| `0x103`         | `KerbCreateApReqAuthenticator`      |                    | _All_           | `HandleCreateApReqAuthenticator`
+| `0x104`         | `KerbDecryptApReply`                |                    | _All_           | `HandleDecryptApReply`
+| `0x105`         | `KerbUnpackKdcReplyBody`            |                    | _All_           | `HandleUnpackKdcReplyBody`
+| `0x106`         | `KerbComputeTgsChecksum`            |                    | _All_           | `HandleComputeTgsChecksum`
+| `0x107`         | `KerbBuildEncryptedAuthData`        |                    | _All_           | `HandleBuildEncryptedAuthData`
+| `0x108`         | `KerbPackApReply`                   |                    | _All_           | `HandlePackApReply`
+| `0x109`         | `KerbHashS4UPreauth`                | :heavy_minus_sign: | :grey_question: | _Not identified_
+| `0x10A`         | `KerbSignS4UPreauthData`            | :heavy_minus_sign: | :grey_question: | _Not identified_
+| `0x10B`         | `KerbVerifyChecksum`                |                    | _All_           | `HandleVerifyChecksum`
+| `0x113`         | `KerbDecryptPacCredentials`         |                    | _All_           | `HandleDecryptPacCredentials`
+| `0x114`         | `KerbCreateECDHKeyAgreement`        | :x:                | `<=4.0`         | _Not identified_
+| `0x115`         | `KerbCreateDHKeyAgreement`          | :x:                | `<=4.0`         | _Not identified_
+| `0x116`         | `KerbDestroyKeyAgreement`           | :x:                | `<=4.0`         | _Not identified_
+| `0x117`         | `KerbKeyAgreementGenerateNonce`     | :x:                | `<=4.0`         | _Not identified_
+| `0x118`         | `KerbFinalizeKeyAgreement`          | :x:                | `<=4.0`         | _Not identified_
+| `0x200`         | `NtlmNegotiateVersion`              |                    | _All_           | `HandleDecryptPacCredentials`
+| `0x201` (<=5.0) | `NtlmProtectCredential,`            | :x:                | `<=5.0`         | `ProtectCredential`
+| `0x202` (<=5.0)
+  `0x201` (>6.0)  | `NtlmLm20GetNtlm3ChallengeResponse` |                    | _All_           | `Lm20GetNtlm3ChallengeResponse`
+| `0x203` (<=5.0) 
+  `0x202` (>6.0)  | `NtlmCalculateNtResponse`           |                    | _All_           | `CalculateNtResponse`
+| `0x204` (<=5.0) 
+  `0x203` (>6.0)  | `NtlmCalculateUserSessionKeyNt`     |                    | _All_           | `CalculateUserSessionKeyNt`
+| `0x205` (<=5.0) 
+  `0x204` (>6.0)  | `NtlmCompareCredentials`            |                    | _All_           | `CompareCredentials`
+|===
+
+NOTE: The internal function for each message type will be located in `kerberos.dll` or `msv1_0.dll`.
