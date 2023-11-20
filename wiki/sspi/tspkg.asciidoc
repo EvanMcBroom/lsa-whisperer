@@ -42,7 +42,7 @@ The APs a message may be forwarded to and the commands they supported https://le
 | `0x117`         | `KerbKeyAgreementGenerateNonce`     | :x:                | `<=4.0`         | _Not identified_
 | `0x118`         | `KerbFinalizeKeyAgreement`          | :x:                | `<=4.0`         | _Not identified_
 | `0x200`         | `NtlmNegotiateVersion`              |                    | _All_           | `HandleDecryptPacCredentials`
-| `0x201` (<=5.0) | `NtlmProtectCredential,`            | :x:                | `<=5.0`         | `ProtectCredential`
+| `0x201` (<=5.0) | `NtlmProtectCredential`             | :x:                | `<=5.0`         | `ProtectCredential`
 | `0x202` (<=5.0)
   `0x201` (>6.0)  | `NtlmLm20GetNtlm3ChallengeResponse` |                    | _All_           | `Lm20GetNtlm3ChallengeResponse`
 | `0x203` (<=5.0) 
