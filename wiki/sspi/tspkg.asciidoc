@@ -18,7 +18,7 @@ These messages allow a server to authenticate a client to networked resources wi
 
 Clients will begin processing any recieved MS-RDPEAR messages as a normal package call to tspkg.
 The tskpg package will first validate the message and then forward it to another AP for further processing.
-The APs a message may be forwarded to and the commands they supported https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpear/7820f8ba-ac44-40d0-9545-73b4cd261dab[are documented by Microsoft] and provided here for convenience.
+The APs a message may be forwarded to and the commands they support https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpear/7820f8ba-ac44-40d0-9545-73b4cd261dab[are documented by Microsoft] and provided here for convenience.
 
 [%header]
 |===
