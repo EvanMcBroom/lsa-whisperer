@@ -167,7 +167,7 @@ In the first mode, the primary credential structure for the specified logon sess
 Additional handling is done in this mode if the structure contains a GMSA credential.
 In that situation, the cleartext password for the service account is retrieved, converted to its NT OWF and SHA OWF equivalents, than stored in the primary credential structure.
 
-In the second mode, the user should supply either a cleartext password or NT OWF hash to store in the primary credential.
+In the second mode, the user should supply either a cleartext password or NT OWF hash to store in an empty primary credential structure.
 If a cleartext password is provided it will be converted to NT OWF and SHA OWF equivalents to store in the primary credential structure.
 The second mode requires the user to supply valid data pointers for LSASS process memory which is out of scope for the project.
 
