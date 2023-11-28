@@ -167,7 +167,7 @@ namespace Msv1_0 {
         UCHAR Reserved[16];
         DWORD CredSize; // <- 0x28
         UCHAR ShaPassword[MSV1_0_SHA_PASSWORD_LENGTH];
-        UCHAR DpapiKey[16];
+        UCHAR Key2[20];
         // 8 bytes of pad
     } GET_CREDENTIAL_KEY_RESPONSE, *PGET_CREDENTIAL_KEY_RESPONSE;
 
@@ -187,15 +187,16 @@ namespace Msv1_0 {
 
     typedef struct _GET_STRONG_CREDENTIAL_KEY_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GetStrongCredentialKey };
-        DWORD Version; // Must be 0 (Primary) or 1
-        DWORD Reserved[8];
+        DWORD Version; // Specifies the mode of operation
+        // Used in version 0 requests
+        DWORD Reserved[8]; // Ignored
         LUID LogonId;
         // Used in version 1 requests
         MSV1_0_CREDENTIAL_KEY_TYPE KeyType; // Must be DomainUserCredKey or LocalUserCredKey
         DWORD KeyLength;
-        PWSTR Key;
+        PWSTR Key; // Treated as a cleartext password for DomainUserCredKey, otherwise an NT OWF hash
         DWORD SidLength;
-        PWSTR Sid;
+        PWSTR Sid; // Used to lookup the account type to 
         DWORD IsProtectedUser; // Determined from lsasrv!LsapGetStrongCredentialKeyFromMSV
     } GET_STRONG_CREDENTIAL_KEY_REQUEST, *PGET_STRONG_CREDENTIAL_KEY_REQUEST;
 

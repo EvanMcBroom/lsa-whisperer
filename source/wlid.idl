@@ -9,11 +9,8 @@
 
 // Unidentified structure names:
 // _LiveSerializedValidationInfo
-// _WLID_CONNECT_PARAM
 // _WLIDAcquireTokenParams
 // _WLIDAcquireTokenResults
-// _WLIDRequestParams
-// _WLIDResponseParams
 
 interface wlidsvc {
 struct _WLIDIdentityProperty {
@@ -72,4 +69,263 @@ struct _WLIDSignedTokens {
     int Member20;
     int Member24;
 };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+// DllOffset: 0x1520F0
+// DllPath C:\Windows\System32\wlidsvc.dll
+// ServiceName: wlidsvc
+// ServiceDisplayName: Microsoft Account Sign-in Assistant
+// Complex Types: 
+/* Memory Size: 16 */
+struct Struct_0 {
+    int Member0;
+    int Member4;
+    struct Struct_1[] Member8;
+};
+
+/* Memory Size: 16 */
+struct Struct_1 {
+    int Member0;
+    int Member4;
+    byte[] Member8;
+};
+
+/* Memory Size: 32 */
+struct _WLID_CONNECT_PARAM {
+    long Member0;
+    int Member8;
+    int MemberC;
+    wchar_t* Member10;
+    int Member18;
+};
+
+/* Memory Size: 16 */
+struct _WLIDIdentityProperty {
+    wchar_t* Member0;
+    wchar_t* Member8;
+};
+
+/* Memory Size: 48 */
+struct _WLIDRequestParams {
+    wchar_t* Member0;
+    wchar_t* Member8;
+    wchar_t* Member10;
+    long Member18;
+    int Member20;
+    int Member24;
+    sbyte Member28;
+};
+
+/* Memory Size: 120 */
+struct _WLIDResponseParams {
+    int Member0;
+    int Member4;
+    int Member8;
+    byte[] Member10;
+    wchar_t* Member18;
+    int Member20;
+    wchar_t* Member28;
+    wchar_t* Member30;
+    wchar_t* Member38;
+    wchar_t* Member40;
+    wchar_t* Member48;
+    wchar_t* Member50;
+    wchar_t* Member58;
+    long Member60;
+    long Member68;
+    wchar_t* Member70;
+};
+
+/* Memory Size: 72 */
+struct _WLIDTokenParams {
+    long Member0;
+    int Member8;
+    wchar_t* Member10;
+    wchar_t* Member18;
+    int Member20;
+    byte[] Member28;
+    int Member30;
+    wchar_t* Member38;
+    wchar_t* Member40;
+};
+
+/* Memory Size: 16 */
+struct Struct_7 {
+    int Member0;
+    int Member4;
+    byte[] Member8;
+};
+
+/* Memory Size: 32 */
+struct Struct_8 {
+    wchar_t* Member0;
+    wchar_t* Member8;
+    int Member10;
+    byte[] Member18;
+};
+
+/* Memory Size: 16 */
+struct Struct_9 {
+    wchar_t* Member0;
+    wchar_t* Member8;
+};
+
+/* Memory Size: 32 */
+struct Struct_10 {
+    int Member0;
+    int Member4;
+    int Member8;
+    int MemberC;
+    double Member10;
+    double Member18;
+};
+
+/* Memory Size: 32 */
+struct Struct_11 {
+    wchar_t* Member0;
+    int Member8;
+    int MemberC;
+    int Member10;
+    int Member14;
+    int Member18;
+};
+
+/* Memory Size: 16 */
+struct _WLIDSignedTokens {
+    wchar_t* Member0;
+    wchar_t* Member8;
+};
+
+/* Memory Size: 32 */
+struct ProofOfPossessionCookieInfo {
+    wchar_t* Member0;
+    wchar_t* Member8;
+    int Member10;
+    wchar_t* Member18;
+};
+
+/* Memory Size: 56 */
+struct Struct_15 {
+    wchar_t* Member0;
+    wchar_t* Member8;
+    wchar_t* Member10;
+    wchar_t* Member18;
+    wchar_t* Member20;
+    wchar_t* Member28;
+    wchar_t* Member30;
+};
+
+
+[uuid("cc105610-da03-467e-bc73-5b9e2937458d"), version(1.0)]
+interface intf_cc105610_da03_467e_bc73_5b9e2937458d {
+    HRESULT WLIDPublishService([In] handle_t p0, handle_t p1, [In] wchar_t* p1);
+    HRESULT WLIDUnpublishService([In] handle_t p0, handle_t p1, [In] wchar_t* p1);
+    HRESULT WLIDResolveDevice([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [Out] struct Struct_0** p2);
+    HRESULT WLIDResolveUser([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] long p2, [Out] wchar_t** p3);
+    HRESULT WLIDConnectIdentity([In] handle_t p0, handle_t p1, [In] struct _WLID_CONNECT_PARAM* p1);
+    HRESULT WLIDUpdateConnectedIdentity([In] handle_t p0, handle_t p1, [In] long p1);
+    HRESULT WLIDCompleteConnect(handle_t p0, [In] wchar_t* p0);
+    HRESULT WLIDDisconnectIdentity([In] handle_t p0);
+    HRESULT WLIDCreateIdentity([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [In] wchar_t* p3, [Out] wchar_t** p4);
+    HRESULT WLIDDeleteIdentity(handle_t p0, [In] long p0, [In] wchar_t* p1, [In] wchar_t* p2);
+    HRESULT WLIDImportIdentity(handle_t p0, [In] wchar_t* p0, [In] long p1, [In] int p2, [In] struct _WLIDIdentityProperty[]* p3);
+    HRESULT WLIDGetLocalDeviceName(handle_t p0, [Out] wchar_t** p0);
+    HRESULT WLIDCreateContext(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [In] long p2, [Out] handle_t* p3);
+    HRESULT WLIDCreateContextWithLogonId(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [In] int p2, [In] int p3, [In] long p4, [Out] handle_t* p5);
+    HRESULT WLIDSetAuthData([In] handle_t p0, handle_t p1, [In] long p1, [In] int p2, [In] byte[]* p3);
+    HRESULT WLIDDeleteContext([In] long p0, [In, Out] handle_t* p1);
+    HRESULT WLIDGetServiceConfig(handle_t p0, [In] wchar_t* p0, [Out] wchar_t** p1);
+    HRESULT WLIDAcquireTokens([In] handle_t p0, handle_t p1, [In] long p1, [In] int p2, [In] struct _WLIDRequestParams[] p3, [In] wchar_t* p4, [In] long p5, [In] [Out] int* p7, [Out] int* p8, [Out] int* p9, [Out] int* p10, [Out] struct _WLIDResponseParams[]* p11, [Out] int* p12);
+    HRESULT WLIDUpdateToken([In] handle_t p0, handle_t p1, [In] struct _WLIDTokenParams* p1);
+    HRESULT WLIDAddOrDeleteColorSetCookie(handle_t p0, [In] int p0);
+    HRESULT WLIDWatsonReport(handle_t p0, [In] long p0, [In] wchar_t* p1, [In] wchar_t* p2, [In] wchar_t* p3, [In] wchar_t* p4, [In] int p5, [In] [In] int p7, [In] wchar_t*[] p8);
+    HRESULT WLIDGetCachedTokens([In] handle_t p0, handle_t p1, [In] long p1, [In] int p2, [In] struct _WLIDRequestParams[] p3, [Out] int* p4, [Out] struct _WLIDResponseParams[]* p5);
+    HRESULT WLIDGetExtendedError([In] handle_t p0, handle_t p1, [In] long p1, [Out] int* p2, [Out] int* p3, [Out] [Out] char** p5, [Out] [Out] [Out] int* p8);
+    HRESULT WLIDGetUserExtendedProperty(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [Out] wchar_t** p2);
+    HRESULT WLIDSetUserExtendedProperty(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [In] wchar_t* p2);
+    HRESULT WLIDGetIdentityProperty([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [Out] wchar_t** p2);
+    HRESULT WLIDSetOptions(handle_t p0, [In] int p0, [In] struct Struct_7[]* p1, [In] long p2);
+    HRESULT WLIDEnumIdentities(handle_t p0, [In] long p0, [In] wchar_t* p1, [In] wchar_t* p2, [Out] int* p3, [Out] wchar_t*[]* p4);
+    HRESULT WLIDHasPersistedCredential([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [Out] int* p2);
+    HRESULT WLIDPersistCredential([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] long p2);
+    HRESULT WLIDPersistCredentialForConnectedUser([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] long p2);
+    HRESULT WLIDRemovePersistedCredential([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] long p2);
+    HRESULT WLIDVerifyAssertion(handle_t p0, [In] int p0, [In] byte[]* p1, [In, Out] int* p2, [In] int p3, [In] byte[] p4, [Out] [Out] int* p6, [Out] byte[]* p7);
+    HRESULT WLIDGetDeviceId(handle_t p0, [In] wchar_t* p0, [In] long p1, [In] int p2, [In] byte[] p3, [Out] [Out] [Out] int* p6, [Out] byte[]* p7);
+    HRESULT WLIDProvisionDeviceId(handle_t p0, [In] wchar_t* p0, [In] int p1, [In] long p2);
+    HRESULT WLIDGetDeviceIdEx(handle_t p0, [In] wchar_t* p0, [In] int p1, [In] long p2, [In] int p3, [In] byte[] p4, [Out] [Out] [Out] int* p7, [Out] byte[]* p8);
+    HRESULT WLIDRenewDeviceId(handle_t p0, [In] wchar_t* p0, [In] int p1, [In] long p2);
+    HRESULT WLIDDeProvisionDeviceId(handle_t p0, [In] wchar_t* p0, [In] int p1, [In] long p2);
+    HRESULT WLIDEnumDevices(handle_t p0, [In] wchar_t* p0, [In] long p1, [In] int p2, [In] byte[] p3, [In, Out] int* p4, [Out] struct Struct_8[]* p5);
+    HRESULT WLIDAssociateDeviceToUser([In] wchar_t* p0, [In] handle_t p1, handle_t p2, [In] wchar_t* p2, [In] int p3);
+    HRESULT WLIDDisassociateDeviceFromUser([In] wchar_t* p0, [In] handle_t p1, handle_t p2, [In] int p2);
+    HRESULT WLIDEnumerateUserAssociatedDevices([In] handle_t p0, handle_t p1, [In] int p1, [In] wchar_t* p2, [Out] int* p3, [Out] struct Struct_9[]* p4);
+    HRESULT WLIDUpdateUserAssociatedDeviceProperties([In] wchar_t* p0, [In] handle_t p1, handle_t p2, [In] int p2, [In] int p3, [In] struct Struct_9[] p4);
+    HRESULT WLIDCreateContextForLinkedIdentity([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [Out] handle_t* p3);
+    HRESULT WLIDAddUserToSsoGroup(handle_t p0, [In] wchar_t* p0, [In] long p1, [In] int p2);
+    HRESULT WLIDGetUsersFromSsoGroup(handle_t p0, [In] long p0, [In] int p1, [Out] int* p2, [Out] wchar_t*[]* p3);
+    HRESULT WLIDRemoveUserFromSsoGroup(handle_t p0, [In] wchar_t* p0, [In] long p1, [In] int p2);
+    HRESULT WLIDGetAuthError([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [Out] wchar_t** p3);
+    HRESULT WLIDGetDeviceShortLivedToken(handle_t p0, [Out] wchar_t** p0);
+    HRESULT WLIDGetHIPChallenge([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [Out] wchar_t** p2);
+    HRESULT WLIDSetHIPSolution([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] wchar_t* p2, [In] long p3);
+    HRESULT WLIDSetDefaultUserForTarget([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] long p2, [In] wchar_t* p3);
+    HRESULT WLIDGetDefaultUserForTarget(handle_t p0, [In] long p0, [In] wchar_t* p1, [Out] wchar_t** p2);
+    HRESULT WLIDIsKioskMode(handle_t p0, [Out] int* p0);
+    HRESULT WLIDGetConfigString(handle_t p0, [In] wchar_t* p0, [Out] wchar_t** p1);
+    HRESULT WLIDGetSvcEnvironment(handle_t p0, [Out] wchar_t** p0);
+    HRESULT WLIDGetIdName([In] handle_t p0, handle_t p1, [Out] wchar_t** p1);
+    HRESULT WLIDGetConfigDWORDValue(handle_t p0, [In] int p0, [Out] int* p1);
+    HRESULT WLIDGetUserPropertiesFromSystemStore(handle_t p0, [In] wchar_t* p0, [Out] int* p1, [Out] struct _WLIDIdentityProperty[]* p2);
+    HRESULT WLIDSetUserPropertiesToSystemStore(handle_t p0, [In] wchar_t* p0, [In] int p1, [In] struct _WLIDIdentityProperty[]* p2);
+    HRESULT WLIDInitializeEx(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [In] int p2, [Out] struct Struct_10** p3);
+    HRESULT WLIDEnableTrace();
+    HRESULT WLIDDisableTrace();
+    HRESULT WLIDGetOneTimeCredential([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [In] wchar_t* p3, [In] wchar_t* p4, [In] wchar_t* p5, [Out] [Out] wchar_t** p7);
+    HRESULT WLIDGetIssuerCertificate(handle_t p0, [In] long p0, [In] int p1, [In] byte[] p2, [Out] int* p3, [Out] byte[]* p4);
+    HRESULT WLIDCreateContextWithChallenge(handle_t p0, [In] wchar_t* p0, [In] wchar_t* p1, [In] long p2, [Out] handle_t* p3);
+    HRESULT WLIDGetDefaultUserForTargetEx(handle_t p0, [In] long p0, [In] wchar_t* p1, [In] wchar_t* p2, [Out] wchar_t** p3);
+    HRESULT WLIDSendOneTimeCode([In] handle_t p0, handle_t p1, [In] wchar_t* p1, [In] wchar_t* p2, [In] wchar_t* p3, [In] int p4, [In] long p5);
+    HRESULT WLIDGetUserPropertiesFromHandle([In] handle_t p0, handle_t p1, [Out] int* p1, [Out] struct _WLIDIdentityProperty[]* p2);
+    HRESULT WLIDGetKeyLatest([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [Out] [Out] [Out] long* p5);
+    HRESULT WLIDGetKeyWithVersion([In] handle_t p0, handle_t p1, [In] long p1, [In] wchar_t* p2, [In] wchar_t* p3, [In] long p4, [Out] wchar_t** p5);
+    HRESULT WLIDGetOpenHandlesData(handle_t p0, [Out] int* p0, [Out] struct Struct_11[]* p1);
+    HRESULT WLIDGetSignedTokens(handle_t p0, [Out] struct _WLIDSignedTokens** p0);
+    HRESULT WLIDGetDeviceDAToken(handle_t p0, [Out] wchar_t** p0);
+    HRESULT WLIDGetProofOfPossessionTokens(handle_t p0, [In] [In] GUID* p1, [Out] int* p2, [Out] struct ProofOfPossessionCookieInfo[]* p3);
+    HRESULT WLIDRegisterUserIdkey(handle_t p0, [In] [In] wchar_t* p1, [In] [In] int p3, [In] long p4);
+    HRESULT WLIDUpdateDeviceLicenseInfo();
+    HRESULT WLIDManageApprover(handle_t p0, [In] int p0, [In] [In] [In] [In] [In] wchar_t* p5, [Out] int* p6);
+    HRESULT WLIDListSessions(handle_t p0, [In] wchar_t*[] p0, [In] int p1, [In] int p2, [In] [Out] struct Struct_15[]* p4, [Out] int* p5, [Out] [Out] int* p7);
+    HRESULT WLIDApproveSession(handle_t p0, [In] [In] [In] [In] [In] [In] long p5);
+    HRESULT WLIDGetScenarioInlineUrlWithContextData(handle_t p0, [In] int p0, [Out] wchar_t** p1);
+    HRESULT WLIDGetInlineUrlContextData(handle_t p0, [Out] wchar_t** p0);
+    HRESULT WLIDAcquireTokensWithNGC([In] handle_t p0, handle_t p1, [In] long p1, [In] int p2, [In] struct _WLIDRequestParams[] p3, [In] [In] long p5, [In] [Out] int* p7, [Out] int* p8, [Out] int* p9, [Out] int* p10, [Out] struct _WLIDResponseParams[]* p11, [Out] int* p12);
+    HRESULT WLIDGetTotpCode(handle_t p0, [In] wchar_t* p0, [In] int p1, [Out] wchar_t** p2, [Out] int* p3, [Out] int* p4);
+    HRESULT WLIDCleanupIdentity(handle_t p0, [In] wchar_t* p0);
+    HRESULT WLIDGetAppData(handle_t p0, [In] wchar_t* p0, [In] GUID* p1, [Out] int* p2);
+    HRESULT WLIDProvisionIdentityWithTransferToken(handle_t p0, [In] GUID* p0, [In] wchar_t* p1, [In] wchar_t* p2, [In] long p3, [In] int p4, [Out] int* p5, [Out] handle_t* p6);
 }

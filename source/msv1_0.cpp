@@ -220,11 +220,11 @@ namespace Msv1_0 {
             std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
             OutputHex(lsa->out, "ShaOwf", shaOwf);
             // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
-            if (*reinterpret_cast<DWORD*>(&response->DpapiKey[MSV1_0_OWF_PASSWORD_LENGTH])) {
-                std::string dpapiKey(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_CREDENTIAL_KEY_LENGTH);
-                OutputHex(lsa->out, "DpapiKey", dpapiKey);
+            if (*reinterpret_cast<DWORD*>(&response->Key2[MSV1_0_OWF_PASSWORD_LENGTH])) {
+                std::string dpapiKey(reinterpret_cast<const char*>(&response->Key2), MSV1_0_CREDENTIAL_KEY_LENGTH);
+                OutputHex(lsa->out, "CredKey", dpapiKey);
             } else {
-                std::string ntOwf(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_OWF_PASSWORD_LENGTH);
+                std::string ntOwf(reinterpret_cast<const char*>(&response->Key2), MSV1_0_OWF_PASSWORD_LENGTH);
                 OutputHex(lsa->out, "NtOwf", ntOwf);
             }
             LsaFreeReturnBuffer(response);
@@ -246,16 +246,9 @@ namespace Msv1_0 {
             if (*reinterpret_cast<DWORD*>(&response->ShaPassword)) {
                 std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
                 OutputHex(lsa->out, "ShaOwf", shaOwf);
-            }
-            if (*reinterpret_cast<DWORD*>(&response->DpapiKey)) {
-                // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
-                if (*reinterpret_cast<DWORD*>(&response->DpapiKey[MSV1_0_OWF_PASSWORD_LENGTH])) {
-                    std::string dpapiKey(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_CREDENTIAL_KEY_LENGTH);
-                    OutputHex(lsa->out, "DpapiKey", dpapiKey);
-                } else {
-                    std::string ntOwf(reinterpret_cast<const char*>(&response->DpapiKey), MSV1_0_OWF_PASSWORD_LENGTH);
-                    OutputHex(lsa->out, "NtOwf", ntOwf);
-                }
+            } else {
+                std::string dpapiKey(reinterpret_cast<const char*>(&response->Key2), MSV1_0_CREDENTIAL_KEY_LENGTH);
+                OutputHex(lsa->out, "CredKey", dpapiKey);
             }
             LsaFreeReturnBuffer(response);
         }

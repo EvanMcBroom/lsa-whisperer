@@ -144,21 +144,42 @@ msv1_0 -d {function name} [function arguments]...
 
 === GetCredentialKey
 
-Get the primary credential keys for a logon session.
-The keys will either be the NT and SHA OWF hashes or the SHA hash and the DPAPI key.
-`SeTcbPrivilege` is required and credential isolation must also not be enabled.
+Get keys from the primary credential structure for the logon session.
+The  primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a Cred key.
+
+The command will return the SHA OWF hash and the Cred Key if it is present.
+If the Cred Key is not present the command will instead return the NT OWF hash.
+The command will fail if the user does not have the `SeTcbPrivilege` privilege or credential isolation is enabled.
 
 ```
 msv1_0 GetCredentialKey --luid {session id}
 ```
 
+NOTE: The Cred Key is the same key referred to by Mimikatz as "DPAPI" under the "Primary" section of the command output for `sekurlsa::msv`.
+
 === GetStrongCredentialKey
 
-...
+Get keys from the primary credential structure for the logon session.
+Please refer to `GetCredentialKey` for more information about primary credentials.
+
+The command offers two modes of operation.
+In the first mode, the primary credential structure for the specified logon session is retrieved.
+Additional handling is done in this mode if the structure contains a GMSA credential.
+In that situation, the cleartext password for the service account is retrieved, converted to its NT OWF and SHA OWF equivalents, than stored in the primary credential structure.
+
+In the second mode, the user should supply either a cleartext password or NT OWF hash to store in the primary credential.
+If a cleartext password is provided it will be converted to NT OWF and SHA OWF equivalents to store in the primary credential structure.
+The second mode requires the user to supply valid data pointers for LSASS process memory which is out of scope for the project.
+
+An account type (e.g., `SID_NAME_USE`) is then determined using either the specified logon session's SID (if using the first mode of the command's operation), otherwise a provided SID is used.
+If the account is a group or domain, then the Cred Key (e.g., `DomainUserCredKey`) is returned.
+Otherwise, the SHA OWF (e.g., the `LocalUserCredKey`) is returned.
 
 ```
 msv1_0 GetStrongCredentialKey ...
 ```
+
+NOTE: The Cred Key is the same key referred to by Mimikatz as "DPAPI" under the "Primary" section of the command output for `sekurlsa::msv`.
 
 === GetUserInfo
 
