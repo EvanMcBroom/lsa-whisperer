@@ -54,9 +54,9 @@ Although not used by LSA Whisperer, the following projects greatly helped in its
 Thank you to [SpecterOps](https://specterops.io/) for supporting this research and to my coworkers who have helped with its development.
 
 Thank you [Elad](https://twitter.com/elad_shamir) and [Lee](https://twitter.com/tifkin_) for both inspiring this tool and the research, support, and collaboration throughout its development.
-Elad additionally developed the operational use cases for [msv1_0's](https://github.com/EvanMcBroom/lsa-whisperer/wiki/msv1_0) caching functions and Lee both introduced me to [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and showed it's potential for recovering authentication data. 
+Elad additionally developed operational use cases for [msv1_0](https://github.com/EvanMcBroom/lsa-whisperer/wiki/msv1_0) and Lee both introduced me to [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and showed it's potential for recovering authentication data. 
 
-Thank you as well to [Will](https://twitter.com/harmj0y) for always being a good sounding board, [Daniel](https://twitter.com/hotnops) for answering my AzureAD questions, and [Kai](https://twitter.com/mhskai2017) for helping add Kerberos support.
+Thank you as well to [Will](https://twitter.com/harmj0y) for always being a good sounding board and helping test the tool, [Daniel](https://twitter.com/hotnops) for answering my AzureAD questions, and [Kai](https://twitter.com/mhskai2017) for helping research [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and add Kerberos support.
 
 ## Related Work
 
