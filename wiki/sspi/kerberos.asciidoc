@@ -83,8 +83,10 @@ kerberos AddBindingCacheEntryEx --domain-name {name} --dc-address {Inet or NetBI
 === AddExtraCredentials
 
 Documented in `NTSecApi.h` as adding "server credentials" to a given logon session, only applicable during AcceptSecurityContext, and requiring TCB to alter "other" credentials.
+Specifically, during the AcceptSecurityContext for Kerberos an AP-REQ will be checked to be valid and decrypted.
+Kerberos will attempt to use any supplied extra credentials in addition to the logon session's primary credentials when attempting to decrypt the AP-REQ.
 The command allows a user to add, replace, or remove the additional credential.
-Only the password is required when removing a credential.
+The password is not required when removing a credential.
 
 ```
 kerberos AddExtraCredentials --domain-name {name} --user-name {name} --password {password} [--replace-cred | --remove-cred]
