@@ -12,6 +12,7 @@ Its `CallPackage` and `CallPackageUntrusted` functions are available but return 
 == Functions
 
 The protocol messages that wdigest supports is not documented by Microsoft but is provided here.
+Wdigest support is not a priority for Lsa Whisperer.
 
 [%header]
 |===
@@ -26,7 +27,4 @@ NOTE: The internal function will be located in `wdigest.dll`.
 The request may be used to verify a plaintext password or OWF hash for a user.
 If the provided data is valid the response will contain a session key and PAC for the user.
 Request data is marshalled as a `DIGEST_BLOB_REQUEST` with responses sent as `DIGEST_BLOB_RESPONSE`.
-
-```
-wdigest VerifyDigest ...
-```
+The request is only available as a passthrough command which is currently not supported by LSA whisperer.
