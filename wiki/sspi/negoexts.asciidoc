@@ -24,9 +24,47 @@ Supporting negoexts commands is currently not a priority for Lsa Whisperer.
 
 [%header]
 |===
-| Id    | Message Type        | CLI Support | NT Version | Internal Function
-| `0x1` | `GetCredUIContext`  |             | `>=6.1`    | `WSTGetCredUIContext`
-| `0x2` | `UpdateCredentials` |             | `>=6.1`    | `WSTUpdateCredentials`
-| `0x3` | `LookupContext`     |             | `>=6.1`    | `WSTLookupContext`
-| `0x4` | `FlushContext`      |             | `>=6.1`    | `WSTFlushContext`
+| Id    | Message Type        | CLI Support        | NT Version | Internal Function
+| `0x1` | `GetCredUIContext`  |                    | `>=6.1`    | `WSTGetCredUIContext`
+| `0x2` | `UpdateCredentials` |                    | `>=6.1`    | `WSTUpdateCredentials`
+| `0x3` | `LookupContext`     | :heavy_check_mark: | `>=6.1`    | `WSTLookupContext`
+| `0x4` | `FlushContext`      | :heavy_check_mark: | `>=6.1`    | `WSTFlushContext`
 |===
+
+=== FlushContext
+
+Remove a context from the global table of WST contexts that negoexts maintains.
+
+```
+negoexts FlushContext --handle {value}
+```
+
+=== GetCredUIContext
+
+Returns a flat buffer of information about the WST context.
+The requested information may be for a certificate, cryptographic service provider (CSP) data, or a password.
+Facilitate the `SpGetCredUIContextFn` API.
+
+```
+negoexts GetCredUIContext --handle {value} {--cert | --csp | --password} --luid {session id}
+```
+
+=== LookupContext
+
+Lookup the handle for a WST context.
+The handle value will be a pointer to the context in the global table of WST contexts that negoexts maintains.
+The target name may be the name as specified by the `TargetName` parameter to `SpInitLsaModeContext` or the target's associated hostname.
+
+```
+negoexts LookupContext --target {name}
+```
+
+=== UpdateCredentials
+
+Updates the WST context with a flat buffer of information.
+The information may be for a certificate, CSP data, or a password.
+Facilitate the `SpUpdateCredentialsFn` API.
+
+```
+negoexts UpdateCredentials --handle {value} {--cert | --csp | --password} --data {value}
+```
