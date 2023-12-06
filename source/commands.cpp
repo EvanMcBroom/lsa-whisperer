@@ -4,6 +4,7 @@
 #include <locale>
 #include <magic_enum.hpp>
 #include <string>
+
 namespace AllPackages {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "all" };
@@ -271,8 +272,8 @@ namespace Kerberos {
             auto userName{ converter.from_bytes(options["user-name"].as<std::string>()) };
             auto password{ converter.from_bytes(options["password"].as<std::string>()) };
             auto flags{ options.count("replace-cred")  ? KERB_REQUEST_REPLACE_CREDENTIAL
-                         : options.count("remove-cred") ? KERB_REQUEST_REMOVE_CREDENTIAL
-                                                        : KERB_REQUEST_ADD_CREDENTIAL };
+                        : options.count("remove-cred") ? KERB_REQUEST_REMOVE_CREDENTIAL
+                                                       : KERB_REQUEST_ADD_CREDENTIAL };
             return proxy.AddExtraCredentials(&luid, domainName, userName, password, flags);
         }
         case PROTOCOL_MESSAGE_TYPE::CleanupMachinePkinitCreds: {
@@ -589,6 +590,70 @@ namespace Msv1_0 {
             return false;
         }
         return false;
+    }
+}
+
+namespace Negoexts {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
+        char* command{ "negoexts" };
+        cxxopts::Options unparsedOptions{ command };
+        // clang-format off
+        unparsedOptions.add_options("Command arguments")
+            ("cert", "Certificate data type", cxxopts::value<bool>()->default_value("false"))
+            ("csp", "Credential support provider data type", cxxopts::value<bool>()->default_value("false"))
+            ("data", "Context information data", cxxopts::value<std::string>()->default_value(""))
+            ("handle", "Context handle", cxxopts::value<long long>())
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("password", "Password data type", cxxopts::value<bool>()->default_value("false"))
+            ("target", "Target name or their host name for the WST context", cxxopts::value<std::string>());
+        // clang-format on
+        if (!args.size()) {
+            std::cout << unparsedOptions.help() << std::endl;
+            return false;
+        }
+        auto options{ unparsedOptions.parse(args.size(), args.data()) };
+        auto proxy{ Proxy(lsa) };
+
+        switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
+        case PROTOCOL_MESSAGE_TYPE::FlushContext: {
+            auto handle{ (LPVOID)(options["handle"].as<long long>()) };
+            return proxy.FlushContext(handle);
+        }
+        case PROTOCOL_MESSAGE_TYPE::GetCredUIContext: {
+            auto handle{ (LPVOID)(options["handle"].as<long long>()) };
+            GUID credType = { 0 };
+            if (options.count("cert")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_CERT;
+            } else if (options.count("csp")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_CSP_DATA;
+            } else if (options.count("password")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_PASSWORD;
+            }
+            LUID session;
+            reinterpret_cast<LARGE_INTEGER*>(&session)->QuadPart = options["luid"].as<long long>();
+            return proxy.GetCredUIContext(handle, credType, session);
+        }
+        case PROTOCOL_MESSAGE_TYPE::LookupContext: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto target{ converter.from_bytes(options["target"].as<std::string>()) };
+            return proxy.LookupContext(target);
+        }
+        case PROTOCOL_MESSAGE_TYPE::UpdateCredentials: {
+            auto handle{ (LPVOID)(options["handle"].as<long long>()) };
+            GUID credType = { 0 };
+            if (options.count("cert")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_CERT;
+            } else if (options.count("csp")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_CSP_DATA;
+            } else if (options.count("password")) {
+                credType = SEC_WINNT_AUTH_DATA_TYPE_PASSWORD;
+            }
+            return proxy.UpdateCredentials(handle, credType, options["data"].as<std::string>());
+        }
+        default:
+            std::cout << "Unsupported function" << std::endl;
+            return false;
+        }
     }
 }
 

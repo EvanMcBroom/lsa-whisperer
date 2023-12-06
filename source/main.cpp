@@ -149,6 +149,7 @@ int main(int argc, char** argv) {
             case Hash("kerberos"): Kerberos::Call(lsa, argv); break;
             case Hash("live"): Live::Call(lsa, argv); break;
             case Hash("msv1_0"): Msv1_0::Call(lsa, argv); break;
+            case Hash("negoexts"): Negoexts::Call(lsa, argv); break;
             case Hash("negotiate"): Negotiate::Call(lsa, argv); break;
             case Hash("pku2u"): Pku2u::Call(lsa, argv); break;
             case Hash("schannel"): Schannel::Call(lsa, argv); break;

@@ -6,6 +6,7 @@ set(SSPI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/live.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lsa.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/negoexts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pku2u.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rpc.cpp

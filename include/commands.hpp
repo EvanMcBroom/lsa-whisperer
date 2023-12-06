@@ -5,6 +5,7 @@
 #include <kerberos.hpp>
 #include <live.hpp>
 #include <msv1_0.hpp>
+#include <negoexts.hpp>
 #include <negotiate.hpp>
 #include <pku2u.hpp>
 #include <schannel.hpp>
@@ -27,6 +28,10 @@ namespace Live {
 }
 
 namespace Msv1_0 {
+    bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
+}
+
+namespace Negoexts {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args);
 }
 

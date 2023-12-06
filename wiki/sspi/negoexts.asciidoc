@@ -20,13 +20,13 @@ toc::[]
 == Functions
 
 The protocol messages that negoexts supports is not documented by Microsoft but is provided here.
-Supporting negoexts commands is currently not a priority for Lsa Whisperer.
+Negoexts support is not a priority for Lsa Whisperer and the implemented commands should be considered unstable.
 
 [%header]
 |===
 | Id    | Message Type        | CLI Support        | NT Version | Internal Function
-| `0x1` | `GetCredUIContext`  |                    | `>=6.1`    | `WSTGetCredUIContext`
-| `0x2` | `UpdateCredentials` |                    | `>=6.1`    | `WSTUpdateCredentials`
+| `0x1` | `GetCredUIContext`  | :heavy_check_mark: | `>=6.1`    | `WSTGetCredUIContext`
+| `0x2` | `UpdateCredentials` | :heavy_check_mark: | `>=6.1`    | `WSTUpdateCredentials`
 | `0x3` | `LookupContext`     | :heavy_check_mark: | `>=6.1`    | `WSTLookupContext`
 | `0x4` | `FlushContext`      | :heavy_check_mark: | `>=6.1`    | `WSTFlushContext`
 |===
@@ -43,7 +43,7 @@ negoexts FlushContext --handle {value}
 
 Returns a flat buffer of information about the WST context.
 The requested information may be for a certificate, cryptographic service provider (CSP) data, or a password.
-Facilitate the `SpGetCredUIContextFn` API.
+Facilitates the `SpGetCredUIContextFn` API.
 
 ```
 negoexts GetCredUIContext --handle {value} {--cert | --csp | --password} --luid {session id}
@@ -63,7 +63,7 @@ negoexts LookupContext --target {name}
 
 Updates the WST context with a flat buffer of information.
 The information may be for a certificate, CSP data, or a password.
-Facilitate the `SpUpdateCredentialsFn` API.
+Facilitates the `SpUpdateCredentialsFn` API.
 
 ```
 negoexts UpdateCredentials --handle {value} {--cert | --csp | --password} --data {value}
