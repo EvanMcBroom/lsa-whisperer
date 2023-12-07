@@ -373,12 +373,10 @@ Reverse engineering some structures were key in understanding the internal messa
 A description and partial definition for each of these structures is provided here for others to use and research further.
 These may not be completely accurate and contributions are appreciated.
 
-=== _ApPluginPkg
-
 === _CLOUDAP_CREDKEY_INFO
 
 Cloudap may store the DPAPI "Cred Key" for a user profile on the file system.
-If it does, information about the CredKey will be stored under `C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\AppData\Local\Microsoft\Windows\CloudAPCache` under a subfolder (`AzureAD` or `MicrosoftAccount`) in a file named `[User Profile Id]\Keys\CredKeyInfo` in the `_CLOUDAP_CREDKEY_INFO` format.
+If it does, information about the CredKey will be stored under `C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Windows\CloudAPCache` under a subfolder (`AzureAD` or `MicrosoftAccount`) in a file named `[User Profile Id]\Keys\CredKeyInfo` in the `_CLOUDAP_CREDKEY_INFO` format.
 
 ._CLOUDAP_CREDKEY_INFO
 [%header]
@@ -389,8 +387,6 @@ If it does, information about the CredKey will be stored under `C:\Windows\Syste
 | `0x14`       | `DWORD Pad;`     | 19041    |
 | `0x18`       | `DWORD Unknown;` | 19041    |
 |===
-
-=== _CREDENTIAL_KEY
 
 === _LOGON_SESSION
 

@@ -3,7 +3,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.txt)
 
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
-Support is provided for the cloudap, msv1_0, negotiate, pku2u, schannel, and kerberos packages.
+Support is currently provided for the cloudap, kerberos, msv1_0, negotiate, pku2u, and schannel packages and cloudap's AzureAD plugin.
+Partial or unstable support is provided for livessp, negoexts, and the security package manager (SPM).
 Please refer to the [wiki](https://github.com/EvanMcBroom/lsa-whisperer/wiki) to see which message protocols are currently supported. 
 Support for more authentication packages may be added in the future.
 
@@ -31,32 +32,33 @@ Thank you to the following packages that are used in LSA Whisperer directly or i
 
 - Cli
     - [AmokHuginnsson/replxx](https://github.com/AmokHuginnsson/replxx) (license - [Multiple](https://github.com/AmokHuginnsson/replxx/blob/master/LICENSE.md))
-    - [Neargye/magic_enum](https://github.com/Neargye/magic_enum) (license - [MIT](https://github.com/Neargye/magic_enum/blob/master/LICENSE))
     - [jarro2783/cxxopts](https://github.com/jarro2783/cxxopts) (license - [MIT](https://github.com/jarro2783/cxxopts/blob/master/LICENSE))
+    - [muellan/clipp](https://github.com/muellan/clipp) (license - [MIT](https://github.com/muellan/clipp/blob/master/LICENSE))
+    - [Neargye/magic_enum](https://github.com/Neargye/magic_enum) (license - [MIT](https://github.com/Neargye/magic_enum/blob/master/LICENSE))
+
 - Docs
     - [Andrew-Chen-Wang/github-wiki-action](https://github.com/Andrew-Chen-Wang/github-wiki-action) (license - [Apache 2.0](https://github.com/Andrew-Chen-Wang/github-wiki-action/blob/master/LICENSE))
     - [breathe-doc/breathe](https://github.com/breathe-doc/breathe) (license - [BSD](https://github.com/breathe-doc/breathe/blob/master/LICENSE))
     - [doxygen/doxygen](https://github.com/doxygen/doxygen) (license - [GPL 2.0](https://github.com/doxygen/doxygen/blob/master/LICENSE))
-    - [sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx) (license - [BSD](https://github.com/sphinx-doc/sphinx/blob/master/LICENSE))
     - [readthedocs/sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) (license - [MIT](https://github.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE))
+    - [sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx) (license - [BSD](https://github.com/sphinx-doc/sphinx/blob/master/LICENSE))
 
 Although not used by LSA Whisperer, the following projects greatly helped in its development:
 
-- [Impacket](https://github.com/SecureAuthCorp/impacket) - A collection of Python classes for working with network protocols
-- [Kekeo](https://github.com/gentilkiwi/kekeo) - A little toolbox to play with Microsoft Kerberos in C
-- [Mimikatz](https://github.com/gentilkiwi/mimikatz) - A little tool to play with Windows security
-- [NtObjectManager](https://github.com/googleprojectzero/sandbox-attacksurface-analysis-tools/tree/main/NtObjectManager) - A library to access the NT object manager namespace
-- [ROADtools](https://github.com/dirkjanm/ROADtools) - The Azure AD exploration framework
-- [Rubeus](https://github.com/GhostPack/Rubeus) - A C# toolset for raw Kerberos interaction and abuses
+- [Impacket](https://github.com/SecureAuthCorp/impacket) ([Alberto Solino](https://twitter.com/agsolino)) - A collection of Python classes for working with network protocols
+- [Kekeo](https://github.com/gentilkiwi/kekeo) ([Benjamin Delpy](https://twitter.com/gentilkiwi)) - A little toolbox to play with Microsoft Kerberos in C
+- [Mimikatz](https://github.com/gentilkiwi/mimikatz) ([Benjamin Delpy](https://twitter.com/gentilkiwi)) - A little tool to play with Windows security
+- [NtObjectManager](https://github.com/googleprojectzero/sandbox-attacksurface-analysis-tools/tree/main/NtObjectManager) ([James Forshaw](https://twitter.com/tiraniddo)) - A library to access the NT object manager namespace
+- [ROADtools](https://github.com/dirkjanm/ROADtools) ([Dirk-jan Mollema](https://twitter.com/_dirkjan)) - The Azure AD exploration framework
+- [Rubeus](https://github.com/GhostPack/Rubeus) ([Will Schroeder](https://twitter.com/harmj0y), [Charlie Clark](https://twitter.com/exploitph)) - A C# toolset for raw Kerberos interaction and abuses
 
 ## Acknowledgments
 
 Thank you to [SpecterOps](https://specterops.io/) for supporting this research and to my coworkers who have helped with its development.
 
 Thank you [Elad](https://twitter.com/elad_shamir) and [Lee](https://twitter.com/tifkin_) for both inspiring this tool and the research, support, and collaboration throughout its development.
-Elad additionally developed operational use cases for [msv1_0](https://github.com/EvanMcBroom/lsa-whisperer/wiki/msv1_0) and Lee both introduced me to [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and showed it's potential for recovering authentication data. 
-
-Thank you as well to [Will](https://twitter.com/harmj0y) for always being a good sounding board and helping test the tool, [Daniel](https://twitter.com/hotnops) for answering my AzureAD questions, and [Kai](https://twitter.com/mhskai2017) for helping research [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and add Kerberos support.
+Elad additionally developed operational use cases for [msv1_0](https://github.com/EvanMcBroom/lsa-whisperer/wiki/msv1_0) and Lee both introduced me to [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and showed it's potential for recovering authentication data.
+Thank you as well to [Will](https://twitter.com/harmj0y) for always being a good sounding board and helping test the tool, [Daniel](https://twitter.com/hotnops) for answering my AzureAD questions, and [Kai](https://twitter.com/mhskai2017) for helping both research [cloudap](https://github.com/EvanMcBroom/lsa-whisperer/wiki/cloudap) and add Kerberos support.
 
 ## Related Work
 

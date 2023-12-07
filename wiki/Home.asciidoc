@@ -7,9 +7,17 @@ endif::[]
 The Local Security Authority (LSA) provides several security related services for the Windows operating system.
 LSA runs within the LSA Subsystem Service (LSASS) Windows service executable but is largely implemented in the LSA server DLL (e.g. `lsasrv.dll`) and other DLLs that the LSA server DLL imports.
 
+The remainder of this page will provide a background of the LSA components that the project interacts with.
+If you prefer, you may skip to the tool's https://github.com/EvanMcBroom/lsa-whisperer/wiki/usage[usage page] or one of the many child pages for a reference guide on using it.
+
+As a whole, this wiki is a culmination of studying LSA, its modules, and other associated resources (ex. patents) without access to internal Microsoft documentation.
+As such, errors in documentating Microsoft's technologies are inevitable.
+Please regard any errors as unintentional and consider submitting a pull request for their correction.
+
 :toc:
 
-The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process on a workstation host as of NT 10.
+The components of LSA may be categorized in different ways but are presented here using the RPC interfaces exposed by the LSASS process on a workstation host as of NT 10 19045.
+Of these interfaces, the LSA Whisperer focuses on interacting with the SSPI.
 
 .LSA RPC Interfaces
 [[interfaces]]
@@ -38,9 +46,17 @@ The components of LSA may be categorized in different ways but are presented her
 
 == Security Support Provider Interface
 
-The LSA Whisperer project focuses on interacting with security support provider (SSP) DLLs.
-Microsoft provides https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of functions] (ex. `LsaCallAuthenticationPackage`) for interacting with SSPs.
-These functions originally communicated with LSASS over LPC in NT 5.2 but are now an abstraction around the SSPI RPC interface (underlined in <<interfaces>>) which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in NT 6.1]. The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented SSP APIs.
+The main goal of the LSA Whisperer project is to interact with security support provider (SSP) DLLs.
+Developers may use https://learn.microsoft.com/en-us/windows/win32/secauthn/authentication-functions[a set of Win32 functions] (ex. `LsaCallAuthenticationPackage`) to interact with SSPs.
+Originally, these functions communicated with LSASS over LPC in NT 5.2 and earlier.
+They now work as an abstraction around the SSPI RPC interface which was introduced http://redplait.blogspot.com/2010/11/vista-sp2-windows7-rpc-interfaces.html[in NT 6.1].
+The SSPI RPC interface is available on ALRPC endpoint `lsasspirpc` and may be used directly instead of using the documented Win32 APIs.
+
+When LSA Whisperer starts it will check if the host is running NT 6.1 or newer.
+If so, the tool will use the SSPI RPC interface when communicating with the LSA.
+Otherwise, the tool will use the equivalent Win32 interfaces.
+The RPC operations supported by the SSPI interface are listed below.
+Of these, LSA Whisperer mainly uses `SspirCallRpc`.
 
 .SSPI Operations
 [%header]
@@ -70,6 +86,10 @@ SSPs are DLLs that either implement a security protocol (security packages - SPs
 The LSA Whisperer project largely focuses on the authentication logic contained in an SSP.
 As such, the project will refer to SSPs that support both a security protocol and authentication logic as an authentication package (AP).
 
+The below table provides a summary of the SSPs that have been released by Microsoft over the years.
+LSA Whisperer supports interacting with a subset of the below SSPs that are marked as APs.
+Please refer to the individual wiki page for each SSP to see which commands the project supports for each AP.
+
 .Microsoft SSPs
 [%header]
 |===
@@ -92,6 +112,9 @@ As such, the project will refer to SSPs that support both a security protocol an
 NOTE: Livessp, msapsspc, and msnsspc are legacy SSPs that have been removed from Windows.
 Additionally, the components for the distributed computing environment (DCE), kernel, and message queue (MQ) RPC authn options could not be identified for auditing.
 
+A table of common 3rd party SSPs is provided below.
+LSA Whisperer does not provide support for these SSPs.
+
 .3rd Party SSPs
 [%header]
 |===
@@ -109,11 +132,14 @@ These functions are named `CallPackage`, `CallPackageUntrusted`, and `CallPackag
 
 A client will normally use these functions when calling `LsaCallAuthenticationPackage`.
 That Win32 API will be facilitated by an AP's `CallPackage` or `CallPackageUntrusted` function depending on if the client has the TCB privilege or not, respectively.
+LSA whisperer itself is a client application and almost every command the tool implements will interact with one of these two functions.
 
-A client will need to specify a package ID when making this call which may be obtained with `LsaLookupAuthenticationPackage`.
-A client may alternatively use a special package ID, `SECPKG_ALL_PACKAGES` or `-2`, which LSA will handle by issuing the call to all loaded APs.
+A client will be required to specify a package ID when making this call.
+LSA Whisperer will obtain these IDs automatically for the user using `LsaLookupAuthenticationPackage`.
+Clients may alternatively use a special package ID, `SECPKG_ALL_PACKAGES` or `-2`, which LSA will handle by issuing the call to all loaded APs.
 There is a small set of calls that are intended for this feature which each AP may choose to process or ignore.
-These calls and the APs that currently support them are provided here.
+These intended calls and the APs that support them are provided below.
+These commands may be issued with LSA Whisperer using the `all` command (ex. `all PinDC`).
 
 .All Package Messages
 [%header]
@@ -138,8 +164,9 @@ Once an LSA receives the request it will be processed by the requested AP's `Cal
 
 NOTE: A domain joined host may be tricked into believing it is a workgroup host to have it process passthrough requests locally.
 
-An AP may not support passthough requests and the ones that do will typically limit clients to a small set of request types.
-The current list of allowable passthrough requests is provided here.
+An AP may not support passthrough requests and the ones that do will typically limit clients to a small set of request types.
+The current list of allowable passthrough requests is provided below.
+LSA Whisperer does not currently support issuing passthrough requests.
 
 .Passthrough Requests
 [%header]
@@ -159,10 +186,14 @@ The current list of allowable passthrough requests is provided here.
 
 === SSPI Security
 
-Windows does not register any security callback function when registering the interface.
-It does however register the interface with the flag `RPC_IF_ALLOW_LOCAL_ONLY` which prevents LSA whisperer from using it remotely.
+Windows does not specify a security callback function when registering the SSPI RPC interface.
+It does however register the interface with the flag `RPC_IF_ALLOW_LOCAL_ONLY`.
+That prevents LSA Whisperer from interacting with a remote host using this interface.
 
-The RPC server will additionally check if the client is local before issuing operation `SspirGetInprocDispatchTable`. Otherwise, no client verification is done by the server and `sspisrv` passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table in `lsasrv` (the function will be prefixed by `SspiEx`). The `lsasrv` functions then pass execution to the original LPC handlers (ex. `LpcHandler`).
+The only additional check the RPC server performs is to verify that a client is local if it requests the `SspirGetInprocDispatchTable` operation.
+This check is redundant and does not affect LSA Whisperer.
+For other operations, no client verification is done by the server and the SSPI server passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table inside `lsasrv` (the internal function will be prefixed with the name `SspiEx`). The `lsasrv` will then pass execution to the original LPC handlers (ex. `LpcHandler`).
+Please refer to the https://github.com/EvanMcBroom/lsa-whisperer/wiki/usage[SPM page] if you would like more information about these LPC handlers.
 
 It is also worth noting that the RPC runtime has a hardcoded list of interfaces that are exempt from multiple security mitigations that have existed since NT 5.2.
 The list is named `RpcVerifierExemptInterfaces` and may be found by viewing its use in the `rpcrt4.dll!IsInterfaceExempt` function.
@@ -171,21 +202,22 @@ The list includes multiple RPC servers that have been previously abused such as 
 Interestingly, Microsoft has only added 2 interfaces to this list since NT 5.2.
 One is the Remote Management interface and one is SSPI.
 Microsoft has also added 1 additional mitigation bypass which has only been applied to SSPI (flag `0x8`).
-The following is the full list of flags for bypassing RPC runtime mitigations which have all been applied to the SSPI interface.
+Each mitigation bypass that Microsoft may specify is provided below.
+All of these bypasses have been applied to the SSPI interface.
 Microsoft's need for doing this has still not been determined.
 
 [source,c]
 ----
-// Registering an interface that is remotely acessible without a
-// security callback and without RPC_IF_ALLOW_SECURE_ONLY flag
+// Allow the interface to be remotely acessible without specifying a security
+// callback and or the RPC_IF_ALLOW_SECURE_ONLY flag during its registration
 #define ALLOW_UNSECURE_REMOTE_ACCESS 0x00000001
 
-// An interface may be called remotely without
+// The interface may be called remotely without
 // RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 #define ALLOW_UNENCRYPTED_REMOTE_ACCESS 0x00000002
 
-// An interface may be called remotely without mutual
-// authentication.
+// The interface may be called remotely without mutual
+// authentication
 #define ALLOW_NO_MUTUAL_AUTH_REMOTE_ACCESS 0x00000004
 
 // Do not flag the use of a security callback when running

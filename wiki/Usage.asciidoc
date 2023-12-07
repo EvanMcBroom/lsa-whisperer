@@ -1,0 +1,135 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Command Usage
+
+LSA Whisperer may be ran without providing any command line arguments.
+Doing so will start the tool as a REPL shell for issuing commands.
+Command history and tab completion for command names are supported.
+
+Command logging is enabled by default.
+If the tool is cleanly exited (ex. by calling `.exit`) the user's command history will be saved to `./.lsa_history.txt`.
+History may be saved to an alternative path using the `--history-file` argument.
+History may also not be saved by using the `--no-history` argument.
+
+Users may specify commands to execute directly from the command line.
+Specifying one or more commands this way will start the tool in a non-interactive mode.
+In this mode the tool will execute each command the user specified and display the corresponding results.
+A full list of commands the tool supports is documented on individual wiki pages but a small list is provided in the https://github.com/EvanMcBroom/lsa-whisperer/usage#example-usage[Example Usage] section.
+The only commands that are not supported in non-interactive mode are the meta commands.
+
+== Meta Commands
+
+LSA Whisperer supports some commands unrelated to interacting with SSPs to make using the tool easier.
+These are called meta commands and are prefixed by a period (ex. `.token`).
+A brief overview of these commands is provided below.
+
+.Meta Commands
+[%header]
+|===
+| Package               | Description
+| `.clear`              | Clear the screen
+| `.exit`               | Cleanly exit from the tool
+| `.help`               | Show a link to the project's wiki for detailed help information
+| `.history`            | Show what commands have previously been ran
+| `.nonce`              | Request a nonce that may be used with the cloudap commands and https://github.com/dirkjanm/ROADtools/wiki/ROADtools-Token-eXchange-(roadtx)[roadtx]
+| `.quit`               | Cleanly exit from the tool
+| `.token Impersonate`  | Impersonate a Window Station session
+| `.token RevertToSelf` | Revert to your original user
+| `.token SetPrivilege` | Enable and disable a privilege for your primary token
+| `.token WhoAmi`       | Show your current user
+|===
+
+
+== Example Usage
+
+Below provides a list of some of the commands the tool supports, each categorized by its high level usage.
+
+.Showing Host Configuration Information
+[source,bash]
+----
+cloudap CheckDeviceKeysHealth
+cloudap GetDpApiCredKeyDecryptStatus
+cloudap GetPrtAuthority
+cloudap IsCloudToOnPremTgtPresentInCache
+kerberos PrintCloudKerberosDebug
+kerberos QueryBindingCache
+kerberos QueryDomainExtendedPolicies
+negotiate EnumPackageNames
+negotiate EnumPackagePrefixes
+schannel StreamSizes # Untested
+spm EnumPackages
+spm EnumLogonSessions
+----
+
+.Showing Logon Session Information
+[source,bash]
+----
+# AzureAD, AD FS, and Microsoft Account logons
+cloudap GetAuthenticatingProvider --luid 0x0000
+cloudap GetPwdExpiryInfo --luid 0x0000
+cloudap GetUnlockKeyType --luid 0x0000
+
+# Domain logons
+kerberos QueryKdcProxyCache --luid 0x0000
+kerberos QueryS4U2ProxyCache --luid 0x0000
+kerberos QueryTicketCache[Ex | Ex2 | Ex3] --luid 0x0000
+
+# Local account logons
+msv1_0 EnumerateUsers
+msv1_0 GetUserInfo ...
+
+# Negotiated logon sessions
+negoexts GetCredUIContext ... # Untested
+negotiate GetCallerName
+
+# Peer-to-peer logon sessions
+pku2u QueryTicketCacheEx2 --luid 0x0000
+----
+
+.Accessing or Creating Credential Data
+[source,bash]
+----
+# AzureAD, AD FS, and Microsoft Account logons
+cloudap GetTokenBlob --luid 0x0000
+
+# AzureAD and AD FS logons
+cloudap CreateDeviceSSOCookie ...
+cloudap CreateEnterpriseSSOCookie ...
+cloudap CreateSSOCookie ...
+
+# Microsoft logons on pre-NT 10 hosts
+live GetSignedProofOfPossessionToken
+
+# Domain logons
+kerberos RetrieveEncodedTicket ...
+kerberos RetrieveKeyTab ...
+kerberos RetrieveTicket ...
+
+# Local account logons
+msv1_0 DeriveCredential ...
+msv1_0 GetCredentialKey --luid 0x0000
+msv1_0 GetStrongCredentialKey --luid 0x0000
+----
+
+== Known Limitations
+
+LSA Whisperer may only be used to interact with the local machine due to the RPC security considerations outlined https://github.com/EvanMcBroom/lsa-whisperer/wiki#sspi-security[on the home page].
+The tool will also experience issues interacting with some SSPs (mainly cloudap) if it is ran as an AppContainer without certain capabilities.
+Partial documentation of these capabilities may be found on individual wiki pages but full documention is not provided as this is an unintended use case of the tool.
+
+The only additional limitation is when Credential Guard is enabled.
+Enabling Credential Guard is known to prevent certain commands as listed below.
+Credential Guard may affect other commands that have not yet been identified.
+
+.Credential Guard Limitations
+[%header]
+|===
+| Package    | Command                       | Effect
+| `kerberos` | `KerbChangePassword`          | Indirectly affected
+| `kerberos` | `KerbChangePassword`          | Indirectly affected
+| `msv1_0`   | `MspGetCredentialKey`         | Prevented
+| `msv1_0`   | `MspLm20GetChallengeResponse` | Prevented
+| `msv1_0`   | `MspNtDeriveCredential`       | Prevented
+|===

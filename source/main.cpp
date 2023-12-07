@@ -174,6 +174,7 @@ int main(int argc, char** argv) {
         cli.AddCommand("kerberos", CommandFactory(lsa, Kerberos::Call));
         cli.AddCommand("live", CommandFactory(lsa, Live::Call));
         cli.AddCommand("msv1_0", CommandFactory(lsa, Msv1_0::Call));
+        cli.AddCommand("negoexts", CommandFactory(lsa, Negoexts::Call));
         cli.AddCommand("negotiate", CommandFactory(lsa, Negotiate::Call));
         cli.AddCommand("pku2u", CommandFactory(lsa, Pku2u::Call));
         cli.AddCommand("schannel", CommandFactory(lsa, Schannel::Call));
@@ -193,6 +194,7 @@ int main(int argc, char** argv) {
         cli.AddSubCommandCompletions("kerberos", SubCommands<Kerberos::PROTOCOL_MESSAGE_TYPE>());
         cli.AddSubCommandCompletions("live", SubCommands<Live::PROTOCOL_MESSAGE_TYPE>());
         cli.AddSubCommandCompletions("msv1_0", SubCommands<Msv1_0::PROTOCOL_MESSAGE_TYPE>());
+        cli.AddSubCommandCompletions("negoexts", SubCommands<Negoexts::PROTOCOL_MESSAGE_TYPE>());
         cli.AddSubCommandCompletions("negotiate", SubCommands<Negotiate::PROTOCOL_MESSAGE_TYPE>());
         cli.AddSubCommandCompletions("pku2u", SubCommands<Pku2u::PROTOCOL_MESSAGE_TYPE>());
         cli.AddSubCommandCompletions("schannel", SubCommands<Schannel::PROTOCOL_MESSAGE_TYPE>());
