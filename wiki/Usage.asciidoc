@@ -16,7 +16,7 @@ History may also not be saved by using the `--no-history` argument.
 Users may specify commands to execute directly from the command line.
 Specifying one or more commands this way will start the tool in a non-interactive mode.
 In this mode the tool will execute each command the user specified and display the corresponding results.
-A full list of commands the tool supports is documented on individual wiki pages but a small list is provided in the https://github.com/EvanMcBroom/lsa-whisperer/usage#example-usage[Example Usage] section.
+A full list of commands the tool supports is documented on individual wiki pages but a small list is provided in the https://github.com/EvanMcBroom/lsa-whisperer/wiki/Usage#example-usage[Example Usage] section.
 The only commands that are not supported in non-interactive mode are the meta commands.
 
 == Meta Commands
