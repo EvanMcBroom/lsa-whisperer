@@ -100,11 +100,8 @@ msv1_0 ClearCachedCredentials
 
 === DecryptDpapiMasterKey
 
-...
-
-```
-msv1_0 DecryptDpapiMasterKey ...
-```
+Return a decrypted master key when provided pointers to an appropriate DPAPI prekey and other input data for a logon session.
+The command is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
 
 === DeleteTbalSecrets
 
@@ -144,12 +141,14 @@ msv1_0 -d {function name} [function arguments]...
 
 === GetCredentialKey
 
-Get keys from the primary credential structure for the logon session.
-The  primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a Cred key.
-
-The command will return the SHA OWF hash and the Cred Key if it is present.
-If the Cred Key is not present the command will instead return the NT OWF hash.
+Return all possible DPAPI prekeys from the primary credential structure for the logon session, regardless of the associated user's account type (e.g. local or domain).
 The command will fail if the user does not have the `SeTcbPrivilege` privilege or credential isolation is enabled.
+
+The primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a Cred key but only 2 keys will be returned.
+The SHA OWF hash will always be returned which may be used as the DPAPI prekey if the account is local.
+The 2nd key will either be the Cred Key if it is present or otherwise the NT OWF hash.
+The 2nd key may be used if the account is a domain account.
+The DPAPI prekeys may be used to decrypt the associated user's DPAPI master key or backup key files.
 
 ```
 msv1_0 GetCredentialKey --luid {session id}
@@ -159,21 +158,17 @@ NOTE: The Cred Key is the same key referred to by Mimikatz as "DPAPI" under the 
 
 === GetStrongCredentialKey
 
-Get keys from the primary credential structure for the logon session.
+Return the appropriate DPAPI prekey to use from the primary credential structure for the logon session.
 Please refer to `GetCredentialKey` for more information about primary credentials.
+The SHA OWF hash will be returned for local accounts and the Cred Key will be returned for domain accounts.
 
-The command offers two modes of operation.
-In the first mode, the primary credential structure for the specified logon session is retrieved.
-Additional handling is done in this mode if the structure contains a GMSA credential.
-In that situation, the cleartext password for the service account is retrieved, converted to its NT OWF and SHA OWF equivalents, than stored in the primary credential structure.
+Additional handling is also done for GMSA credentials.
+For GMSA accounts, the cleartext password for the service account is retrieved and converted to its NT OWF and SHA OWF equivalents for the primary credential structure if needed before the structure is referenced for the appropriate DPAPI prekey for the account.
 
-In the second mode, the user should supply either a cleartext password or NT OWF hash to store in an empty primary credential structure.
-If a cleartext password is provided it will be converted to NT OWF and SHA OWF equivalents to store in the primary credential structure.
-The second mode requires the user to supply valid data pointers for LSASS process memory which is out of scope for the project.
-
-An account type (e.g., `SID_NAME_USE`) is then determined using either the specified logon session's SID (if using the first mode of the command's operation), otherwise a provided SID is used.
-If the account is a group or domain, then the Cred Key (e.g., `DomainUserCredKey`) is returned.
-Otherwise, the SHA OWF (e.g., the `LocalUserCredKey`) is returned.
+The above description is how LSA Whisperer will operate when using the command but the command does have a 2nd mode of operation.
+In the 2nd mode, the user should supply pointers to a SID and either a cleartext password or an NT OWF hash.
+The account type for the SID will then be determined (e.g. local or group/domain) and then the appropriate DPAPI prekey is returned for the associated user.
+The 2nd mode is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
 
 ```
 msv1_0 GetStrongCredentialKey ...
@@ -250,3 +245,68 @@ msv1_0 TransferCred --sluid {session id} --dluid {session id}
 Msv1_0 supports registering custom sub-authentication packages for extra user validation for local logons.
 The only Micosoft developed sub-authentication package that could be identified was the "Microsoft IIS sub-authenticiation handler" implemented in the file `iissuba.dll`.
 The `iissuba.dll` package has not shipped with Windows for a long time - hence it has not been included in the LSA Whisperer project.
+
+== Key Terms
+
+Reverse engineering some terms were key in understanding the internal message protocol functions that msv1_0 provides.
+A description for each of these terms is provided here for others to use and research further.
+These may not be completely accurate and contributions are appreciated.
+
+=== Credential Key
+
+In regards to the Data Protection API (DPAPI), Microsoft refers to the DPAPI prekey as Credential Key or Cred Key for short.
+The Cred Key is used to decrypt a user's master key or backup key file for accessing DPAPI encrypted data.
+The Cred Key for a local user will be the SHA OWF hash of the user's password.
+The Cred Key for domain users will be the Secure Cred Key or the NT OWF hash for hosts older than NT 10 1604.
+
+=== Credential Key Identifier
+
+Microsoft will derive another value from a Cred Key for logging purposes which it calls the Cred Key Id.
+The Cred Key Id is generated by msv1_0 may be seen in logs such as event Id 12289 from the Microsoft-Windows-Crypto-DPAPI provider.
+Code for deriving a Cred Key Identifier is provided below.
+
+[source,c++]
+----
+// Input data must be 0x14 bytes and will be the SHA OWF hash for a LocalUserCredKey
+// or a null padded Cred Key, which are 0x10 bytes, for all other account types
+std::string CredKeyId(BYTE* data, PSID sid) {
+    std::string output;
+    BCRYPT_KEY_HANDLE key;
+    if (!BCryptGenerateSymmetricKey(BCRYPT_SP800108_CTR_HMAC_ALG_HANDLE, &key, nullptr, 0, data, 0x14, 0)) {
+        std::string label{ "DPAPICredKeyLogging" };
+        std::wstring algorithm{ BCRYPT_SHA256_ALGORITHM };
+        BCryptBuffer cryptBuffers[] = {
+            {
+                static_cast<ULONG>(label.size() + 1), // 0x14
+                KDF_LABEL,
+                const_cast<char*>(label.data()),
+            }, {
+                GetLengthSid(sid),
+                KDF_CONTEXT,
+                sid,
+            }, {
+                static_cast<ULONG>((algorithm.size() + 1) * sizeof(wchar_t)), // 0xe
+                KDF_HASH_ALGORITHM,
+                const_cast<wchar_t*>(algorithm.data()),
+            }
+        };
+        BCryptBufferDesc parameterList;
+        parameterList.ulVersion = 0;
+        parameterList.cBuffers = 3;
+        parameterList.pBuffers = cryptBuffers;
+        UCHAR credKey[0x20];
+        DWORD copiedBytes{ 0 };
+        if (!BCryptKeyDerivation(key, &parameterList, credKey, 0x20, &copiedBytes, 0)) {
+            output = std::string(reinterpret_cast<char*>(credKey), copiedBytes);
+        }
+        BCryptDestroyKey(key);
+    }
+    return output;
+}
+----
+
+=== Secure Credential Key
+
+Microsoft refers to Cred Keys used for domain accounts post NT 10 1607 as "Secure Cred Keys."
+The reason for a new term is that a Secure Cred Key is generated differently than a normal Cred Key, as documented in different FOSS projects such as https://github.com/openwall/john/blob/4222aa48e282fdd608b4b54a7efadb834a999b42/run/DPAPImk2john.py#L545[John the Ripper].
+Although the key derivations are different, Microsoft commonly refers to both types of generated keys as "Cred Keys."
