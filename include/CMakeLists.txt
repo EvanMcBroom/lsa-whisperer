@@ -11,7 +11,6 @@ set(SSPI_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/msv1_0.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negoexts.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/negotiate.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/netlogon.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pch.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pku2u.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rpc.hpp

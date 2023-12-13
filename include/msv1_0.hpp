@@ -3,7 +3,6 @@
 
 #include <lsa.hpp>
 #include <memory>
-#include <netlogon.hpp>
 #include <string>
 #include <vector>
 
@@ -113,12 +112,13 @@ namespace Msv1_0 {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::DecryptDpapiMasterKey };
         // OWF password type. 0 for NtOwf, 1 for ShaOwf
         // Based off  NtlmCredIsoInProc::DecryptDpapiMasterKey
-        DWORD IsShaPassword; // confirmed
+        DWORD IsLocalUserCredKey; // 1 means it is a SHA OWF
         LUID LogonSession;
-        DWORD MasterKeyIn;
-        DWORD unknown3;
-        DWORD unknown4; // used for something
-        DWORD unknown5[7];
+        ULONG bcryptInputDataLength;
+        PUCHAR bcryptInputData;
+        DWORD cbMasterKeyIn;
+        PUCHAR pbMasterKeyIn;
+        UCHAR Reserved[32];
     } DECRYPT_DPAPI_MASTER_KEY_REQUEST, *PDECRYPT_DPAPI_MASTER_KEY_REQUEST;
 
     typedef struct _DECRYPT_DPAPI_MASTER_KEY_RESPONSE {
@@ -288,15 +288,4 @@ namespace Msv1_0 {
         template<typename _Request, typename _Response>
         bool CallPackage(_Request* submitBuffer, size_t submitBufferLength, _Response** returnBuffer) const;
     };
-
-    namespace Cache {
-        std::unique_ptr<Netlogon::INTERACTIVE_INFO> GetLogonInfo(const std::wstring& domainName, const std::wstring& userName, std::wstring& computerName, const std::vector<byte>& hash, ULONG logonType = RPC_C_AUTHN_GSS_KERBEROS);
-
-        // The GetSupplementalMitCreds function is only provided for convenience
-        // Other supplemental cred formats are left to the user to build
-        std::vector<byte> GetSupplementalMitCreds(const std::wstring& domainName, const std::wstring& upn);
-
-        // The validationInfo argument is specified as VALIDATION_SAM_INFO3 because may store resource group information
-        std::unique_ptr<Netlogon::VALIDATION_SAM_INFO4> GetValidationInfo(Netlogon::PVALIDATION_SAM_INFO3 validationInfo, std::wstring* dnsDomainName);
-    }
 }

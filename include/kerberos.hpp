@@ -3,7 +3,6 @@
 
 #include <lsa.hpp>
 #include <memory>
-#include <netlogon.hpp>
 #include <string>
 #include <vector>
 

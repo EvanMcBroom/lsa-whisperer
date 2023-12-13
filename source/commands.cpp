@@ -1,3 +1,4 @@
+#include <crypt.hpp>
 #include <DsGetDC.h>
 #include <codecvt>
 #include <commands.hpp>
@@ -464,7 +465,6 @@ namespace Msv1_0 {
         unparsedOptions.add_options()
             ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
         unparsedOptions.add_options("Function arguments")
-            ("computer", "Computer name", cxxopts::value<std::string>())
             ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
             ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
@@ -482,8 +482,7 @@ namespace Msv1_0 {
             ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
             ("sluid", "Source logon session", cxxopts::value<long long>())
             ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
-            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
-            ("user", "User name", cxxopts::value<std::string>());
+            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -493,38 +492,6 @@ namespace Msv1_0 {
         auto proxy{ Proxy(lsa) };
 
         switch (magic_enum::enum_cast<PROTOCOL_MESSAGE_TYPE>(args[1]).value()) {
-        case PROTOCOL_MESSAGE_TYPE::CacheLogon: {
-            // Populate the logon info
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            auto domain{ converter.from_bytes(options["domain"].as<std::string>()) };
-            auto account{ converter.from_bytes(options["user"].as<std::string>()) };
-            auto computer{ std::wstring((options.count("computer")) ? converter.from_bytes(options["computer"].as<std::string>()) : L"") };
-            std::vector<byte> hash;
-            if (options.count("hash")) {
-                hash = HexDecode(std::cout, converter.from_bytes(options["hash"].as<std::string>()));
-            } else {
-                hash = CalculateNtOwfPassword(options["pass"].as<std::string>());
-            }
-            auto logonInfo{ Cache::GetLogonInfo(domain, account, computer, hash) };
-            // Populate the validation info and supplemental creds
-            ULONG requestFlags = static_cast<ULONG>(CacheLogonFlags::RequestInfo4);
-            Netlogon::VALIDATION_SAM_INFO4 validationInfo4;
-            std::memset(&validationInfo4, 0, sizeof(Netlogon::VALIDATION_SAM_INFO4));
-            std::vector<byte> supplementalCreds;
-            if (options.count("mitlogon")) {
-                requestFlags |= static_cast<ULONG>(CacheLogonFlags::RequestMitLogon);
-                auto upn{ converter.from_bytes(options["mitlogon"].as<std::string>()) };
-                supplementalCreds = Cache::GetSupplementalMitCreds(domain, upn);
-            }
-            if (options.count("suppcreds")) {
-                supplementalCreds = HexDecode(std::cout, converter.from_bytes(options["suppcreds"].as<std::string>()));
-            }
-            // Set any additional flags that may have been specified
-            requestFlags |= (options.count("delete")) ? static_cast<ULONG>(CacheLogonFlags::DeleteEntry) : 0;
-            requestFlags |= (options.count("smartcard")) ? static_cast<ULONG>(CacheLogonFlags::RequestSmartcardOnly) : 0;
-            void* response{ nullptr };
-            return proxy.CacheLogon(logonInfo.get(), &validationInfo4, supplementalCreds, requestFlags);
-        }
         case PROTOCOL_MESSAGE_TYPE::CacheLookupEx:
             break;
         case PROTOCOL_MESSAGE_TYPE::ChangeCachedPassword: {
