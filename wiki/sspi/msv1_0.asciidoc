@@ -89,7 +89,7 @@ msv1_0 ClearCachedCredentials
 
 === DecryptDpapiMasterKey
 
-Return a decrypted master key when provided pointers to an appropriate DPAPI prekey and other input data for a logon session.
+Return a decrypted master key when provided pointers to an appropriate DPAPI credential key and other input data for a logon session.
 The command is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
 
 === DeleteTbalSecrets
@@ -102,9 +102,13 @@ msv1_0 DeleteTbalSecrets
 
 === DeriveCredential
 
-Get the [SHA1 HMAC](https://en.wikipedia.org/wiki/HMAC) for a provided message using an NT OWF or SHA1 OWF password as the key, specified by the logon session id.
-The `--sha1v2` argument specifies to use the SHA1 OWF password instead of the NT OWF password.
-`SeTcbPrivilege` may be required when specifying an id for another logon session but still need to verify that.
+Get the master key (MK) encryption key for a local user.
+The MK Encryption Key is the https://en.wikipedia.org/wiki/HMAC[SHA1 HMAC] for a provided message using a user's NT OWF or SHA OWF hash as the key, specified by the logon session id, and the associated user's SID as the message.
+
+The NT OWF hash https://www.passcape.com/index.php[was originally used as the MK encryption key] but was updated to instead be the SHA OWF to prevent users decrypting a master key by recovering an NT OWF hash from the SAM.
+Although although Windows now uses SHA OWF, the command still supports the legacy option.
+The `--sha1v2` argument specifies to use the SHA OWF hash instead of the NT OWF hash.
+The command will fail if the user does not have the `SeTcbPrivilege` privilege and specifies a session id for another user or if credential isolation is enabled.
 
 ```
 msv1_0 DeriveCredential --luid {session id} [--sha1v2] --message {ascii hex}
@@ -130,14 +134,15 @@ msv1_0 -d {function name} [function arguments]...
 
 === GetCredentialKey
 
-Return all possible DPAPI prekeys from the primary credential structure for the logon session, regardless of the associated user's account type (e.g. local or domain).
+Return all possible DPAPI credential keys from the primary credential structure for the logon session, regardless of the associated user's account type (e.g. local or domain).
 The command will fail if the user does not have the `SeTcbPrivilege` privilege or credential isolation is enabled.
 
-The primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a Cred key but only 2 keys will be returned.
-The SHA OWF hash will always be returned which may be used as the DPAPI prekey if the account is local.
-The 2nd key will either be the Cred Key if it is present or otherwise the NT OWF hash.
+The primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a "secure" credential key but only 2 keys will be returned.
+The SHA OWF hash will always be returned which may be used as the DPAPI credential key if the account is local.
+The 2nd key will either be the "secure" credential key if it is present or otherwise the NT OWF hash.
+The "secure" credential key has introduced in NT 1607 and will not be present on older hosts.
 The 2nd key may be used if the account is a domain account.
-The DPAPI prekeys may be used to decrypt the associated user's DPAPI master key or backup key files.
+The DPAPI credential keys may be used with a user's SID to derive the master key (MK) encryption key to decrypt the user's master key or backup key files.
 
 ```
 msv1_0 GetCredentialKey --luid {session id}
@@ -147,20 +152,20 @@ NOTE: The Cred Key is the same key referred to by Mimikatz as "DPAPI" under the 
 
 === GetStrongCredentialKey
 
-Return the appropriate DPAPI prekey to use from the primary credential structure for the logon session.
+Return the appropriate DPAPI credential key to use from the primary credential structure for the logon session.
 Please refer to `GetCredentialKey` for more information about primary credentials.
-The SHA OWF hash will be returned for local accounts and the Cred Key will be returned for domain accounts.
+The SHA OWF hash will be returned for local accounts and the NT OWF has or "secure" credential key will be returned for domain accounts.
 
 Additional handling is also done for GMSA credentials.
-For GMSA accounts, the cleartext password for the service account is retrieved and converted to its NT OWF and SHA OWF equivalents for the primary credential structure if needed before the structure is referenced for the appropriate DPAPI prekey for the account.
+For GMSA accounts, the cleartext password for the service account is retrieved and converted to its NT OWF and SHA OWF equivalents for the primary credential structure if needed before the structure is referenced for the appropriate DPAPI credential key for the account.
 
 The above description is how LSA Whisperer will operate when using the command but the command does have a 2nd mode of operation.
 In the 2nd mode, the user should supply pointers to a SID and either a cleartext password or an NT OWF hash.
-The account type for the SID will then be determined (e.g. local or group/domain) and then the appropriate DPAPI prekey is returned for the associated user.
+The account type for the SID will then be determined (e.g. local or group/domain) and then the appropriate DPAPI credential key is returned for the associated user.
 The 2nd mode is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
 
 ```
-msv1_0 GetStrongCredentialKey ...
+msv1_0 GetStrongCredentialKey --luid {session id} [--protected-user]
 ```
 
 NOTE: The Cred Key is the same key referred to by Mimikatz as "DPAPI" under the "Primary" section of the command output for `sekurlsa::msv`.
@@ -237,7 +242,7 @@ The `iissuba.dll` package has not shipped with Windows for a long time - hence i
 
 == Key Terms
 
-Reverse engineering some terms were key in understanding the internal message protocol functions that msv1_0 provides.
+Reverse engineering some terms were key in understanding the importance of some functions that msv1_0 provides.
 A description for each of these terms is provided here for others to use and research further.
 These may not be completely accurate and contributions are appreciated.
 

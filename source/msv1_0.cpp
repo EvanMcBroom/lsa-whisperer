@@ -212,14 +212,18 @@ namespace Msv1_0 {
         auto result{ CallPackage(request, &response) };
         if (result) {
             std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
-            OutputHex(lsa->out, "ShaOwf", shaOwf);
+            OutputHex(lsa->out, "Local CredKey (SHA OWF)  ", shaOwf);
             // If there is data past the length for the ShaOwf and the NtOwf, then the NtOwf offset will actually be the Dpapi key
             if (*reinterpret_cast<DWORD*>(&response->Key2[MSV1_0_OWF_PASSWORD_LENGTH])) {
                 std::string dpapiKey(reinterpret_cast<const char*>(&response->Key2), MSV1_0_CREDENTIAL_KEY_LENGTH);
-                OutputHex(lsa->out, "CredKey", dpapiKey);
+                if (shaOwf.size() == dpapiKey.size() && !std::memcmp(shaOwf.data(), dpapiKey.data(), dpapiKey.size())) {
+                    std::cout << "Domain CredKey: Not calculated yet for logon session. Reported as SHA OWF." << std::endl;
+                } else {
+                    OutputHex(lsa->out, "Domain CredKey (\"Secure\")", dpapiKey);
+                }
             } else {
                 std::string ntOwf(reinterpret_cast<const char*>(&response->Key2), MSV1_0_OWF_PASSWORD_LENGTH);
-                OutputHex(lsa->out, "NtOwf", ntOwf);
+                OutputHex(lsa->out, "Domain CredKey (NT OWF)  ", ntOwf);
             }
             LsaFreeReturnBuffer(response);
         }
@@ -239,10 +243,10 @@ namespace Msv1_0 {
         if (result) {
             if (*reinterpret_cast<DWORD*>(&response->ShaPassword)) {
                 std::string shaOwf(reinterpret_cast<const char*>(&response->ShaPassword), MSV1_0_SHA_PASSWORD_LENGTH);
-                OutputHex(lsa->out, "ShaOwf", shaOwf);
+                OutputHex(lsa->out, "Local CredKey (SHA OWF)", shaOwf);
             } else {
                 std::string dpapiKey(reinterpret_cast<const char*>(&response->Key2), MSV1_0_CREDENTIAL_KEY_LENGTH);
-                OutputHex(lsa->out, "CredKey", dpapiKey);
+                OutputHex(lsa->out, "Domain CredKey (NT OWF/\"Secure\")", dpapiKey);
             }
             LsaFreeReturnBuffer(response);
         }
