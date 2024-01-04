@@ -469,6 +469,7 @@ namespace Msv1_0 {
             ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain", "Domain name", cxxopts::value<std::string>())
+            ("user", "User name", cxxopts::value<std::string>())
             ("hash", "Asciihex hash", cxxopts::value<std::string>())
             ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
             ("luid", "Logon session", cxxopts::value<long long>())
