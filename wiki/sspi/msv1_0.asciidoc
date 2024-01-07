@@ -33,13 +33,13 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 | `0x0D` | `ConfigLocalAliases`       |                    | `>=6.0`    | `MspConfigLocalAliases`
 | `0x0E` | `ClearCachedCredentials`   | :heavy_check_mark: | `>=6.0`    | `MspLm20ClearCachedCredentials`
 | `0x0F` | `LookupToken`              |                    | `>=6.1`    | `MspLookupToken`
-| `0x10` | `ValidateAuth`             |                    | `>=6.2`    | `MspValidateAuth`
+| `0x10` | `ValidateAuth`             | :x:                | `>=6.2`    | `MspValidateAuth`
 | `0x11` | `CacheLookupEx`            | :x:                | `>=6.2`    | `MspLm20CacheLookup`
 | `0x12` | `GetCredentialKey`         | :heavy_check_mark: | `>=6.2`    | `MspGetCredentialKey`
 | `0x13` | `SetThreadOption`          | :heavy_check_mark: | `>=6.2`    | `MspSetThreadOption`
 | `0x14` | `DecryptDpapiMasterKey`    | _Planned_          | `>=6.4`    | `MspDecryptDpapiMasterKey`
 | `0x15` | `GetStrongCredentialKey`   | :heavy_check_mark: | `>=6.4`    | `MspGetStrongCredentialKey`
-| `0x16` | `TransferCred`             | :heavy_check_mark: | `>=10.0`   | `MspTransferCreds`
+| `0x16` | `TransferCred`             | :x:                | `>=10.0`   | `MspTransferCreds`
 | `0x17` | `ProvisionTbal`            | :heavy_check_mark: | `>=10.0`   | `MspProvisionTbal`
 | `0x18` | `DeleteTbalSecrets`        | :heavy_check_mark: | `>=10.0`   | `MspDeleteTbalSecrets`
 |===
@@ -60,7 +60,7 @@ The command is restricted to only being callable by LSASS itself and as such is 
 
 === CacheLookupEx
 
-Similar to the `CacheLookup` command, `CacheLookupEx` is restricted to only being callable by LSASS itself and as such is outside the scope of LSA Whisperer.
+The command is restricted to only being callable by LSASS itself and as such is outside the scope of LSA Whisperer.
 
 === ChangeCachedPassword
 
@@ -226,13 +226,14 @@ msv1_0 SetThreadOption --option {thread option} [--disable]
 
 === TransferCred
 
-Transfer data between two msv1_0 logon sessions.
-The specific data that is transferred and privileges that may be required are still being determined.
-The function will ignore any flags that are provided.
+Copy the primary credentials (LM, NT, SHA OWFs, and Cred Key) from one msv1_0 logon session to another logon session.
+The copying is done by retrieving the primary credentials of the source logon session then calling `SspAcceptCredentials` with the `PRIMARY_CRED_UPDATE` flag set and the necessary input data to update the destination logon session with the retrieved credentials.
+The function will ignore the all standard flags for a transfer credentials call (ex. `--cleanup-credentials`).
+The command is restricted to only being callable by LSASS itself and as such is outside the scope of LSA Whisperer.
 
-```
-msv1_0 TransferCred --sluid {session id} --dluid {session id}
-```
+=== ValidateAuth
+
+The command is restricted to only being callable by LSASS itself and as such is outside the scope of LSA Whisperer.
 
 == Sub-authentication Packages
 

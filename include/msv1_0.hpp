@@ -245,14 +245,6 @@ namespace Msv1_0 {
         BOOLEAN DisableOptions; // correct
         BOOLEAN unknown; // something else
     } SETTHREADOPTION_REQUEST, *PSETTHREADOPTION_REQUEST;
-    
-    // TRANSFER_CRED_REQUEST::Flags is ignored by msv1_0
-    typedef struct _TRANSFER_CRED_REQUEST : _SECPKG_CALL_PACKAGE_TRANSFER_CRED_REQUEST {
-        _TRANSFER_CRED_REQUEST() {
-            MessageType = static_cast<ULONG>(PROTOCOL_MESSAGE_TYPE::TransferCred);
-            Flags = 0;
-        }
-    } TRANSFER_CRED_REQUEST, *PTRANSFER_CRED_REQUEST;
 
     class Proxy {
     public:
@@ -275,7 +267,6 @@ namespace Msv1_0 {
         bool Lm20ChallengeRequest() const;
         bool ProvisionTbal(PLUID luid) const;
         bool SetProcessOption(ProcessOption options, bool disable) const;
-        bool TransferCred(PLUID sourceLuid, PLUID destinationLuid) const;
 
     protected:
         std::shared_ptr<Lsa> lsa;

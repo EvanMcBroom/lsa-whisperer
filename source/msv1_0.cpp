@@ -308,16 +308,6 @@ namespace Msv1_0 {
         return CallPackage(request, &response);
     }
 
-    bool Proxy::TransferCred(PLUID sourceLuid, PLUID destinationLuid) const {
-        TRANSFER_CRED_REQUEST request;
-        request.OriginLogonId.LowPart = sourceLuid->LowPart;
-        request.OriginLogonId.HighPart = sourceLuid->HighPart;
-        request.DestinationLogonId.LowPart = destinationLuid->LowPart;
-        request.DestinationLogonId.HighPart = destinationLuid->HighPart;
-        void* response;
-        return CallPackage(request, &response);
-    }
-
     bool Proxy::CallPackage(const std::string& submitBuffer, void** returnBuffer) const {
         if (lsa->Connected()) {
             return lsa->CallPackage(MSV1_0_PACKAGE_NAME, submitBuffer, returnBuffer);

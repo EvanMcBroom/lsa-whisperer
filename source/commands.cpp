@@ -546,12 +546,6 @@ namespace Msv1_0 {
         }
         case PROTOCOL_MESSAGE_TYPE::SetProcessOption:
             return proxy.SetProcessOption(magic_enum::enum_cast<ProcessOption>(options["option"].as<std::string>()).value(), options["disable"].as<bool>());
-        case PROTOCOL_MESSAGE_TYPE::TransferCred: {
-            LUID sourceLuid, destinationLuid;
-            reinterpret_cast<LARGE_INTEGER*>(&sourceLuid)->QuadPart = options["sluid"].as<long long>();
-            reinterpret_cast<LARGE_INTEGER*>(&destinationLuid)->QuadPart = options["dluid"].as<long long>();
-            return proxy.TransferCred(&sourceLuid, &destinationLuid);
-        }
         default:
             std::cout << "Unsupported function" << std::endl;
             return false;
