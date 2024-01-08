@@ -137,12 +137,18 @@ msv1_0 -d {function name} [function arguments]...
 Return all possible DPAPI credential keys from the primary credential structure for the logon session, regardless of the associated user's account type (e.g. local or domain).
 The command will fail if the user does not have the `SeTcbPrivilege` privilege or credential isolation is enabled.
 
-The primary credential structure may contain an LM OWF hash, NT OWF hash, SHA OWF hash, and a "secure" credential key but only 2 keys will be returned.
-The SHA OWF hash will always be returned which may be used as the DPAPI credential key if the account is local.
-The 2nd key will either be the "secure" credential key if it is present or otherwise the NT OWF hash.
+The primary credential structure contains fields for an LM OWF hash, NT OWF hash, SHA OWF hash, and a "secure" credential key.
+Only 2 of these fields will be returned.
+The the SHA OWF hash will always be returned which may be used as the DPAPI credential key if the account is local.
+The 2nd key will either be the value of the "secure" credential key field if it is present or otherwise the NT OWF hash.
+
 The "secure" credential key has introduced in NT 1607 and will not be present on older hosts.
 The 2nd key may be used if the account is a domain account.
 The DPAPI credential keys may be used with a user's SID to derive the master key (MK) encryption key to decrypt the user's master key or backup key files.
+
+In some situations the "secure" credential key field for a logon session on a non-domain joined host will be populated with a copy of the account's SHA OWF hash.
+In those situations the SHA OWF and "secure" credential key fields will returned but they will be the same value.
+What causes this situation has not been identified.
 
 ```
 msv1_0 GetCredentialKey --luid {session id}
