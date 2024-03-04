@@ -281,12 +281,49 @@ namespace Msv1_0 {
     }
 
     bool Proxy::Lm20ChallengeRequest() const {
-        LM20_CHALLENGE_REQUEST request;
-        LM20_CHALLENGE_RESPONSE* response;
+        LM20_CHALLENGE_REQUEST_REQUEST request;
+        LM20_CHALLENGE_REQUEST_RESPONSE* response;
         bool result{ CallPackage(request, &response) };
         if (result) {
             std::string challenge(reinterpret_cast<const char*>(&response->ChallengeToClient), sizeof(response->ChallengeToClient));
             OutputHex(lsa->out, "Challenge To Client", challenge);
+            LsaFreeReturnBuffer(response);
+        }
+        return result;
+    }
+
+    bool Proxy::Lm20GetChallengeResponse(ULONG flags, PLUID luid, const std::vector<byte>& challenge) const {
+        LM20_GET_CHALLENGE_RESPONSE_REQUEST request;
+        std::memset(&request, '\0', sizeof(request));
+        request.MessageType = PROTOCOL_MESSAGE_TYPE::Lm20GetChallengeResponse;
+        request.ParameterControl = flags;
+        request.LogonId.LowPart = luid->LowPart;
+        request.LogonId.HighPart = luid->HighPart;
+        std::memcpy(request.ChallengeToClient, challenge.data(), std::min(sizeof(request.ChallengeToClient), challenge.size()));
+        LM20_GET_CHALLENGE_RESPONSE_RESPONSE* response;
+        auto result{ CallPackage(request, &response) };
+        if (result) {
+            std::cout << "Base: 0x" << &response << std::endl;
+            auto buffer{ reinterpret_cast<const char*>(response->CaseSensitiveChallengeResponse.Buffer) };
+            std::string caseSensitiveResponse(buffer, buffer + (response->CaseSensitiveChallengeResponse.Length));
+            OutputHex(lsa->out, "CaseSensitiveChallengeResponse  ", caseSensitiveResponse);
+            buffer = reinterpret_cast<const char*>(response->CaseInsensitiveChallengeResponse.Buffer);
+            std::string caseInensitiveResponse(buffer, buffer + (response->CaseInsensitiveChallengeResponse.Length));
+            OutputHex(lsa->out, "CaseInsensitiveChallengeResponse", caseInensitiveResponse);
+            if (response->UserName.Buffer) {
+                std::wcout << L"UserName                              : " << response->UserName.Buffer << std::endl;
+            } else {
+                std::wcout << L"UserName                              : nullptr" << std::endl;
+            }
+            if (response->LogonDomainName.Buffer) {
+                std::wcout << L"LogonDomainName                       : " << response->LogonDomainName.Buffer << std::endl;
+            } else {
+                std::wcout << L"LogonDomainName                       : nullptr" << std::endl;
+            }
+            std::string userSessionKey(reinterpret_cast<const char*>(response->UserSessionKey), sizeof(response->UserSessionKey));
+            OutputHex(lsa->out, "UserSessionKey                  ", userSessionKey);
+            std::string lanmanSessionKey(reinterpret_cast<const char*>(response->LanmanSessionKey), sizeof(response->LanmanSessionKey));
+            OutputHex(lsa->out, "LanmanSessionKey                ", lanmanSessionKey);
             LsaFreeReturnBuffer(response);
         }
         return result;

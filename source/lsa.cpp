@@ -154,6 +154,18 @@ bool Lsa::CallPackagePassthrough(const std::wstring& domainName, const std::wstr
     return false;
 }
 
+bool Lsa::AddCredentials() const {
+    return false;
+}
+
+bool Lsa::AddPackage() const {
+    return false;
+}
+
+bool Lsa::ChangeAccountPassword() const {
+    return false;
+}
+
 bool Lsa::EnumLogonSessions() const {
     if (useRpc) {
         SpmApi::MESSAGE message{ SpmApi::NUMBER::EnumLogonSessions, sizeof(SpmApi::Args::SPMEnumLogonSessionAPI) };
@@ -198,6 +210,97 @@ bool Lsa::EnumPackages() const {
     return false;
 }
 
+bool Lsa::FindPackage(const std::wstring& name) const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::FindPackage, sizeof(SpmApi::Args::SPMFindPackageAPI) };
+        auto& data{ message.ApiCallRequest.bData };
+        std::memcpy(data, name.data(), name.size() * sizeof(wchar_t));
+        auto& packageName{ message.ApiCallRequest.Args.SpmArguments.Arguments.FindPackage.ssPackageName };
+        packageName.Length = static_cast<unsigned short>(name.length());
+        packageName.MaximumLength = static_cast<unsigned short>(name.length() + 1);
+        packageName.Buffer = reinterpret_cast<LPWSTR>(data);
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.FindPackage };
+            out << "PackageId: 0x" << std::setfill('0') << std::setw(8) << response.ulPackageId << std::endl;
+            LsaFreeReturnBuffer(output);
+        }
+    }
+    return false;
+}
+
+bool Lsa::GetBinding() const {
+    return false;
+}
+
+bool Lsa::GetLogonSessionData() const {
+    return false;
+}
+
+bool Lsa::GetUserInfo() const {
+    return false;
+}
+
+bool Lsa::LookupAccountName() const {
+    return false;
+}
+
+bool Lsa::LookupWellKnownSid() const {
+    return false;
+}
+
+bool Lsa::LsaPolicyChangeNotify() const {
+    return false;
+}
+
+bool Lsa::QueryContextAttributes() const {
+    return false;
+}
+
+bool Lsa::QueryCredAttributes() const {
+    return false;
+}
+
+bool Lsa::QueryPackage(const std::wstring& name) const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::QueryPackage, sizeof(SpmApi::Args::SPMQueryPackageAPI) };
+        auto& data{ message.ApiCallRequest.bData };
+        std::memset(data, '\0', sizeof(data));
+        auto& packageName{ message.ApiCallRequest.Args.SpmArguments.Arguments.QueryPackage.ssPackageName };
+        packageName.Length = static_cast<unsigned short>(name.length());
+        packageName.MaximumLength = static_cast<unsigned short>(name.length() + 1);
+        packageName.Buffer = reinterpret_cast<LPWSTR>(data);
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.QueryPackage.pPackageInfo };
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            out << "Capabilities: 0x" << std::setfill('0') << std::setw(8) << response->fCapabilities << std::endl;
+            out << "Version     : " << response->wVersion << std::endl;
+            out << "RPCID       : " << response->wRPCID << std::endl;
+            out << "MaxToken    : " << response->cbMaxToken << std::endl;
+            out << "Name        : " << response->Name << std::endl;
+            out << "Comment     : " << converter.to_bytes(response->Comment) << std::endl;
+            LsaFreeReturnBuffer(output);
+        }
+    }
+    return false;
+}
+
+bool Lsa::SetContextAttributes() const {
+    return false;
+}
+
+bool Lsa::SetCredAttributes() const {
+    return false;
+}
+
+bool Lsa::SetSession() const {
+    return false;
+}
 
 bool Lsa::CallPackage(ULONG package, const std::string& submitBuffer, void** returnBuffer, size_t* returnBufferLength) const {
     bool result{ false };

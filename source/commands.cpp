@@ -1,9 +1,10 @@
-#include <crypt.hpp>
 #include <DsGetDC.h>
 #include <codecvt>
 #include <commands.hpp>
+#include <crypt.hpp>
 #include <locale>
 #include <magic_enum.hpp>
+#include <msv1_0.hpp>
 #include <string>
 
 namespace AllPackages {
@@ -465,11 +466,19 @@ namespace Msv1_0 {
         unparsedOptions.add_options()
             ("d,dc", "Send request to domain controller", cxxopts::value<bool>()->default_value("false"));
         unparsedOptions.add_options("Function arguments")
+            ("challenge", "Asciihex Lm20 challenge data", cxxopts::value<std::string>())
             ("delete", "Delete entry", cxxopts::value<bool>()->default_value("false"))
             ("disable", "Disable an option", cxxopts::value<bool>()->default_value("false"))
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain", "Domain name", cxxopts::value<std::string>())
-            ("user", "User name", cxxopts::value<std::string>())
+            ("gcr-allow-lm", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-allow-ntlm", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-machine-credential", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-ntlm3-parms", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-target-info", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-use-oem-set", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-use-owf-password", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("generate-client-challenge", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("hash", "Asciihex hash", cxxopts::value<std::string>())
             ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
             ("luid", "Logon session", cxxopts::value<long long>())
@@ -480,10 +489,16 @@ namespace Msv1_0 {
             ("option", "Process option", cxxopts::value<std::string>())
             ("pass", "Password", cxxopts::value<std::string>())
             ("protected-user", "Is the user protected", cxxopts::value<bool>())
+            ("return-non-nt-user-session-key", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("return-primary-logon-domain-name", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("return-primary-username", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("return-reserved-parameter", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("sha1v2", "Use SHA OWF instead of NT OWF", cxxopts::value<bool>()->default_value("false"))
             ("sluid", "Source logon session", cxxopts::value<long long>())
             ("smartcard", "Set smart card flag", cxxopts::value<bool>()->default_value("false"))
-            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>());
+            ("suppcreds", "Asciihex supplemental creds", cxxopts::value<std::string>())
+            ("use-primary-password", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("user", "User name", cxxopts::value<std::string>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -540,6 +555,30 @@ namespace Msv1_0 {
         }
         case PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest:
             return proxy.Lm20ChallengeRequest();
+        case PROTOCOL_MESSAGE_TYPE::Lm20GetChallengeResponse: {
+            ULONG flags{ 0 };
+            flags += (options.count("use-primary-password")) ? static_cast<ULONG>(Lm20ParameterControl::UsePrimaryPassword) : 0;
+            flags += (options.count("return-primary-username")) ? static_cast<ULONG>(Lm20ParameterControl::ReturnPrimaryUsername) : 0;
+            flags += (options.count("return-primary-logon-domain-name")) ? static_cast<ULONG>(Lm20ParameterControl::ReturnPrimaryLogonDomainName) : 0;
+            flags += (options.count("return-non-nt-user-session-key")) ? static_cast<ULONG>(Lm20ParameterControl::ReturnNonNtUserSessionKey) : 0;
+            flags += (options.count("generate-client-challenge")) ? static_cast<ULONG>(Lm20ParameterControl::GenerateClientChallenge) : 0;
+            flags += (options.count("gcr-ntlm3-parms")) ? static_cast<ULONG>(Lm20ParameterControl::GcrNtlm3Parms) : 0;
+            flags += (options.count("gcr-target-info")) ? static_cast<ULONG>(Lm20ParameterControl::GcrTargetInfo) : 0;
+            flags += (options.count("return-reserved-parameter")) ? static_cast<ULONG>(Lm20ParameterControl::ReturnReservedParameter) : 0;
+            flags += (options.count("gcr-allow-ntlm")) ? static_cast<ULONG>(Lm20ParameterControl::GcrAllowNtlm) : 0;
+            flags += (options.count("gcr-use-oem-set")) ? static_cast<ULONG>(Lm20ParameterControl::GcrUseOemSet) : 0;
+            flags += (options.count("gcr-machine-credential")) ? static_cast<ULONG>(Lm20ParameterControl::GcrMachineCredential) : 0;
+            flags += (options.count("gcr-use-owf-password")) ? static_cast<ULONG>(Lm20ParameterControl::GcrUseOwfPassword) : 0;
+            flags += (options.count("gcr-allow-lm")) ? static_cast<ULONG>(Lm20ParameterControl::GcrAllowLm) : 0;
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            std::vector<byte> challenge;
+            challenge = HexDecode(std::cout, converter.from_bytes(options["challenge"].as<std::string>()));
+            return proxy.Lm20GetChallengeResponse(flags, &luid, challenge);
+        }
         case PROTOCOL_MESSAGE_TYPE::ProvisionTbal: {
             LUID luid;
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
@@ -715,9 +754,19 @@ namespace Schannel {
     bool Call(const std::shared_ptr<Lsa>& lsa, const std::vector<char*>& args) {
         char* command{ "schannel" };
         cxxopts::Options unparsedOptions{ command };
-        unparsedOptions.add_options("Schannel Function")("f,function", "Function name", cxxopts::value<std::string>());
+        // clang-format off
+        unparsedOptions.add_options("Schannel Function")
+            ("f,function", "Function name", cxxopts::value<std::string>());
         // Arguments for functions that require additional inputs
-        unparsedOptions.add_options("Function arguments")("server", "Server name", cxxopts::value<std::string>())("luid", "Logon session", cxxopts::value<long long>())("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"));
+        unparsedOptions.add_options("Function arguments")
+            ("server", "Server name", cxxopts::value<std::string>())
+            ("luid", "Logon session", cxxopts::value<long long>())
+            ("clients", "All clients flag", cxxopts::value<bool>()->default_value("false"))
+            ("client-entry", "Client entry flag", cxxopts::value<bool>()->default_value("false"))
+            ("locators", "Purge locators flag", cxxopts::value<bool>()->default_value("false"))
+            ("servers", "All servers flag", cxxopts::value<bool>()->default_value("false"))
+            ("server-entry", "Server entry flag", cxxopts::value<bool>()->default_value("false"));
+        // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
             return false;
@@ -765,8 +814,8 @@ namespace Spm {
         char* command{ "spm" };
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
-        unparsedOptions.add_options("Spm Function")
-            ("f,function", "Function name", cxxopts::value<std::string>());
+        unparsedOptions.add_options("Function arguments")
+            ("package", "Package name", cxxopts::value<std::string>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -779,6 +828,11 @@ namespace Spm {
             return lsa->EnumLogonSessions();
         case SpmApi::NUMBER::EnumPackages:
             return lsa->EnumPackages();
+        case SpmApi::NUMBER::QueryPackage: {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            auto package{ converter.from_bytes(options["package"].as<std::string>()) };
+            return lsa->QueryPackage(package);
+        }
         default:
             break;
         }

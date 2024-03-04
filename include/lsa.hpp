@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#undef AddCredentials
+
 class UnicodeString : public UNICODE_STRING {
 public:
     UnicodeString(std::wstring data);
@@ -84,8 +86,24 @@ public:
 
     // Exposes the SPM API
     // Currently only supports issuing calls via the SSPI RPC interface
+    bool AddCredentials() const;
+    bool AddPackage() const;
+    bool ChangeAccountPassword() const;
     bool EnumLogonSessions() const;
     bool EnumPackages() const;
+    bool FindPackage(const std::wstring& name) const;
+    bool GetBinding() const;
+    bool GetLogonSessionData() const;
+    bool GetUserInfo() const;
+    bool LookupAccountName() const;
+    bool LookupWellKnownSid() const;
+    bool LsaPolicyChangeNotify() const;
+    bool QueryContextAttributes() const;
+    bool QueryCredAttributes() const;
+    bool QueryPackage(const std::wstring& name) const;
+    bool SetContextAttributes() const;
+    bool SetCredAttributes() const;
+    bool SetSession() const;
 
 private:
     bool connected{ false };

@@ -25,6 +25,22 @@ namespace Msv1_0 {
         Sha1V2
     };
 
+    enum class Lm20ParameterControl : ULONG {
+        UsePrimaryPassword = 0x01,
+        ReturnPrimaryUsername = 0x02,
+        ReturnPrimaryLogonDomainName = 0x04,
+        ReturnNonNtUserSessionKey = 0x08,
+        GenerateClientChallenge = 0x10,
+        GcrNtlm3Parms = 0x20,
+        GcrTargetInfo = 0x40, // ServerName field should contains target info AV pairs
+        ReturnReservedParameter = 0x80, // Previously 0x10
+        GcrAllowNtlm = 0x100, // Allow the use of NTLM
+        GcrUseOemSet = 0x200, // Response will use oem character set
+        GcrMachineCredential = 0x400,
+        GcrUseOwfPassword = 0x800, // Use owf passwords
+        GcrAllowLm = 0x1000 // Allow the use of LM 
+    };
+
     enum class ProcessOption : ULONG {
         AllowBlankPassword = 0x01,
         DisableAdminLockout = 0x02,
@@ -203,14 +219,36 @@ namespace Msv1_0 {
     using GET_STRONG_CREDENTIAL_KEY_RESPONSE = GET_CREDENTIAL_KEY_RESPONSE;
     using PGET_STRONG_CREDENTIAL_KEY_RESPONSE = PGET_CREDENTIAL_KEY_RESPONSE;
 
-    typedef struct _LM20_CHALLENGE_REQUEST {
+    typedef struct _LM20_CHALLENGE_REQUEST_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::Lm20ChallengeRequest };
-    } LM20_CHALLENGE_REQUEST, *PLM20_CHALLENGE_REQUEST;
+    } LM20_CHALLENGE_REQUEST_REQUEST, *PLM20_CHALLENGE_REQUEST_REQUEST;
 
-    typedef struct _LM20_CHALLENGE_RESPONSE {
+    typedef struct _LM20_CHALLENGE_REQUEST_RESPONSE {
         PROTOCOL_MESSAGE_TYPE MessageType;
         UCHAR ChallengeToClient[8]; // challenge length
-    } LM20_CHALLENGE_RESPONSE, *PLM20_CHALLENGE_RESPONSE;
+    } LM20_CHALLENGE_REQUEST_RESPONSE, *PLM20_CHALLENGE_REQUEST_RESPONSE;
+
+    typedef struct _LM20_GET_CHALLENGE_RESPONSE_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::Lm20GetChallengeResponse };
+        ULONG ParameterControl;
+        LUID LogonId;
+        UNICODE_STRING Password;
+        UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+        // Rest is only present if ParameterControl includes GCR_NTLM3_PARMS (0x20)
+        UNICODE_STRING UserName;
+        UNICODE_STRING LogonDomainName;
+        UNICODE_STRING ServerName; // server domain or target info AV pairs
+    } LM20_GET_CHALLENGE_RESPONSE_REQUEST, *PLM20_GET_CHALLENGE_RESPONSE_REQUEST;
+
+    typedef struct _LM20_GET_CHALLENGE_RESPONSE_RESPONSE {
+        MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+        STRING CaseSensitiveChallengeResponse;
+        STRING CaseInsensitiveChallengeResponse;
+        UNICODE_STRING UserName;
+        UNICODE_STRING LogonDomainName;
+        UCHAR UserSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+        UCHAR LanmanSessionKey[MSV1_0_LANMAN_SESSION_KEY_LENGTH];
+    } LM20_GET_CHALLENGE_RESPONSE_RESPONSE, *PLM20_GET_CHALLENGE_RESPONSE_RESPONSE;
 
     typedef struct _PASSTHROUGH_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::GenericPassthrough };
@@ -265,6 +303,7 @@ namespace Msv1_0 {
         bool GetStrongCredentialKey(PLUID luid, bool isProtectedUser) const;
         bool GetUserInfo(PLUID luid) const;
         bool Lm20ChallengeRequest() const;
+        bool Lm20GetChallengeResponse(ULONG flags, PLUID luid, const std::vector<byte>& challenge) const;
         bool ProvisionTbal(PLUID luid) const;
         bool SetProcessOption(ProcessOption options, bool disable) const;
 

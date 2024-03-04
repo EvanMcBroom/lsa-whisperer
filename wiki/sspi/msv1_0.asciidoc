@@ -18,7 +18,7 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 |===
 | Id     | Message Type               | CLI Support        | NT Version | Internal Function
 | `0x00` | `Lm20ChallengeRequest`     | :heavy_check_mark: | `>=3.5`    | `MspLm20Challenge`
-| `0x01` | `Lm20GetChallengeResponse` |                    | `>=3.5`    | `MspLm20GetChallengeResponse`
+| `0x01` | `Lm20GetChallengeResponse` | :heavy_check_mark: | `>=3.5`    | `MspLm20GetChallengeResponse`
 | `0x02` | `EnumerateUsers`           | :heavy_check_mark: | `>=3.5`    | `MspLm20EnumUsers`
 | `0x03` | `GetUserInfo`              | :heavy_check_mark: | `>=3.5`    | `MspLm20GetUserInfo`
 | `0x04` | `ReLogonUsers`             | :heavy_minus_sign: | `>=3.5`    | `MspLm20ReLogonUsers`
@@ -189,6 +189,34 @@ Once a challenge response is received, it may be passed to `LsaLogonUser` with a
 
 ```
 msv1_0 Lm20ChallengeRequest
+```
+
+=== Lm20GetChallengeResponse
+
+Get the client NTLM response data for the challenge received from a server.
+The command is used by at least the LanMan redirector but may be used by more software.
+The command supports several flags:
+
+-- `--gcr-allow-lm`
+-- `--gcr-allow-ntlm`
+-- `--gcr-machine-credential`
+-- `--gcr-ntlm3-parms`
+-- `--gcr-target-info`
+-- `--gcr-use-oem-set`
+-- `--gcr-use-owf-password`
+-- `--generate-client-challenge`
+-- `--return-non-nt-user-session-key`
+-- `--return-primary-logon-domain-name`
+-- `--return-primary-username`
+-- `--return-reserved-parameter`
+-- `--use-primary-password`
+
+`msv1_0` does allow the caller to explicitly specify a password, but LSA Whisperer currently only supports using the primary password for the specific logon session.
+So you will want to at least specify the `--use-primary-password` flag when issuing this command.
+The command will fail if the user does not have the `SeTcbPrivilege` privilege and specifies a session id for another user.
+
+```
+msv1_0 Lm20GetChallengeResponse --luid {session id} --challenge {challenge to clients} [flags...]
 ```
 
 === ProvisionTbal
