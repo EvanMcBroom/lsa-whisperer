@@ -203,19 +203,19 @@ Get the client NTLM response data for the challenge received from a server.
 The command is used by at least the LanMan redirector but may be used by more software.
 The command supports several flags:
 
--- `--gcr-allow-lm`
--- `--gcr-allow-ntlm`
--- `--gcr-machine-credential`
--- `--gcr-ntlm3-parms`
--- `--gcr-target-info`
--- `--gcr-use-oem-set`
--- `--gcr-use-owf-password`
--- `--generate-client-challenge`
--- `--return-non-nt-user-session-key`
--- `--return-primary-logon-domain-name`
--- `--return-primary-username`
--- `--return-reserved-parameter`
--- `--use-primary-password`
+- `--gcr-allow-lm`
+- `--gcr-allow-ntlm`
+- `--gcr-machine-credential`
+- `--gcr-ntlm3-parms`
+- `--gcr-target-info`
+- `--gcr-use-oem-set`
+- `--gcr-use-owf-password`
+- `--generate-client-challenge`
+- `--return-non-nt-user-session-key`
+- `--return-primary-logon-domain-name`
+- `--return-primary-username`
+- `--return-reserved-parameter`
+- `--use-primary-password`
 
 `msv1_0` does allow the caller to explicitly specify a password, but LSA Whisperer currently only supports using the primary password for the specific logon session.
 So you will want to at least specify the `--use-primary-password` flag when issuing this command.
