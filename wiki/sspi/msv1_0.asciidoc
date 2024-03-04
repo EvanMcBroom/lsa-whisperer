@@ -37,7 +37,7 @@ The protocol messages that msv1_0 supports is documented on MSDN and included he
 | `0x11` | `CacheLookupEx`            | :x:                | `>=6.2`    | `MspLm20CacheLookup`
 | `0x12` | `GetCredentialKey`         | :heavy_check_mark: | `>=6.2`    | `MspGetCredentialKey`
 | `0x13` | `SetThreadOption`          | :heavy_check_mark: | `>=6.2`    | `MspSetThreadOption`
-| `0x14` | `DecryptDpapiMasterKey`    | _Planned_          | `>=6.4`    | `MspDecryptDpapiMasterKey`
+| `0x14` | `DecryptDpapiMasterKey`    | :x:                | `>=6.4`    | `MspDecryptDpapiMasterKey`
 | `0x15` | `GetStrongCredentialKey`   | :heavy_check_mark: | `>=6.4`    | `MspGetStrongCredentialKey`
 | `0x16` | `TransferCred`             | :x:                | `>=10.0`   | `MspTransferCreds`
 | `0x17` | `ProvisionTbal`            | :heavy_check_mark: | `>=10.0`   | `MspProvisionTbal`
@@ -91,6 +91,8 @@ msv1_0 ClearCachedCredentials
 
 Return a decrypted master key when provided pointers to an appropriate DPAPI credential key and other input data for a logon session.
 The command is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
+This is a memory corruption issue that was reported to MSRC.
+MSRC closed the report with the issue marked as a non-fix item.
 
 === DeleteTbalSecrets
 
@@ -163,6 +165,8 @@ The above description is how LSA Whisperer will operate when using the command b
 In the 2nd mode, the user should supply pointers to a SID and either a cleartext password or an NT OWF hash.
 The account type for the SID will then be determined (e.g. local or group/domain) and then the appropriate DPAPI credential key is returned for the associated user.
 The 2nd mode is out of scope for the project becuase it would require the tool to supply valid pointers for LSASS's memory space.
+This is a memory corruption issue that was reported to MSRC.
+MSRC closed the report with the issue marked as a non-fix item.
 
 ```
 msv1_0 GetStrongCredentialKey --luid {session id} [--protected-user]

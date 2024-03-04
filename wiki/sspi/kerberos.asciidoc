@@ -308,7 +308,7 @@ Behaves the same as the `SetPassword` command but allows a user to specify a cli
 
 === SubmitTicket
 
-Request a ticket from the KDC and updates the ticket cache for the current logon session.
+Adds a supplied ticket to the ticket cache for the current logon session.
 `SeTcbPrivilege` is required to specify another logon session.
 
 === TransferCredentials
