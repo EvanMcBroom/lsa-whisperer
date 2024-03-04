@@ -303,7 +303,6 @@ namespace Msv1_0 {
         LM20_GET_CHALLENGE_RESPONSE_RESPONSE* response;
         auto result{ CallPackage(request, &response) };
         if (result) {
-            std::cout << "Base: 0x" << &response << std::endl;
             auto buffer{ reinterpret_cast<const char*>(response->CaseSensitiveChallengeResponse.Buffer) };
             std::string caseSensitiveResponse(buffer, buffer + (response->CaseSensitiveChallengeResponse.Length));
             OutputHex(lsa->out, "CaseSensitiveChallengeResponse  ", caseSensitiveResponse);
