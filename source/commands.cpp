@@ -472,12 +472,14 @@ namespace Msv1_0 {
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain", "Domain name", cxxopts::value<std::string>())
             ("gcr-allow-lm", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-allow-no-target", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-allow-ntlm", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-machine-credential", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-ntlm3-parms", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-target-info", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-use-oem-set", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("gcr-use-owf-password", "Lm20 challenge response flag", cxxopts::value<bool>())
+            ("gcr-vsm-protected-password", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("generate-client-challenge", "Lm20 challenge response flag", cxxopts::value<bool>())
             ("hash", "Asciihex hash", cxxopts::value<std::string>())
             ("imp", "Impersonating", cxxopts::value<bool>()->default_value("false"))
@@ -566,9 +568,11 @@ namespace Msv1_0 {
             flags += (options.count("gcr-target-info")) ? static_cast<ULONG>(Lm20ParameterControl::GcrTargetInfo) : 0;
             flags += (options.count("return-reserved-parameter")) ? static_cast<ULONG>(Lm20ParameterControl::ReturnReservedParameter) : 0;
             flags += (options.count("gcr-allow-ntlm")) ? static_cast<ULONG>(Lm20ParameterControl::GcrAllowNtlm) : 0;
+            flags += (options.count("gcr--allow-no-target")) ? static_cast<ULONG>(Lm20ParameterControl::GcrAllowNoTarget) : 0;
             flags += (options.count("gcr-use-oem-set")) ? static_cast<ULONG>(Lm20ParameterControl::GcrUseOemSet) : 0;
             flags += (options.count("gcr-machine-credential")) ? static_cast<ULONG>(Lm20ParameterControl::GcrMachineCredential) : 0;
             flags += (options.count("gcr-use-owf-password")) ? static_cast<ULONG>(Lm20ParameterControl::GcrUseOwfPassword) : 0;
+            flags += (options.count("gcr-vsm-protected-password")) ? static_cast<ULONG>(Lm20ParameterControl::GcrVsmProtectedPassword) : 0;
             flags += (options.count("gcr-allow-lm")) ? static_cast<ULONG>(Lm20ParameterControl::GcrAllowLm) : 0;
             LUID luid = { 0 };
             if (options["luid"].count()) {

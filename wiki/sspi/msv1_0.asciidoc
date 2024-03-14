@@ -204,12 +204,14 @@ The command is used by at least the LanMan redirector but may be used by more so
 The command supports several flags:
 
 - `--gcr-allow-lm`
+- `--gcr-allow-no-target`
 - `--gcr-allow-ntlm`
 - `--gcr-machine-credential`
 - `--gcr-ntlm3-parms`
 - `--gcr-target-info`
 - `--gcr-use-oem-set`
 - `--gcr-use-owf-password`
+- `--gcr-vsm-protected-password`
 - `--generate-client-challenge`
 - `--return-non-nt-user-session-key`
 - `--return-primary-logon-domain-name`

@@ -38,7 +38,11 @@ namespace Msv1_0 {
         GcrUseOemSet = 0x200, // Response will use oem character set
         GcrMachineCredential = 0x400,
         GcrUseOwfPassword = 0x800, // Use owf passwords
-        GcrAllowLm = 0x1000 // Allow the use of LM 
+        GcrAllowLm = 0x1000, // Allow the use of LM 
+        // Windows Server 2003 and above
+        GcrAllowNoTarget = 0x2000, // allow no target server or target domain name
+        // Windows 10 and above
+        GcrVsmProtectedPassword = 0x4000 // password is VSM protected
     };
 
     enum class ProcessOption : ULONG {
