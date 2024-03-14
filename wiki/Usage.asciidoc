@@ -128,7 +128,6 @@ Credential Guard may affect other commands that have not yet been identified.
 |===
 | Package    | Command                       | Effect
 | `kerberos` | `KerbChangePassword`          | Indirectly affected
-| `kerberos` | `KerbChangePassword`          | Indirectly affected
 | `msv1_0`   | `MspGetCredentialKey`         | Prevented
 | `msv1_0`   | `MspLm20GetChallengeResponse` | Prevented
 | `msv1_0`   | `MspNtDeriveCredential`       | Prevented

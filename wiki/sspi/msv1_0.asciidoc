@@ -223,6 +223,9 @@ The command supports several flags:
 So you will want to at least specify the `--use-primary-password` flag when issuing this command.
 The command will fail if the user does not have the `SeTcbPrivilege` privilege and specifies a session id for another user.
 
+On a domain joined host you may use the `--gcr-machine-credential` flag to generate a response using the primary credentials for the machine account (e.g., session 999).
+You may also generate responses for any logged on domain users and a few additional builtin accounts that will be present in the output of `EnumerateUsers`.
+
 ```
 msv1_0 Lm20GetChallengeResponse --luid {session id} --challenge {challenge to clients} [flags...]
 ```
