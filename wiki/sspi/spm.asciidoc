@@ -138,7 +138,7 @@ The remainder are documented here.
 | `0x1E` | {GetUserNameX}          |                    | `>~5.2`    | Moved to the SSPI RPC interface
 | `0x1F` | {AddCredential}         |                    | `>~5.2`    | Renamed to `AddCredentials`
 | `0x20` | {EnumLogonSession}      | :heavy_check_mark: | `>~5.2`    | Renamed to `EnumLogonSessions`
-| `0x21` | {GetLogonSessionData}   |                    | `>~5.2`    | 
+| `0x21` | {GetLogonSessionData}   | :heavy_check_mark: | `>~5.2`    | 
 | `0x22` | {SetContextAttr}        |                    | `>~5.2`    | Renamed to `SetContextAttributes`
 | `0x23` | {LookupAccountSidX}     |                    | `>~5.2`    | Moved to the SSPI RPC interface
 | `0x24` | {LookupAccountNameX}    |                    | `>~5.2`    | Renamed to `LookupAccountName`
@@ -169,7 +169,7 @@ NOTE: The SPM API has been identified in NT 5.2 but may have existed as early as
 | `0x12` | {LsaPolicyChangeNotify}  |                    | `>=6.1`    | Facilitates two Win32 APIs
 | `0x13` | {AddCredentials}         |                    | `>=6.1`    | 
 | `0x14` | {EnumLogonSessions}      | :heavy_check_mark: | `>=6.1`    | 
-| `0x15` | {GetLogonSessionData}    |                    | `>=6.1`    | 
+| `0x15` | {GetLogonSessionData}    | :heavy_check_mark: | `>=6.1`    | 
 | `0x16` | {SetContextAttributes}   |                    | `>=6.1`    | 
 | `0x17` | {LookupAccountName}      |                    | `>=6.1`    | 
 | `0x18` | LookupWellKnownSid       |                    | `>=6.1`    | 
