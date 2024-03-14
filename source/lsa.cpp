@@ -5,6 +5,8 @@
 #include <msv1_0.hpp>
 #include <string>
 
+#define STATUS_SUCCESS 0
+
 namespace {
     typedef enum _THREAD_INFORMATION_CLASS {
         ThreadBasicInformation,
@@ -239,7 +241,28 @@ bool Lsa::GetLogonSessionData() const {
     return false;
 }
 
-bool Lsa::GetUserInfo() const {
+bool Lsa::GetUserInfo(PLUID luid) const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::GetUserInfo, sizeof(SpmApi::Args::SPMGetUserInfoAPI) };
+        auto& data{ message.ApiCallRequest.bData };
+        message.ApiCallRequest.Args.SpmArguments.Arguments.GetUserInfo.LogonId.LowPart = luid->LowPart;
+        message.ApiCallRequest.Args.SpmArguments.Arguments.GetUserInfo.LogonId.HighPart = luid->HighPart;
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.GetUserInfo.pUserInfo };
+            std::wcout << L"UserName       : " << std::wstring(response->UserName.Buffer, response->UserName.Buffer + (response->UserName.Length / sizeof(wchar_t))) << std::endl;
+            std::wcout << L"LogonDomainName: " << std::wstring(response->LogonDomainName.Buffer, response->LogonDomainName.Buffer + (response->LogonDomainName.Length / sizeof(wchar_t))) << std::endl;
+            std::wcout << L"LogonServer    : " << std::wstring(response->LogonServer.Buffer, response->LogonServer.Buffer + (response->LogonServer.Length / sizeof(wchar_t))) << std::endl;
+            UNICODE_STRING sidString;
+            if (RtlConvertSidToUnicodeString(&sidString, response->pSid, true) == STATUS_SUCCESS) {
+                std::wcout << L"Sid            : " << sidString.Buffer << std::endl;
+                RtlFreeUnicodeString(&sidString);
+            }
+            LsaFreeReturnBuffer(output);
+        }
+    }
     return false;
 }
 

@@ -819,7 +819,8 @@ namespace Spm {
         cxxopts::Options unparsedOptions{ command };
         // clang-format off
         unparsedOptions.add_options("Function arguments")
-            ("package", "Package name", cxxopts::value<std::string>());
+            ("package", "Package name", cxxopts::value<std::string>())
+            ("luid", "Logon session", cxxopts::value<long long>());
         // clang-format on
         if (!args.size()) {
             std::cout << unparsedOptions.help() << std::endl;
@@ -832,6 +833,13 @@ namespace Spm {
             return lsa->EnumLogonSessions();
         case SpmApi::NUMBER::EnumPackages:
             return lsa->EnumPackages();
+        case SpmApi::NUMBER::GetUserInfo: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return lsa->GetUserInfo(&luid);
+        }
         case SpmApi::NUMBER::QueryPackage: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             auto package{ converter.from_bytes(options["package"].as<std::string>()) };

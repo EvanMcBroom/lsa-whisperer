@@ -122,7 +122,7 @@ The remainder are documented here.
 | `0x0E` | {ApplyToken}            |                    | `>~5.2`    | Moved to the SSPI RPC interface
 | `0x0F` | {DeleteContext}         |                    | `>~5.2`    | Moved to the SSPI RPC interface
 | `0x10` | {QueryPackage}          |                    | `>~5.2`    | 
-| `0x11` | {GetUserInfo}           |                    | `>~5.2`    | 
+| `0x11` | {GetUserInfo}           | :heavy_check_mark: | `>~5.2`    | 
 | `0x12` | GetCreds                | :x:                | `>~5.2`    | Later removed
 | `0x13` | SaveCreds               | :x:                | `>~5.2`    | Later removed
 | `0x14` | {QueryCredAttributes}   |                    | `>~5.2`    | 
@@ -157,7 +157,7 @@ NOTE: The SPM API has been identified in NT 5.2 but may have existed as early as
 | `0x06` | FindPackage              |                    | `>=6.1`    | 
 | `0x07` | {EnumPackages}           | :heavy_check_mark: | `>=6.1`    | 
 | `0x08` | {QueryPackage}           |                    | `>=6.1`    | 
-| `0x09` | {GetUserInfo}            |                    | `>=6.1`    | 
+| `0x09` | {GetUserInfo}            | :heavy_check_mark: | `>=6.1`    | 
 | `0x0A` | {QueryCredAttributes}    |                    | `>=6.1`    | 
 | `0x0B` | {AddPackage}             |                    | `>=6.1`    | 
 | `0x0C` | EfsGenerateKey           | :x:                | `>=6.1`    | 
