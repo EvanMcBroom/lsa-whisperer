@@ -93,7 +93,7 @@ public:
     bool EnumPackages() const;
     bool FindPackage(const std::wstring& name) const;
     bool GetBinding() const;
-    bool GetLogonSessionData() const;
+    bool GetLogonSessionData(PLUID luid) const;
     bool GetUserInfo(PLUID luid) const;
     bool LookupAccountName() const;
     bool LookupWellKnownSid() const;

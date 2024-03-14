@@ -833,6 +833,13 @@ namespace Spm {
             return lsa->EnumLogonSessions();
         case SpmApi::NUMBER::EnumPackages:
             return lsa->EnumPackages();
+        case SpmApi::NUMBER::GetLogonSessionData: {
+            LUID luid = { 0 };
+            if (options["luid"].count()) {
+                reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
+            }
+            return lsa->GetLogonSessionData(&luid);
+        }
         case SpmApi::NUMBER::GetUserInfo: {
             LUID luid = { 0 };
             if (options["luid"].count()) {

@@ -237,7 +237,53 @@ bool Lsa::GetBinding() const {
     return false;
 }
 
-bool Lsa::GetLogonSessionData() const {
+bool Lsa::GetLogonSessionData(PLUID luid) const {
+    if (useRpc) {
+        SpmApi::MESSAGE message{ SpmApi::NUMBER::GetLogonSessionData, sizeof(SpmApi::Args::SPMGetUserInfoAPI) };
+        auto& data{ message.ApiCallRequest.bData };
+        message.ApiCallRequest.Args.SpmArguments.Arguments.GetLogonSessionData.LogonId.LowPart = luid->LowPart;
+        message.ApiCallRequest.Args.SpmArguments.Arguments.GetLogonSessionData.LogonId.HighPart = luid->HighPart;
+        size_t outputMessageSize{ 0 };
+        SpmApi::MESSAGE* output{ nullptr };
+        auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
+        if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
+            auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.GetLogonSessionData.LogonSessionInfo };
+            if (response) {
+                auto session{ reinterpret_cast<PSECURITY_LOGON_SESSION_DATA>(response) };
+                std::wcout << L"LogonId              : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LogonId.LowPart << std::endl;
+                std::wcout << L"UserName             : " << std::wstring(session->UserName.Buffer, session->UserName.Buffer + (session->UserName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"LogonDomain          : " << std::wstring(session->LogonDomain.Buffer, session->LogonDomain.Buffer + (session->LogonDomain.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"AuthenticationPackage: " << std::wstring(session->AuthenticationPackage.Buffer, session->AuthenticationPackage.Buffer + (session->AuthenticationPackage.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"LogonType            : " << session->LogonType << std::endl;
+                std::wcout << L"Session              : " << session->Session << std::endl;
+                UNICODE_STRING sidString;
+                if (RtlConvertSidToUnicodeString(&sidString, session->Sid, true) == STATUS_SUCCESS) {
+                    std::wcout << L"Sid                  : " << sidString.Buffer << std::endl;
+                    RtlFreeUnicodeString(&sidString);
+                }
+                std::wcout << L"LogonTime            : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LogonTime.QuadPart << std::endl;
+                std::wcout << L"LogonServer          : " << std::wstring(session->LogonServer.Buffer, session->LogonServer.Buffer + (session->LogonServer.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"DnsDomainName        : " << std::wstring(session->DnsDomainName.Buffer, session->DnsDomainName.Buffer + (session->DnsDomainName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"Upn                  : " << std::wstring(session->Upn.Buffer, session->Upn.Buffer + (session->Upn.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"UserFlags            : " << session->UserFlags << std::endl;
+                std::wcout << L"LastLogonInfo" << std::endl;
+                std::wcout << L"    LastSuccessfulLogon: 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LastLogonInfo.LastSuccessfulLogon.QuadPart << std::endl;
+                std::wcout << L"    LastFailedLogon    : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LastLogonInfo.LastFailedLogon.QuadPart << std::endl;
+                std::wcout << L"    FailedAttemptCount : " << session->LastLogonInfo.FailedAttemptCountSinceLastSuccessfulLogon << std::endl;
+                std::wcout << L"LogonScript          : " << std::wstring(session->LogonScript.Buffer, session->LogonScript.Buffer + (session->LogonScript.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"ProfilePath          : " << std::wstring(session->ProfilePath.Buffer, session->ProfilePath.Buffer + (session->ProfilePath.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"HomeDirectory        : " << std::wstring(session->HomeDirectory.Buffer, session->HomeDirectory.Buffer + (session->HomeDirectory.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"HomeDirectoryDrive   : " << std::wstring(session->HomeDirectoryDrive.Buffer, session->HomeDirectoryDrive.Buffer + (session->HomeDirectoryDrive.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"LogoffTime           : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->LogoffTime.QuadPart << std::endl;
+                std::wcout << L"KickOffTime          : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->KickOffTime.QuadPart << std::endl;
+                std::wcout << L"PasswordLastSet      : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->PasswordLastSet.QuadPart << std::endl;
+                std::wcout << L"PasswordCanChange    : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->PasswordCanChange.QuadPart << std::endl;
+                std::wcout << L"PasswordMustChange   : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->PasswordMustChange.QuadPart << std::endl;
+                LsaFreeReturnBuffer(response);
+            }
+            LsaFreeReturnBuffer(output);
+        }
+    }
     return false;
 }
 
