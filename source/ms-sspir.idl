@@ -116,6 +116,19 @@ typedef long* PLSA_OPERATIONAL_MODE_LPC;
 #define SECPKG_ATTR_CERT_CHECK_RESULT_INPROC      0x72 // returns SecPkgContext_CertificateValidationResult, use only after SSPI handshake loop
 #define SECPKG_ATTR_SESSION_TICKET_KEYS           0x73 // sets    SecPkgCred_SessionTicketKeys
 
+// These are the valid flags for some operations
+#define SPMAPI_FLAG_ERROR_RET   0x0001  // Indicates an error return
+#define SPMAPI_FLAG_MEMORY      0x0002  // Memory was allocated in client
+#define SPMAPI_FLAG_PREPACK     0x0004  // Data packed in bData field
+#define SPMAPI_FLAG_GETSTATE    0x0008  // driver should call GetState
+#define SPMAPI_FLAG_ANSI_CALL   0x0010  // Called via ANSI stub
+#define SPMAPI_FLAG_HANDLE_CHG  0x0020  // A handle was changed
+#define SPMAPI_FLAG_CALLBACK    0x0040  // Callback to calling process
+#define SPMAPI_FLAG_ALLOCS      0x0080  // VM Allocs were placed in prepack
+#define SPMAPI_FLAG_EXEC_NOW    0x0100  // Execute in LPC thread
+#define SPMAPI_FLAG_WIN32_ERROR 0x0200  // Status is a win32 error
+#define SPMAPI_FLAG_KMAP_MEM    0x0400  // Call contains buffers in the kmap
+
 // short
 typedef enum _SSPIR_SID_NAME_USE {
     SSPIR_SIDTypeUser = 1,
@@ -131,17 +144,33 @@ typedef enum _SSPIR_SID_NAME_USE {
     SSPIR_SIDTypeLogonSession
 } SSPIR_SID_NAME_USE, *PSSPIR_SID_NAME_USE;
 
+// short
+typedef enum _SSPIR_SECURITY_LOGON_TYPE {
+  SSPIR_Interactive = 2,
+  SSPIR_Network,
+  SSPIR_Batch,
+  SSPIR_Service,
+  SSPIR_Proxy,
+  SSPIR_Unlock,
+  SSPIR_NetworkCleartext,
+  SSPIR_NewCredentials,
+  SSPIR_RemoteInteractive,
+  SSPIR_CachedInteractive,
+  SSPIR_CachedRemoteInteractive,
+  SSPIR_CachedUnlock
+} SSPIR_SECURITY_LOGON_TYPE, *PSSPIR_SECURITY_LOGON_TYPE;
+
 typedef struct _SSPIR_STRING {
 	short Length;
 	short MaximumLength;
 	[unique] [size_is(MaximumLength)] [length_is(Length)] char* Buffer;
 } SSPIR_STRING;
 
-typedef struct _SSPIR_SEC_BUFFER_LPC {
+typedef struct _SSPIR_SecBuffer {
     unsigned long cbBuffer;
     unsigned long BufferType;
 	[unique][size_is(cbBuffer)] char* pvBuffer;
-} SSPIR_SEC_BUFFER_LPC;
+} SSPIR_SecBuffer;
 
 // The argument names are likely to be slightly off
 // The corresponding struct is:
@@ -157,15 +186,14 @@ typedef struct _SSPIR_SPMCallbackAPI {
 	unsigned long Type;
 	unsigned __int3264 Argument1;
 	unsigned __int3264 Argument2;
-	SSPIR_SEC_BUFFER_LPC InputOutput;
+	SSPIR_SecBuffer InputOutput;
 	char StructMember4;
 } SSPIR_SPMCallbackAPI;
 
-// SecHandle
-typedef struct _SSPIR_CONTEXT_HANDLE_LPC {
+typedef struct _SSPIR_SecHandle {
 	hyper dwLower;
 	hyper dwUpper;
-} SSPIR_CONTEXT_HANDLE_LPC;
+} SSPIR_SecHandle;
 
 typedef struct _SSPIR_SECURITY_STRING {
 	short Length;
@@ -178,11 +206,11 @@ typedef struct _SSPIR_LUID {
 	long HighPart;
 } SSPIR_LUID;
 
-typedef struct Struct_282_t {
-	long StructMember0;
-	hyper StructMember1;
-	[unique] [size_is(StructMember0)] char* StructMember2;
-} Struct_282_t;
+typedef struct SSPIR_AuthenticationInformation {
+	long Length;
+	hyper Reserved; // Set to 0
+	[unique] [size_is(Length)] char* Buffer;
+} SSPIR_AuthenticationInformation;
 
 // SecHandle
 typedef struct _SSPIR_PCredHandle {
@@ -195,11 +223,11 @@ typedef struct _SSPIR_PTimeStamp {
 	hyper QuadPart;
 } SSPIR_PTimeStamp;
 
-typedef struct Struct_446_t {
-	long StructMember0;
-	long StructMember1;
-	[unique] [size_is(StructMember1)] SSPIR_SEC_BUFFER_LPC* StructMember2;
-} Struct_446_t;
+typedef struct _SSPIR_SecBufferDesc {
+	long ulVersion;
+	long cBuffers;
+	[unique] [size_is(cBuffers)] SSPIR_SecBuffer* pBuffers;
+} SSPIR_SecBufferDesc;
 
 typedef struct Struct_466_t {
 	long StructMember0;
@@ -212,32 +240,31 @@ typedef struct Struct_516_t {
 	[unique] [size_is(StructMember1)] struct Struct_466_t* StructMember2;
 } Struct_516_t;
 
-typedef [switch_type(unsigned long)] union union_624 {
-	[case(SECPKG_ATTR_NAMES)] [unique] struct Struct_658_t* unionMember_1;
-	[case(SECPKG_ATTR_SUPPORTED_ALGS)] [unique] struct Struct_676_t* unionMember_86;
-	[case(SECPKG_ATTR_CIPHER_STRENGTHS)] [unique] struct Struct_696_t* unionMember_87;
-	[case(SECPKG_ATTR_SUPPORTED_PROTOCOLS)] [unique] struct Struct_708_t* unionMember_88;
-	[default] ;
-} union_624;
-
-
-typedef struct Struct_658_t {
+typedef struct _SSPIR_SecPkgCredentials_Names {
 	[unique] [string] wchar_t* StructMember0;
-} Struct_658_t;
+} SSPIR_SecPkgCredentials_Names;
 
-typedef struct Struct_676_t {
-	long StructMember0;
-	[unique] long* StructMember1;
-} Struct_676_t;
+typedef struct _SSPIR_SecPkgCred_SupportedAlgs {
+	long cSupportedAlgs;
+	[unique] long* palgSupportedAlgs; // ALG_ID*
+} SSPIR_SecPkgCred_SupportedAlgs;
 
-typedef struct Struct_696_t {
-	long StructMember0;
-	long StructMember1;
-} Struct_696_t;
+typedef struct _SSPIR_SecPkgCred_CipherStrengths {
+	long dwMinimumCipherStrength;
+	long dwMaximumCipherStrength;
+} SSPIR_SecPkgCred_CipherStrengths;
 
-typedef struct Struct_708_t {
+typedef struct _SSPIR_SecPkgCred_SupportedProtocols {
 	long StructMember0;
-} Struct_708_t;
+} SSPIR_SecPkgCred_SupportedProtocols;
+
+typedef [switch_type(unsigned long)] union _SSPIR_SSL_ATTRIBUTE {
+	[case(SECPKG_ATTR_NAMES)] [unique] SSPIR_SecPkgCredentials_Names* Names;
+	[case(SECPKG_ATTR_SUPPORTED_ALGS)] [unique] SSPIR_SecPkgCred_SupportedAlgs* SupportedAlgs;
+	[case(SECPKG_ATTR_CIPHER_STRENGTHS)] [unique] SSPIR_SecPkgCred_CipherStrengths* CipherStrengths;
+	[case(SECPKG_ATTR_SUPPORTED_PROTOCOLS)] [unique] SSPIR_SecPkgCred_SupportedProtocols* SupportedProtocols;
+	[default] ;
+} SSPIR_SSL_ATTRIBUTE;
 
 typedef struct _SSPIR_SecPkgContext_Sizes {
 	long cbMaxToken;
@@ -260,11 +287,11 @@ typedef struct _SSPIR_SecPkgContext_NegotiationInfo {
 	long NegotiationState;
 } SSPIR_SecPkgContext_NegotiationInfo;
 
-typedef [switch_type(unsigned long)] union union_750 {
-	[case(SECPKG_ATTR_SIZES)] [unique] SSPIR_SecPkgContext_Sizes* unionMember_0;
-	[case(SECPKG_ATTR_NEGOTIATION_INFO)] [unique] SSPIR_SecPkgContext_NegotiationInfo* unionMember_12;
+typedef [switch_type(unsigned long)] union _SSPIR_NEG_ATTRIBUTE {
+	[case(SECPKG_ATTR_SIZES)] [unique] SSPIR_SecPkgContext_Sizes* Sizes;
+	[case(SECPKG_ATTR_NEGOTIATION_INFO)] [unique] SSPIR_SecPkgContext_NegotiationInfo* NegotiationInfo;
 	[default];
-} union_750;
+} SSPIR_NEG_ATTRIBUTE;
 
 typedef struct Struct_848_t {
 	long StructMember0;
@@ -303,15 +330,15 @@ typedef struct _SSPIR_SID {
 	[size_is(SubAuthorityCount)] long SubAuthority[];
 } SSPIR_SID;
 
-typedef struct _Struct_1086_t {
-	[unique]SSPIR_SID * StructMember0;
-	long StructMember1;
-} Struct_1086_t;
+typedef struct _SSPIR_SID_AND_ATTRIBUTES {
+	[unique]SSPIR_SID* Sid;
+	long Attributes;
+} SSPIR_SID_AND_ATTRIBUTES;
 
-typedef struct _Struct_1144_t {
-	long StructMember0;
-	[size_is(StructMember0)] Struct_1086_t StructMember1[];
-} Struct_1144_t;
+typedef struct _SSPIR_TOKEN_GROUPS {
+	long GroupCount;
+	[size_is(GroupCount)] SSPIR_SID_AND_ATTRIBUTES Groups[];
+} SSPIR_TOKEN_GROUPS;
 
 typedef struct _SSPIR_QUOTA_LIMITS {
 	hyper PagedPoolLimit;
@@ -356,53 +383,53 @@ long SspirCallRpc(
     [in][size_is(SubmitBufferLength)] char* ProtocolSubmitBuffer, 
     [out]long* ReturnBufferLength, 
     [out][ref][size_is(, *ReturnBufferLength)] char** ProtocolReturnBuffer, 
-    [out]SSPIR_SPMCallbackAPI* Args);
+    [out]SSPIR_SPMCallbackAPI* Callback);
 
 // procnum 4:
 // LsaAcquireCredentialsHandle -> SspipAcquireCredentialsHandle
 long SspirAcquireCredentialsHandle(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in][unique]SSPIR_SECURITY_STRING* ssPrincipal, 
-    [in]SSPIR_SECURITY_STRING* ssSecPackage, 
-    [in]long fCredentialUse, 
+    [in]SSPIR_SecHandle* Context, 
+    [in][unique]SSPIR_SECURITY_STRING* Principal, 
+    [in]SSPIR_SECURITY_STRING* SecPackage, 
+    [in]long CredentialUse, 
     [in][unique]SSPIR_LUID* LogonID, 
-    [in]struct Struct_282_t* arg_6, 
-    [in]hyper arg_7, 
-    [in]hyper arg_8, 
-    [in]long arg_9, 
-    [out]SSPIR_PCredHandle* arg_10, 
-    [out]SSPIR_PTimeStamp* tsExpiry, 
-    [in]SSPIR_SPMCallbackAPI* arg_12, 
-    [out]SSPIR_SPMCallbackAPI* arg_13);
+    [in]struct SSPIR_AuthenticationInformation* AuthenticationInformation, // Set to nullptr
+    [in]hyper GetKeyFunction, 
+    [in]hyper GetKeyArgument, 
+    [in]long Flags, // Usually 0 or SPMAPI_FLAG_ANSI_CALL
+    [out]SSPIR_PCredHandle* Credential, 
+    [out]SSPIR_PTimeStamp* Expiry,
+    [in]SSPIR_SPMCallbackAPI* InputCallback, 
+    [out]SSPIR_SPMCallbackAPI* OutputCallback);
 
 // procnum 5:
 // LsaFreeCredentialsHandle -> SspipFreeCredentialsHandle
 long SspirFreeCredentialsHandle(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* hCredential, 
-    [out]SSPIR_SPMCallbackAPI* arg_3);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential, 
+    [out]SSPIR_SPMCallbackAPI* Callback);
 
 // procnum 6:
 // LsaInitializeSecurityContext -> SspipProcessSecurityContext
 // LsaAcceptSecurityContext -> SspipProcessSecurityContext
 long SspirProcessSecurityContext(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
+    [in]SSPIR_SecHandle* Context, 
     [in][out]long* arg_2, 
     [in][unique]SSPIR_SECURITY_STRING* arg_3, 
     [in]SSPIR_PCredHandle* arg_4, 
     [in]SSPIR_PCredHandle* arg_5, 
     [in]long arg_6, 
     [in]long arg_7, 
-    [in][unique][size_is(32)] char* arg_8, 
+    [in][unique][size_is(32)] char* IpAddress, // Optional and normally set by SeciAllocateAndSetIPAddress
     [in][unique][string] wchar_t* arg_9, 
-    [in]struct Struct_446_t* arg_10, 
+    [in]SSPIR_SecBufferDesc* arg_10, 
     [in][ref]struct Struct_516_t* arg_11, 
-    [out]struct Struct_446_t* arg_12, 
+    [out]SSPIR_SecBufferDesc* arg_12, 
     [out][ref]struct Struct_516_t** arg_13, 
-    [out] SSPIR_SEC_BUFFER_LPC* arg_14, 
+    [out] SSPIR_SecBuffer* arg_14, 
     [out]SSPIR_PCredHandle* arg_15, 
     [out]long* arg_16, 
     [out]SSPIR_PTimeStamp* arg_17, 
@@ -414,70 +441,70 @@ long SspirProcessSecurityContext(
 // LsaDeleteSecurityContext -> SspipDeleteSecurityContext
 long SspirDeleteSecurityContext(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* arg_2, 
-    [out]SSPIR_SPMCallbackAPI* arg_3);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential, 
+    [out]SSPIR_SPMCallbackAPI* Callback);
 
 // procnum 8:
 // I believe: QueryCredentialsAttributes (Schannel) -> SspirNegQueryContextAttributes
 long SspirSslQueryCredentialsAttributes(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* hCredentials, 
-    [in]long ulAttribute, 
-    [out][switch_is(ulAttribute)]union union_624* arg_4);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential,
+    [in]unsigned long Attribute, 
+    [out][switch_is(Attribute)]SSPIR_SSL_ATTRIBUTE* Buffer);
 
 // procnum 9:
 // QueryContextAttributes (Negotiate) -> SspirNegQueryContextAttributes
 long SspirNegQueryContextAttributes(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* phCredential, 
-    [in]long ulAttribute, 
-    [out][switch_is(ulAttribute)]union union_750* arg_4);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential, 
+    [in]unsigned long Attribute, 
+    [out][switch_is(Attribute)]SSPIR_NEG_ATTRIBUTE* Buffer);
 
 // procnum a:
 // I believe: SetCredentialsAttributes (Schannel) -> SspirNegQueryContextAttributes
 long SspirSslSetCredentialsAttributes(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* arg_2, 
-    [in]struct Struct_888_t* arg_3);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential, 
+    [in]struct Struct_888_t* Buffer);
 
 // procnum b:
 // LsaApplyControlToken -> ApplyControlToken
 long SspirApplyControlToken(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_PCredHandle* arg_2, 
-    [in]struct Struct_446_t* arg_3);
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_PCredHandle* Credential, 
+    [in]SSPIR_SecBufferDesc* Input);
 
 // procnum c:
 // LsaLogonUser -> SspipLogonUser
-// 
 long SspirLogonUser(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
+    [in]SSPIR_SecHandle* Context, 
     [in]SSPIR_STRING* OriginName, 
-    [in]SSPIR_SID_NAME_USE arg_3, // May actually be SECURITY_LOGON_TYPE
-    [in]long arg_4, 
-    [in]struct Struct_282_t* arg_5, 
+    [in]SSPIR_SECURITY_LOGON_TYPE LogonType,
+    [in]long AuthenticationPackage, 
+    [in]SSPIR_AuthenticationInformation* AuthenticationInformation, 
     [in]SSPIR_TOKEN_SOURCE* SourceContext, 
-    [in][unique]Struct_1144_t* arg_7, 
-    [in]long arg_8, 
-    [in][unique][size_is(32)] char* IpAddress, 
+    [in][unique]SSPIR_TOKEN_GROUPS* LocalGroups,
+    // Next two values are optional and normally set by SeciAllocateAndSetIPAddress
+    [in]long arg_8, // SecTlsIP[0x20]
+    [in][unique][size_is(32)] char* IpAddress, // SecTlsIP
     [out]long* SubStatus, 
-    [out]hyper* ProfileBuffer, 
+    [out]hyper* ProfileBuffer, // Set to nullptr
     [out]long* ProfileBufferLength, 
     [in][out]SSPIR_LUID* LogonId, 
     [out]hyper** Token, // HANDLE*
-    [out]SSPIR_QUOTA_LIMITS* arg_15);
+    [out]SSPIR_QUOTA_LIMITS* QuotaLimits);
 
 // procnum d:
-long SspirLookupAccountSSPIR_SID(
+long SspirLookupAccountSid(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]SSPIR_SID * SSPIR_SID, 
+    [in]SSPIR_SecHandle* Context, 
+    [in]SSPIR_SID * Sid, 
     [out]SSPIR_SECURITY_STRING* Name, 
     [out]SSPIR_SECURITY_STRING* Domain, 
     [out][ref]PSSPIR_SID_NAME_USE NameUse);
@@ -486,10 +513,10 @@ long SspirLookupAccountSSPIR_SID(
 // GetUserNameExW -> SspipGetUserName
 long SspirGetUserName(
     [in][context_handle] void* LsaHandle, 
-    [in]SSPIR_CONTEXT_HANDLE_LPC* Context, 
-    [in]long Options, 
+    [in]SSPIR_SecHandle* Context, 
+    [in]long Options, // Likely EXTENDED_NAME_FORMAT
     [out]SSPIR_SECURITY_STRING* Name, 
-    [out]long* arg_4);
+    [out]long* Size);
 
 // procnum f:
 // InitState
