@@ -1,6 +1,8 @@
 # LSA Whisperer
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.txt)
+[![Bloodhound Slack](https://img.shields.io/badge/BloodHound%20Slack-4A154B?logo=slack&logoColor=white)](https://ghst.ly/BHSlack)
+[![Sponsored by SpecterOps](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/specterops/.github/main/config/shield.json)](https://github.com/specterops)
 
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
 Support is currently provided for the cloudap, kerberos, msv1_0, negotiate, pku2u, and schannel packages and cloudap's AzureAD plugin.
