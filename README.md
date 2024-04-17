@@ -8,7 +8,10 @@ LSA Whisperer is a set of tools for interacting with authentication packages usi
 Support is currently provided for the cloudap, kerberos, msv1_0, negotiate, pku2u, and schannel packages and cloudap's AzureAD plugin.
 Partial or unstable support is provided for livessp, negoexts, and the security package manager (SPM).
 Please refer to the [wiki](https://github.com/EvanMcBroom/lsa-whisperer/wiki) to see which message protocols are currently supported. 
-Support for more authentication packages may be added in the future.
+
+Support for more authentication packages and package calls may be added in the future.
+If you are interested in a package call that is not implemented or you see an area of the wiki that can be improved, please submit an issue on GitHub or consider making a pull request (PR) for the project.
+Contributions are appreciated!
 
 ## Building
 

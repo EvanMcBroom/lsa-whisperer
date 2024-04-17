@@ -58,6 +58,12 @@ The Microsoft mechanism is used by negotiate to identify the NTLM security packa
 When negotiate gathers information about packages it supports during initialization it will overwrite the last byte of the Microsoft mechanism OID with what it believes to be the RPC ID of the NTLM package.
 Through testing, this last byte will be overwritten with `3`.
 
+Originally, the return buffer used by LSASS was not initialized to zero before being used.
+The buffer is only partially filled by the OID data causing LSASS memory to leak to the caller.
+This memory leak issue was reported to MSRC.
+MSRC patched the issue with https://support.microsoft.com/en-us/topic/april-9-2024-kb5036892-os-builds-19044-4291-and-19045-4291-cb5d2d42-6b10-48f7-829a-be7d416a811b[KB5036892] and assigned the issue https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2024-26209[CVE-2024-26209].
+LSA Whisperer will annotate the call output with the portion of the buffer that was leaked.
+
 ```
 negotiate EnumPackagePrefixes
 ```
