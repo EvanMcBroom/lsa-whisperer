@@ -122,6 +122,13 @@ The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, a
 This function unprotects and returns the TokenBlob entry for a specified logon session.
 You may specify a specific logon session, otherwise the current logon session will be used.
 
+LSA Whisperer's implementation of `GetTokenBlob` is believed to be correct, but only the following errors have been observed during testing:
+
+- `0xc0000022` - Access is denied.
+- `0xc000005f` - A specified logon session does not exist. It may already have been terminated.
+
+It is still unknown what setup and access is needed for the command to return successfully.
+
 ```
 cloudap GetTokenBlob [--luid {session id}]
 ```
