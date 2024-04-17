@@ -102,7 +102,7 @@ Please refer to the individual wiki page for each SSP to see which commands the 
 | msnsspc   | MSN Client                                | NTLM          | :heavy_minus_sign: | 18     | `MSN`
 | msv1_0    | Microsoft Authentication Package v1.0     | NTLM          | :heavy_check_mark: | 10     | `WINNT`
 | negoexts  | Negotiate Extender                        | NEGOEX        | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
-| negotiate | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
+| lsasrv    | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
 | pku2u     | Public Key User to User                   | PKU2U         | :heavy_check_mark: | 31     | `NEGO_PKU2U`
 | schannel  | Secure Channel                            | SSL/TLS       | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
 | tspkg     | Terminal Services Package                 |               | :heavy_check_mark: | 22     | ?
