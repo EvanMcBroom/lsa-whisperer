@@ -48,22 +48,23 @@ NOTE: The internal function for each message type will be located in `msv1_0.dll
 
 === CacheLogon
 
-Stores logon information in a logon session's cache.
-The routine is used by the kerberos package to cache the NT OWF hash for a user logon session after it is recovered from a Privilege Attribute Certificate (PAC) for a ticket.
+Stores logon information in a logon session's cache, located in the registry under `HKLM\Security\Cache`.
+The routine is used by the kerberos package to cache data from the Privilege Attribute Certificate (PAC) for a ticket for later recovery using the `CacheLookup` call.
+This is the same cache used by `LsaApLogonUserEx2` to store user data for future logon attempts when Netlogon is unavailable.
 The command is restricted to only being callable by LSASS itself and as such was originally outside the scope of LSA Whisperer.
-The call has been put in scope to facilitate reusing a NT OWF hash on a user controlled VM with https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/configuring-additional-lsa-protection#disable-lsa-protection[LSASS configured to not start as a PPL process].
+The call has been put in scope to assist with testing the `CacheLookup` call.
 
 === CacheLookup
 
 Recovers logon information in a logon session's cache.
-The information may include the associated user's NT OWF hash.
+The information may include the associated user's NT OWF hash amongst other data.
 The command is restricted to only being callable by LSASS itself and as such was originally outside the scope of LSA Whisperer.
-The call has been put in scope to assist with using the `CacheLogon` call.
+The call been put in scope to assist with credential recovery.
 
 === CacheLookupEx
 
 The command is restricted to only being callable by LSASS itself and as such was originally outside the scope of LSA Whisperer.
-The call has been put in scope to assist with using the `CacheLogon` call.
+The call been put in scope to assist with credential recovery.
 
 === ChangeCachedPassword
 
