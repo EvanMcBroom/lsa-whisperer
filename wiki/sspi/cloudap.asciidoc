@@ -122,6 +122,13 @@ The `_USER_CACHE_ENTRY` structure has a DPAPI protected entry named TokenBlob, a
 This function unprotects and returns the TokenBlob entry for a specified logon session.
 You may specify a specific logon session, otherwise the current logon session will be used.
 
+LSA Whisperer's implementation of `GetTokenBlob` is believed to be correct, but only the following errors have been observed during testing:
+
+- `0xc0000022` - Access is denied.
+- `0xc000005f` - A specified logon session does not exist. It may already have been terminated.
+
+It is still unknown what setup and access is needed for the command to return successfully.
+
 ```
 cloudap GetTokenBlob [--luid {session id}]
 ```
@@ -298,7 +305,7 @@ Always returns `E_NOTIMPL`.
 
 Create a signed JWT for the current device which may be specified in web requests using the https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oapxbc/71d4b3c8-2720-4bfa-84c5-67ac2cd5db59[`x-ms-DeviceCredential`] header.
 The JWT is used to authenticate the client device and its contents are described https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oapxbc/f6d4a084-4c7f-4d0c-8c47-9456a7debbe0[here].
-The caller must be System and the host must be cloud domain joined for the call to succeed.
+The host must be cloud domain joined for the call to succeed.
 
 ==== CreateEnterpriseSSOCookie
 

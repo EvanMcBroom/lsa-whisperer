@@ -102,7 +102,7 @@ Please refer to the individual wiki page for each SSP to see which commands the 
 | msnsspc   | MSN Client                                | NTLM          | :heavy_minus_sign: | 18     | `MSN`
 | msv1_0    | Microsoft Authentication Package v1.0     | NTLM          | :heavy_check_mark: | 10     | `WINNT`
 | negoexts  | Negotiate Extender                        | NEGOEX        | :heavy_check_mark: | 30     | `NEGO_EXTENDER`
-| negotiate | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
+| lsasrv    | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
 | pku2u     | Public Key User to User                   | PKU2U         | :heavy_check_mark: | 31     | `NEGO_PKU2U`
 | schannel  | Secure Channel                            | SSL/TLS       | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
 | tspkg     | Terminal Services Package                 |               | :heavy_check_mark: | 22     | ?
@@ -193,7 +193,7 @@ That prevents LSA Whisperer from interacting with a remote host using this inter
 The only additional check the RPC server performs is to verify that a client is local if it requests the `SspirGetInprocDispatchTable` operation.
 This check is redundant and does not affect LSA Whisperer.
 For other operations, no client verification is done by the server and the SSPI server passes execution in almost all cases to an equivalently named function in the `LsapSspiExtensionFunctions` table inside `lsasrv` (the internal function will be prefixed with the name `SspiEx`). The `lsasrv` will then pass execution to the original LPC handlers (ex. `LpcHandler`).
-Please refer to the https://github.com/EvanMcBroom/lsa-whisperer/wiki/usage[SPM page] if you would like more information about these LPC handlers.
+Please refer to the https://github.com/EvanMcBroom/lsa-whisperer/wiki/spm[SPM page] if you would like more information about these LPC handlers.
 
 It is also worth noting that the RPC runtime has a hardcoded list of interfaces that are exempt from multiple security mitigations that have existed since NT 5.2.
 The list is named `RpcVerifierExemptInterfaces` and may be found by viewing its use in the `rpcrt4.dll!IsInterfaceExempt` function.
