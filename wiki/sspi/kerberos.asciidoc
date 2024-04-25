@@ -275,6 +275,7 @@ Implemented to allow the Winlogon session to refresh credentials as needed on te
 Get a ticket either by querying the ticket cache for the current logon session or by requesting the ticket from the current KDC.
 `SeTcbPrivilege` is required to specify another logon session.
 If the requested ticket is a TGT, `SeTcbPrivilege` is required to additionally get the session key for the TGT.
+If the TGT was obtained when Credential Guard was active, the returned TGT session key will not be valid, making the TGT unusable.
 
 ```
 kerberos RetrieveEncodedTicket --target-name {server name} [--luid {session id}] [--ticket-flags {value}] [--cache-option {value}] [--enc-type {type}]
@@ -292,6 +293,7 @@ kerberos RetrieveKeyTab --domain-name {name} --user-name {name} --password {pass
 
 Get the TGT from the ticket cache of the specified user logon session.
 `SeTcbPrivilege` is required to additionally get the session key for the TGT.
+If the TGT was obtained when Credential Guard was active, the returned TGT session key will not be valid, making the TGT unusable. 
 
 ```
 kerberos RetrieveTicket --target-name {server name} [--luid {session id}] [--ticket-flags {value}] [--cache-option {value}] [--enc-type {type}]

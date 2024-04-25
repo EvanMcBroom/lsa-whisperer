@@ -118,7 +118,7 @@ msv1_0 Lm20GetChallengeResponse ...
 
 LSA Whisperer may only be used to interact with the local machine due to the RPC security considerations outlined https://github.com/EvanMcBroom/lsa-whisperer/wiki#sspi-security[on the home page].
 The tool will also experience issues interacting with some SSPs (mainly cloudap) if it is ran as an AppContainer without certain capabilities.
-Partial documentation of these capabilities may be found on individual wiki pages but full documention is not provided as this is an unintended use case of the tool.
+Partial documentation of these capabilities may be found on individual wiki pages but full documentation is not provided as this is an unintended use case of the tool.
 
 The only additional limitation is when Credential Guard is enabled.
 Enabling Credential Guard is known to prevent certain commands as listed below.
@@ -129,6 +129,8 @@ Credential Guard may affect other commands that have not yet been identified.
 |===
 | Package    | Command                       | Effect
 | `kerberos` | `KerbChangePassword`          | Indirectly affected
+| `kerberos` | `RetrieveEncodedTicket        | Cannot get real TGT session key
+| `kerberos` | `RetrieveTicket               | Cannot get real TGT session key
 | `msv1_0`   | `MspGetCredentialKey`         | Prevented
 | `msv1_0`   | `MspLm20GetChallengeResponse` | Prevented
 | `msv1_0`   | `MspNtDeriveCredential`       | Prevented
