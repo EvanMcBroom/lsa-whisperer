@@ -1,0 +1,14 @@
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+= Secret Filter AP
+
+Sfapm is the "Web Defense" authentication package (AP) and security package (SP).
+Sfapm was released on NT 10 19045 and above as a part of the https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-webthreatdefense[WebThreatDefense] technology.
+It has a complementary DLL, named `sfape.dll`, which is likely used to support running the package in a https://learn.microsoft.com/en-us/windows/win32/trusted-execution/enclaves-available-in-vertdll[VBS enclave].
+No documention could be identified for the package itself.
+Microsoft does not publish symbols for the current release of sfapm, but a symbols are at least published for file version 1.0 for NT 10 14983 (e.g., "WinBuild.160101-0800").
+
+Although the package does implement the `CallPackage`, `CallPackageUntrusted`, and `CallPackagePassthrough` functions, they are only implemented to log their invocations.
+As such, supporting an sfapm package call is not currently planned for LSA Whisperer.

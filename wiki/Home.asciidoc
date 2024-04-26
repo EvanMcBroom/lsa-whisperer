@@ -105,12 +105,14 @@ Please refer to the individual wiki page for each SSP to see which commands the 
 | lsasrv    | Negotiate                                 | SPNEGO        | :heavy_check_mark: | 9      | `GSS_NEGOTIATE`
 | pku2u     | Public Key User to User                   | PKU2U         | :heavy_check_mark: | 31     | `NEGO_PKU2U`
 | schannel  | Secure Channel                            | SSL/TLS       | :heavy_check_mark: | 14     | `GSS_SCHANNEL`
+| sfapm     | Secret Filter AP                          | ?             | :heavy_check_mark: | -1     | `DEFAULT`
 | tspkg     | Terminal Services Package                 |               | :heavy_check_mark: | 22     | ?
 | wdigest   | Windows Digest                            | Digest Access | :heavy_check_mark: | 21     | `DIGEST`
 |===
 
-NOTE: Livessp, msapsspc, and msnsspc are legacy SSPs that have been removed from Windows.
-Additionally, the components for the distributed computing environment (DCE), kernel, and message queue (MQ) RPC authn options could not be identified for auditing.
+Livessp, msapsspc, and msnsspc are legacy SSPs that have been removed from Windows.
+The components for the distributed computing environment (DCE), kernel, and message queue (MQ) RPC authn options could not be identified for auditing.
+Lastly, the `DEFAULT` RPC authentication method, RPC ID `-1`, is intended to be used https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/application-verifier-tests-within-application-verifier#what-factors-cause-ntlm-to-be-hard-coded-in-an-application[as an alias for an NTLM SP] (e.g., `msv1_0`); though, the `sfapm` AP also reports its RPC ID as `-1`.
 
 A table of common 3rd party SSPs is provided below.
 LSA Whisperer does not provide support for these SSPs.
