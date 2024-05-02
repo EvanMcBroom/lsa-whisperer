@@ -3,6 +3,7 @@ ifdef::env-github[]
 endif::[]
 
 = Secret Filter AP
+:toc: macro
 
 Sfapm is the "Web Defense" authentication package (AP) and security package (SP).
 Sfapm was released on NT 10 19045 and above as a part of the https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-webthreatdefense[WebThreatDefense] technology.
@@ -12,3 +13,37 @@ Microsoft does not publish symbols for the current release of sfapm, but a symbo
 
 Although the package does implement the `CallPackage`, `CallPackageUntrusted`, and `CallPackagePassthrough` functions, they are only implemented to log their invocations.
 As such, supporting an sfapm package call is not currently planned for LSA Whisperer.
+
+Sfapm also contains RPC servers that monitors and intercepts logon requests/clipboard activities/keystroke input for all user sessions. During LSASS initializtion, sfapm is loaded by LSASS. Subsequently, the sfapm enables RPC servers (if  Credential Guard not enabled) and loads the SFAPE.dll through `LoadEnclaveImage` if certain Windows features are enabled on the machine (i.e., VBS, Enabling ProcessRedirectionTrustPolicy for LSASS). 
+
+toc::[]
+
+== LSA Functions
+
+The AP does not implement any functions to be called from LSA_AP_CALL_PACKAGE.
+
+== RPC Servers
+The SFAPM DLL implements two RPC servers that gets called when user try to copy/paste text across different windows. 
+
+[%header]
+|===
+|Name     | Internal Protocol| RPC Interface ID| Internal Function
+| `imsfk` | IM RPC Protocol|`36cc8d98-6e89-4325-bb5e-1c70f13a2981`| `SFRCharactersInput`
+`SfapRPCCtxClose`
+`SfaRPCtxOpen`
+`SfapRpcQueueStgateUpdateRequest`|`clipsfk` | Clip Board RPC protocol|`cf148a37-dacc-4183-afcf-77307190be06`|`SFRClipboardInput` 
+|===
+
+== SpAcceptCredentialsFn Callback
+
+The DLL implements `SpAcceptCredentialsFn` callback in the `SECPKG_FUNCTION_TABLE`. The function is called everytime when creating a new logon session(e.g., `runas.exe`) and logs the `LogonType`, `AccountName` and  `PrimaryCredentials` parameters except the following suitiations; It will not log if the logon session is a system logon session (e.g., `0x3e7`); It will not log if it's a `Network` logon type.
+
+ifdef::env-github[]
+:note-caption: :pencil2:
+endif::[]
+
+== SFRClipboardInput
+The RPC function is invoked everytime when a user performed copy/paste actions. It captures the copied/pasted buffer and determines to see if the buffer is a poteintial password based on the length of the buffer. It then generates a derived key using `BCryptHash` + `BCryptDeriveKeyPBKDF2` for the buffer and compares it with a same derived key for the current user's credential which is stored in LSASS memory. If the derived keys matches, the DLL sends event using WTDS ETW Provider handle.
+
+== SFRCharactersInput 
+Similar functionalities described above. The function is triggered EVERYTIME when a user type into a textbox (e.g., notepad, browser search bar)
