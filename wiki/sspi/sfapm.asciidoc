@@ -5,14 +5,11 @@ endif::[]
 = Secret Filter AP
 :toc: macro
 
-Sfapm is the "Web Defense" authentication package (AP) and security package (SP).
-Sfapm was released on NT 10 19045 and above as a part of the https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-webthreatdefense[WebThreatDefense] technology.
+Sfapm is the "Web Defense" authentication package (AP) and security package (SP), available on NT 10 19045 and above.
+Sfapm is a part of Microsoft's https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-webthreatdefense[WebThreatDefense] technology and is documented as the https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/enhanced-phishing-protection[Enhanced Phishing Protection in Microsoft Defender SmartScreen].
+The main purpose of sfapm is to monitor user activity to identify if a user typed or copied their password into an application.
 It has a complementary DLL, named `sfape.dll`, which is likely used to support running the package in a https://learn.microsoft.com/en-us/windows/win32/trusted-execution/enclaves-available-in-vertdll[VBS enclave].
-No documention could be identified for the package itself.
-Microsoft does not publish symbols for the current release of sfapm, but a symbols are at least published for file version 1.0 for NT 10 14983 (e.g., "WinBuild.160101-0800").
-
-The main purpose of sfapm is to monitor user activity.
-
+Microsoft does not publish symbols for the current release of sfapm, but symbols are at least published for file version 1.0 for NT 10 14983 (e.g., "WinBuild.160101-0800").
 
 toc::[]
 
