@@ -68,7 +68,8 @@ If either the following Windows features are enabled, sfapm will additionally lo
 
 ==== SFRCharactersInput
 
-Function is called everytime a user provides keyboard input.
+Function is called everytime a user provides keyboard input to capture the input.
+The input is used to identify if a user typed a password, similar to what is described in the `SFRClipboardInput` operation for clipsfk.
 
 === Clipsfk
 
