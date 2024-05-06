@@ -7,4 +7,5 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
-
+    - name: Build
+      run: cmake --build build
