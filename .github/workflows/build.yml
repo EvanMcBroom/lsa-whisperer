@@ -6,7 +6,9 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: Prepare the build
       run: cmake .. -A x64
       working-directory: builds
