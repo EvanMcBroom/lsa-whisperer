@@ -1,0 +1,10 @@
+name: Build LSA Whisperer
+on:
+  workflow_dispatch: # Allows you to manually run the workflow
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
