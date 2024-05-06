@@ -7,4 +7,9 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
-
+    - name: Prepare the build
+      run: cmake .. -A x64
+      working-directory: builds
+    - name: Run the build
+      run: cmake --build .
+      working-directory: builds
