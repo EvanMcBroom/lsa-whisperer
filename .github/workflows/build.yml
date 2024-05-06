@@ -10,7 +10,7 @@ jobs:
       with:
         submodules: recursive
     - name: Prepare the build
-      run: cmake .. -A x64
+      run: cmake .. -A x64 -DCMAKE_SYSTEM_VERSION=10.0.22621.0
       working-directory: builds
     - name: Run the build
       run: cmake --build .
