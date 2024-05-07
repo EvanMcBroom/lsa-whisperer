@@ -19,7 +19,9 @@ jobs:
       run: cmake --build .
       working-directory: builds
     - name: Generate artifact name
-      run: echo "ARTIFACT_NAME=lsa-whisperer-$(git describe --always)" >> $env:GITHUB_ENV
+      run: >
+        git fetch --tags origin
+        echo "ARTIFACT_NAME=lsa-whisperer-$(git describe --always)" >> $env:GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
