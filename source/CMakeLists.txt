@@ -21,14 +21,7 @@ target_sources(sspi PRIVATE ${SSPI_SOURCES})
 target_link_libraries(sspi PUBLIC Bcrypt.lib Crypt32.lib Ntdll.lib Rpcrt4.dll Secur32.lib)
 target_idl_sources(sspi CLIENT SOURCES ms-sspir.idl)
 
-target_sources(sspi-broker PRIVATE
-    broker.cpp
-)
-target_idl_sources(sspi-broker CLIENT SOURCES ms-sspir.idl)
-target_idl_sources(sspi-broker SERVER SOURCES ms-sspir.idl)
-
 target_sources(lsa-whisperer PRIVATE
-    appcontainer.cpp
     cli.cpp
     commands.cpp
     main.cpp

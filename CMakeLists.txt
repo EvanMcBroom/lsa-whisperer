@@ -17,9 +17,6 @@ add_library(sspi STATIC)
 target_compile_definitions(sspi PUBLIC NOMINMAX)
 target_link_libraries(sspi PUBLIC magic_enum::magic_enum)
 
-add_executable(sspi-broker)
-target_link_libraries(sspi-broker PRIVATE advapi32 magic_enum::magic_enum replxx::replxx sspi)
-
 add_executable(lsa-whisperer)
 target_link_libraries(lsa-whisperer PRIVATE advapi32 Userenv.lib Wininet.lib clipp::clipp cxxopts::cxxopts magic_enum::magic_enum replxx::replxx sspi)
 

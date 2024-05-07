@@ -25,7 +25,6 @@ target_sources(sspi PRIVATE ${SSPI_HEADERS})
 target_precompile_headers(sspi PUBLIC <pch.hpp>)
 
 target_sources(lsa-whisperer PRIVATE
-    appcontainer.hpp
     cli.hpp
     commands.hpp
     lazy.hpp
