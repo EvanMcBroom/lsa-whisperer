@@ -108,7 +108,9 @@ namespace Kerberos {
         QueryS4U2ProxyCache,
         RetrieveKeyTab,
         RefreshPolicy,
-        PrintCloudKerberosDebug
+        PrintCloudKerberosDebug,
+        NetworkTicketLogon,
+        NlChangeMachinePassword
     };
 
     enum class TicketFlags : ULONG {
@@ -132,12 +134,19 @@ namespace Kerberos {
         Feserved = 0x80000000
     };
 
-    // required structure for call KerbChangeMachinePasswordMessage
+    // Required structure for call KerbChangeMachinePasswordMessage
     typedef struct _CHANGE_MACH_PWD_REQUEST {
         PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::ChangeMachinePassword };
         UNICODE_STRING NewPassword;
         UNICODE_STRING OldPassword;
     } CHANGE_MACH_PWD_REQUEST, * PCHANGE_MACH_PWD_REQUEST;
+
+    // Temporarily added until GitHub's "windows-latest" runner includes Windows11 SDK 26100
+    // Required structure for call NlChangeMachinePassword
+    typedef struct _CHANGEMACHINEPASSWORD_REQUEST {
+        PROTOCOL_MESSAGE_TYPE MessageType{ PROTOCOL_MESSAGE_TYPE::NlChangeMachinePassword };
+        BOOLEAN Impersonating;
+    } CHANGEMACHINEPASSWORD_REQUEST, *PCHANGEMACHINEPASSWORD_REQUEST;
 
     class Proxy {
     public:
@@ -148,6 +157,7 @@ namespace Kerberos {
         bool AddBindingCacheEntryEx(const std::wstring& realmName, const std::wstring& kdcAddress, ULONG addressType, ULONG dcFlags, bool useEx = true) const;
         bool AddExtraCredentials(PLUID luid, const std::wstring& domainName, const std::wstring& userName, const std::wstring& password, ULONG flags) const;
         bool CleanupMachinePkinitCreds(PLUID luid) const;
+        bool NlChangeMachinePassword(bool impersonating) const;
         bool PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const;
         bool PrintCloudKerberosDebug(PLUID luid) const;
         bool PurgeBindingCache() const;

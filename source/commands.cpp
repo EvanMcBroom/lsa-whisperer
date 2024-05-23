@@ -221,6 +221,7 @@ namespace Kerberos {
             ("dluid", "Destination logon session", cxxopts::value<long long>())
             ("domain-name", "", cxxopts::value<std::string>())
             ("enc-type", "EncryptionType field for KerbRetrieveTicketMessage", cxxopts::value<long long>())
+            ("impersonating", "Used for NlChangeMachinePassword", cxxopts::value<bool>()->default_value("false"))
             ("luid", "Logon session", cxxopts::value<long long>())
             ("optimistic-logon", "Optimistic logon flag", cxxopts::value<bool>()->default_value("false"))
             ("password", "", cxxopts::value<std::string>())
@@ -282,6 +283,9 @@ namespace Kerberos {
             LUID luid = { 0 };
             reinterpret_cast<LARGE_INTEGER*>(&luid)->QuadPart = options["luid"].as<long long>();
             return proxy.CleanupMachinePkinitCreds(&luid);
+        }
+        case PROTOCOL_MESSAGE_TYPE::NlChangeMachinePassword: {
+            return proxy.NlChangeMachinePassword(options["impersonating"].as<bool>());
         }
         case PROTOCOL_MESSAGE_TYPE::PinKdc: {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

@@ -94,6 +94,13 @@ namespace Kerberos {
         return CallPackage(request, &response);
     }
 
+    bool Proxy::NlChangeMachinePassword(bool impersonating) const {
+        CHANGEMACHINEPASSWORD_REQUEST request;
+        request.Impersonating = impersonating;
+        void* response{ nullptr };
+        return CallPackage(request, &response);
+    }
+
     bool Proxy::PinKdc(const std::wstring& domainName, const std::wstring& dcName, ULONG dcFlags) const {
         auto requestSize{ sizeof(SECPKG_CALL_PACKAGE_PIN_DC_REQUEST) + ((domainName.length() + dcName.length() + 2) * sizeof(wchar_t)) };
         std::string requestBytes(requestSize, '\0');
