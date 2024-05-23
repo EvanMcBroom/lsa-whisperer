@@ -18,44 +18,46 @@ The full and correct list of messages that kerberos supports is provided here:
 
 [%header]
 |===
-| Id     | Message Type                   | CLI Support        | NT Version | Internal Function
-| `0x00` | `DebugRequest`                 | :heavy_minus_sign: | `>=5.0`    | `KerbDebugRequest`
-| `0x01` | `QueryTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbQueryTicketCache`
-| `0x02` | `ChangeMachinePassword`        | :x:                | `>=5.0`    | `KerbChangeMachinePassword`
-| `0x03` | `VerifyPac`                    | _Planned_          | `>=5.0`    | `KerbVerifyPac`
-| `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveTicket`
-| `0x05` | `UpdateAddresses`              | :x:                | `>=5.0`    | `KerbSetIpAddresses`
-| `0x06` | `PurgeTicketCache`             | :heavy_check_mark: | `>=5.0`    | `KerbPurgeTicket`
-| `0x07` | `ChangePassword`               |                    | `>=5.0`    | `KerbChangePassword`
-| `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`    | `KerbRetrieveEncodedTicket`
-| `0x09` | `DecryptData`                  | :heavy_minus_sign: | `>=5.0`    | `KerbDecryptMessage`
-| `0x0A` | `AddBindingCacheEntry`         | :heavy_check_mark: | `>=5.0`    | `KerbAddBindingCacheEntry`
-| `0x0B` | `SetPassword`                  |                    | `>=5.0`    | `KerbSetPassword`
-| `0x0C` | `SetPasswordEx`                |                    | `>=5.0`    | `KerbSetPassword`
-| `0x0D` | `VerifyCredentials`            | :x:                | `>=5.1`    | `KerbVerifyCredentials`
-| `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbQueryTicketCacheEx`
-| `0x0F` | `PurgeTicketCacheEx`           | :heavy_check_mark: | `>=5.1`    | `KerbPurgeTicketEx`
-| `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`    | `KerbRefreshSmartcardCredentials`
-| `0x11` | `AddExtraCredentials`          | :heavy_check_mark: | `>=5.0`    | `KerbAddExtraCredential`
-| `0x12` | `QuerySupplementalCredentials` | :x:                | `>=5.2`    | `KerbQuerySupplementalCredentials`
-| `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`    | `KerbTransferCredentials`
-| `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`    | `KerbQueryTicketCacheEx2`
-| `0x15` | `SubmitTicket`                 |                    | `>=6.0`    | `KerbSubmitTicket`
-| `0x16` | `AddExtraCredentialsEx`        | _Planned_          | `>=6.0`    | `KerbAddExtraCredentialEx`
-| `0x17` | `QueryKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbQueryKdcProxyCache`
-| `0x18` | `PurgeKdcProxyCache`           | :heavy_check_mark: | `>=6.2`    | `KerbPurgeKdcProxyCache`
-| `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryTicketCacheEx3`
-| `0x1a` | `CleanupMachinePkinitCreds`    | :heavy_check_mark: | `>=6.2`    | `KerbCleanupMachinePkinitCreds`
-| `0x1b` | `AddBindingCacheEntryEx`       | :heavy_check_mark: | `>=6.2`    | `KerbAddBindingCacheEntryEx`
-| `0x1c` | `QueryBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbQueryBindingCache`
-| `0x1d` | `PurgeBindingCache`            | :heavy_check_mark: | `>=6.2`    | `KerbPurgeBindingCache`
-| `0x1e` | `PinKdc`                       | :heavy_check_mark: | `>=6.2`    | `KerbPinKdc`
-| `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`    | `KerbUnpinAllKdcs`
-| `0x20` | `QueryDomainExtendedPolicies`  | :heavy_check_mark: | `>=6.2`    | `KerbQueryDomainExtendedPolicies`
-| `0x21` | `QueryS4U2ProxyCache`          | :heavy_check_mark: | `>=6.2`    | `KerbQueryS4U2ProxyCache`
-| `0x22` | `RetrieveKeyTab`               | :heavy_check_mark: | `>=10.0`   | `KerbRetrieveKeyTab`
-| `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`   | ?
-| `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`   | `KerbPrintCloudKerberosDebug`
+| Id     | Message Type                   | CLI Support        | NT Version     | Internal Function
+| `0x00` | `DebugRequest`                 | :heavy_minus_sign: | `>=5.0`        | `KerbDebugRequest`
+| `0x01` | `QueryTicketCache`             | :heavy_check_mark: | `>=5.0`        | `KerbQueryTicketCache`
+| `0x02` | `ChangeMachinePassword`        | :x:                | `>=5.0`        | `KerbChangeMachinePassword`
+| `0x03` | `VerifyPac`                    | _Planned_          | `>=5.0`        | `KerbVerifyPac`
+| `0x04` | `RetrieveTicket`               | :heavy_check_mark: | `>=5.0`        | `KerbRetrieveTicket`
+| `0x05` | `UpdateAddresses`              | :x:                | `>=5.0`        | `KerbSetIpAddresses`
+| `0x06` | `PurgeTicketCache`             | :heavy_check_mark: | `>=5.0`        | `KerbPurgeTicket`
+| `0x07` | `ChangePassword`               |                    | `>=5.0`        | `KerbChangePassword`
+| `0x08` | `RetrieveEncodedTicket`        | :heavy_check_mark: | `>=5.0`        | `KerbRetrieveEncodedTicket`
+| `0x09` | `DecryptData`                  | :heavy_minus_sign: | `>=5.0`        | `KerbDecryptMessage`
+| `0x0A` | `AddBindingCacheEntry`         | :heavy_check_mark: | `>=5.0`        | `KerbAddBindingCacheEntry`
+| `0x0B` | `SetPassword`                  |                    | `>=5.0`        | `KerbSetPassword`
+| `0x0C` | `SetPasswordEx`                |                    | `>=5.0`        | `KerbSetPassword`
+| `0x0D` | `VerifyCredentials`            | :x:                | `>=5.1`        | `KerbVerifyCredentials`
+| `0x0E` | `QueryTicketCacheEx`           | :heavy_check_mark: | `>=5.1`        | `KerbQueryTicketCacheEx`
+| `0x0F` | `PurgeTicketCacheEx`           | :heavy_check_mark: | `>=5.1`        | `KerbPurgeTicketEx`
+| `0x10` | `RefreshSmartcardCredentials`  |                    | `>=5.2`        | `KerbRefreshSmartcardCredentials`
+| `0x11` | `AddExtraCredentials`          | :heavy_check_mark: | `>=5.0`        | `KerbAddExtraCredential`
+| `0x12` | `QuerySupplementalCredentials` | :x:                | `>=5.2`        | `KerbQuerySupplementalCredentials`
+| `0x13` | `TransferCredentials`          | :heavy_check_mark: | `>=6.0`        | `KerbTransferCredentials`
+| `0x14` | `QueryTicketCacheEx2`          | :heavy_check_mark: | `>=6.0`        | `KerbQueryTicketCacheEx2`
+| `0x15` | `SubmitTicket`                 |                    | `>=6.0`        | `KerbSubmitTicket`
+| `0x16` | `AddExtraCredentialsEx`        | _Planned_          | `>=6.0`        | `KerbAddExtraCredentialEx`
+| `0x17` | `QueryKdcProxyCache`           | :heavy_check_mark: | `>=6.2`        | `KerbQueryKdcProxyCache`
+| `0x18` | `PurgeKdcProxyCache`           | :heavy_check_mark: | `>=6.2`        | `KerbPurgeKdcProxyCache`
+| `0x19` | `QueryTicketCacheEx3`          | :heavy_check_mark: | `>=6.2`        | `KerbQueryTicketCacheEx3`
+| `0x1a` | `CleanupMachinePkinitCreds`    | :heavy_check_mark: | `>=6.2`        | `KerbCleanupMachinePkinitCreds`
+| `0x1b` | `AddBindingCacheEntryEx`       | :heavy_check_mark: | `>=6.2`        | `KerbAddBindingCacheEntryEx`
+| `0x1c` | `QueryBindingCache`            | :heavy_check_mark: | `>=6.2`        | `KerbQueryBindingCache`
+| `0x1d` | `PurgeBindingCache`            | :heavy_check_mark: | `>=6.2`        | `KerbPurgeBindingCache`
+| `0x1e` | `PinKdc`                       | :heavy_check_mark: | `>=6.2`        | `KerbPinKdc`
+| `0x1f` | `UnpinAllKdcs`                 | :heavy_check_mark: | `>=6.2`        | `KerbUnpinAllKdcs`
+| `0x20` | `QueryDomainExtendedPolicies`  | :heavy_check_mark: | `>=6.2`        | `KerbQueryDomainExtendedPolicies`
+| `0x21` | `QueryS4U2ProxyCache`          | :heavy_check_mark: | `>=6.2`        | `KerbQueryS4U2ProxyCache`
+| `0x22` | `RetrieveKeyTab`               | :heavy_check_mark: | `>=10.0`       | `KerbRetrieveKeyTab`
+| `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`       | ?
+| `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`       | `KerbPrintCloudKerberosDebug`
+| `0x25` | `NetworkTicketLogon`           | :heavy_minus_sign: | `>=10.0.26080` | ?
+| `0x26` | `NlChangeMachinePassword`      | _Planned_          | `>=10.0.26080` | `KerbNlChangeMachinePassword`
 |===
 
 NOTE: The internal function for each message type will be located in `kerberos.dll`.
@@ -138,12 +140,24 @@ The `dc-flags` value may be any combination of DC types as described by the DS_*
 kerberos PinKdc --domain-name {name} --dc-name {name} [--dc-flags {value}]
 ```
 
+=== NetworkTicketLogon
+
+The `NetworkTicketLogon` command is not included with release builds of Windows.
+
 === PrintCloudKerberosDebug
 
 Get cloud kerberos configuration information.
 
 ```
 kerberos PrintCloudKerberosDebug
+```
+
+=== NlChangeMachinePassword
+
+Creates a password bound by CredGuard, then changes the password on the KDC machine account, the password cache, and the logon credentials if applicable.
+
+```
+kerberos NlChangeMachinePassword [--impersonating]
 ```
 
 === PurgeBindingCache
