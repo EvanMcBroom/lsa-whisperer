@@ -57,7 +57,7 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`       | ?
 | `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`       | `KerbPrintCloudKerberosDebug`
 | `0x25` | `NetworkTicketLogon`           | :heavy_minus_sign: | `>=10.0.26080` | ?
-| `0x26` | `NlChangeMachinePassword`      | :heavy_minus_sign: | `>=10.0.26080` | `KerbNlChangeMachinePassword`
+| `0x26` | `NlChangeMachinePassword`      | :heavy_check_mark: | `>=10.0.26080` | `KerbNlChangeMachinePassword`
 |===
 
 NOTE: The internal function for each message type will be located in `kerberos.dll`.
