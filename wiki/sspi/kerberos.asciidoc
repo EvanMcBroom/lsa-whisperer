@@ -7,6 +7,7 @@ endif::[]
 
 The kerberos authentication package (AP) supports domain logons.
 It is also the security package (SP) for Microsoft kerberos v1.0 authentication on a network.
+As of NT 10.0.26100, the AP implements a https://techcommunity.microsoft.com/t5/windows-it-pro-blog/the-evolution-of-windows-authentication/ba-p/3926848[local KDC] to also support remote authentication with local user accounts using kerberos.
 
 toc::[]
 
@@ -56,8 +57,8 @@ The full and correct list of messages that kerberos supports is provided here:
 | `0x22` | `RetrieveKeyTab`               | :heavy_check_mark: | `>=10.0`       | `KerbRetrieveKeyTab`
 | `0x23` | `RefreshPolicy`                | :heavy_minus_sign: | `>=10.0`       | ?
 | `0x24` | `PrintCloudKerberosDebug`      | :heavy_check_mark: | `>=10.0`       | `KerbPrintCloudKerberosDebug`
-| `0x25` | `NetworkTicketLogon`           | :heavy_minus_sign: | `>=10.0.26080` | ?
-| `0x26` | `NlChangeMachinePassword`      | :heavy_check_mark: | `>=10.0.26080` | `KerbNlChangeMachinePassword`
+| `0x25` | `NetworkTicketLogon`           | :heavy_minus_sign: | `>=10.0.26100` | ?
+| `0x26` | `NlChangeMachinePassword`      | :heavy_check_mark: | `>=10.0.26100` | `KerbNlChangeMachinePassword`
 |===
 
 NOTE: The internal function for each message type will be located in `kerberos.dll`.

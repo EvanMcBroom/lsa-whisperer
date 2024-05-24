@@ -6,7 +6,7 @@ endif::[]
 :toc: macro
 
 The cloud authentication package (AP) supports logons with Azure, AD FS, and Microsoft accounts.
-It is also the security support provider (SSP) for OAuth 2.0 authentication with Microsoft's cloud services.
+It is also the security package (SP) for OAuth 2.0 authentication with Microsoft's cloud services.
 
 toc::[]
 
