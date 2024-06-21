@@ -343,7 +343,11 @@ Always returns `E_NOTIMPL`.
 ==== GetPrtAuthority
 
 Get information about any PRT authorities the current device may be registered with.
-The current device may be registered with Azure AD, an AD FS instance (e.g., "Enterprise"), or both.
+The current device may be registered with Azure AD (use `--authority 1`), an AD FS instance (e.g., "Enterprise" [use `--authority 2`]), or both.
+
+```
+cloudap GetPrtAuthority --authority 1 ## Authority values: AzureAd (1), Enterprise (2)
+``` 
 
 ==== RefreshP2PCACert
 
