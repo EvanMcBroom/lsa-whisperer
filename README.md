@@ -19,7 +19,7 @@ Contributions are appreciated!
 
 LSA Whisperer uses [CMake](https://cmake.org/) to generate and run the build system files for your platform.
 The project does not rely on any library manager to allow it to be easily built in an offline environment if desired.
-You will need the latest Windows 11 SDK, which at the time of this writing is 10.0.22621.0.
+You will need [the latest Windows 11 SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/), which at the time of this writing is 10.0.22621.0.
 
 ```
 git clone --recurse-submodules https://github.com/EvanMcBroom/lsa-whisperer.git
@@ -27,6 +27,10 @@ cd lsa-whisperer/builds
 cmake .. -A {Win32 | x64}
 cmake --build .
 ```
+
+> :pencil2: If you have an issue building the project, please check the output of the generation step (e.g., `cmake ..`) to ensure that cmake choose the correct Windows SDK version.
+If you have multiple Windows SDKs installed, you will likely need to specify the correct version for cmake to use (e.g., `cmake .. -DCMAKE_SYSTEM_VERSION=10.0.22621.0`).
+
 
 By default CMake will build both the `lsa-whisperer` utility and the `sspi` static library it uses.
 The `lsa-whisperer` utility will be linked against the static version of the runtime library which will allow the tool to run as a standalone program on other hosts.
