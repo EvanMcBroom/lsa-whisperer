@@ -1,9 +1,11 @@
 name: Build LSA Whisperer
 on:
   workflow_dispatch: # Allows you to manually run the workflow
-  push:
+  push: # Run when code changes
     branches: ['master']
     paths: ['cmake/**', 'include/**', 'libraries/**', 'source/**', 'CMakeList.txt']
+  schedule: # Run on first day of every month
+    - cron: "0 0 1 * *"
 jobs:
   build:
     runs-on: windows-latest
