@@ -22,11 +22,11 @@ jobs:
     - name: Run the build
       run: cmake --build .
       working-directory: builds
-    - name: Remove tag 'latest' which would change git description
-      run: git tag -d latest
     - name: Generate description for artifact name
       id: ghd
       uses: proudust/gh-describe@v2
+      with:
+        match: v*
     - name: Upload artifact to workflow run
       uses: actions/upload-artifact@v4
       with:
