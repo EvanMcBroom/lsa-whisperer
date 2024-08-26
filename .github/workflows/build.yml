@@ -42,6 +42,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
-        files: ${{ needs.build.outputs.artifact }}.zip
+        files: lsa-whisperer-*
         fail_on_unmatched_files: true
 
