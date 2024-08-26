@@ -22,6 +22,8 @@ jobs:
     - name: Run the build
       run: cmake --build .
       working-directory: builds
+    - name: Remove tag 'latest' which would change git description
+      run: git tag -d latest
     - name: Generate description for artifact name
       id: ghd
       uses: proudust/gh-describe@v2
@@ -30,7 +32,10 @@ jobs:
       with:
         name: lsa-whisperer-${{ steps.ghd.outputs.describe }}
         path: builds/Debug/**
-  upload: # Reupload artifacts to a GitHub release to allow them to be downloaded unauthenticated
+  deploy: # Reupload artifacts to a GitHub release to allow them to be downloaded unauthenticated
+    environment:
+      name: github-artifacts
+      url: https://github.com/EvanMcBroom/lsa-whisperer/releases/tag/latest
     runs-on: ubuntu-latest
     needs: build
     steps:
