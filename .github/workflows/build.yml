@@ -53,6 +53,7 @@ jobs:
       uses: larryjoelane/delete-release-action@v1.0.24
       with:
           release-name: latest
+          token: ${{ secrets.GH_TOKEN }}
     - name: Recreate the GitHub release and upload the new artifact to it
       uses: softprops/action-gh-release@v2
       with:
