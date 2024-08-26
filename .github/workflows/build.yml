@@ -50,7 +50,7 @@ jobs:
         files: artifact-files/
         dest: ${{ needs.build.outputs.artifact }}.zip
     - name: Delete the existing GitHub release so it does not get bloated with old artifacts
-      uses: liudonghua123/delete-release-action@v1
+      uses: larryjoelane/delete-release-action@v1.0.24
       with:
           release_name: latest
     - name: Recreate the GitHub release and upload the new artifact to it
