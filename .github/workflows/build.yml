@@ -48,6 +48,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
+        body: Source code and build artifacts from the last run of the project's [build workflow](https://github.com/EvanMcBroom/lsa-whisperer/actions/workflows/build.yml?query=is%3Asuccess).
         files: ${{ needs.build.outputs.artifact }}.zip
         fail_on_unmatched_files: true
 
