@@ -34,8 +34,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@master
     - name: Download artifact from workflow run
       uses: actions/download-artifact@master
       with:
@@ -44,6 +42,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
-        files: ${{ needs.build.outputs.artifact }}
+        files: ${{ needs.build.outputs.artifact }}.zip
         fail_on_unmatched_files: true
 
