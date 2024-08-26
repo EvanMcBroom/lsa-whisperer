@@ -30,7 +30,7 @@ jobs:
       with:
         name: lsa-whisperer-${{ steps.ghd.outputs.describe }}
         path: builds/Debug/**
-  upload:
+  upload: # Reupload artifacts to a GitHub release to allow them to be downloaded unauthenticated
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -38,10 +38,16 @@ jobs:
       uses: actions/download-artifact@master
       with:
         name: ${{ needs.build.outputs.artifact }}
-    - name: Reupload artifact to latest release
+        path: artifact-files
+    - name: Archive artifacts
+      uses: vimtor/action-zip@v1.2
+      with:
+        files: artifact-files/
+        dest: ${{ needs.build.outputs.artifact }}.zip
+    - name: Reupload artifact to a GitHub release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
-        files: lsa-whisperer-*
+        files: ${{ needs.build.outputs.artifact }}.zip
         fail_on_unmatched_files: true
 
