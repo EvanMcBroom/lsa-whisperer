@@ -5,7 +5,7 @@
 [![Sponsored by SpecterOps](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/specterops/.github/main/config/shield.json)](https://github.com/specterops)
 
 LSA Whisperer is a set of tools for interacting with authentication packages using their individual message protocols.
-You may download prebuilt copies of LSA Whisperer from the artifacts list of a recent run of its [build workflow](https://github.com/EvanMcBroom/lsa-whisperer/actions/workflows/build.yml?query=is%3Asuccess).
+You may download prebuilt copies of LSA Whisperer from the assets section of its [latest release](https://github.com/EvanMcBroom/lsa-whisperer/releases/tag/latest).
 
 Support is currently provided for the cloudap, kerberos, msv1_0, negotiate, pku2u, and schannel packages and cloudap's AzureAD plugin.
 Partial or unstable support is provided for livessp, negoexts, and the security package manager (SPM).
