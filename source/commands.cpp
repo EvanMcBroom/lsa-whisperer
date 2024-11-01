@@ -3,7 +3,7 @@
 #include <commands.hpp>
 #include <crypt.hpp>
 #include <locale>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <msv1_0.hpp>
 #include <string>
 

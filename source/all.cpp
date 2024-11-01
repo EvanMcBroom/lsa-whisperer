@@ -5,7 +5,7 @@
 #include <all.hpp>
 #include <live.hpp>
 #include <lsa.hpp>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <string>
 
 namespace {
