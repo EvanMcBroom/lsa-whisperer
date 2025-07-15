@@ -36,10 +36,6 @@ namespace {
         return result;
     }
 
-    constexpr size_t RoundUp(size_t count, size_t powerOfTwo) {
-        return (count + powerOfTwo - 1) & (~powerOfTwo - 1);
-    }
-
     UNICODE_STRING WCharToUString(wchar_t* string) {
         if (string) {
             auto size{ lstrlenW(string) * sizeof(wchar_t) };
@@ -265,11 +261,11 @@ namespace Msv1_0 {
                 RtlFreeUnicodeString(&sidString);
             }
             offset = offset + sidLength;
-            std::wcout << L"UserName       : " << response->UserName.Buffer << std::endl;
+            std::wcout << L"UserName       : " << ToWString(&response->UserName) << std::endl;
             offset = offset + response->UserName.Length;
-            std::wcout << L"LogonDomainName: " << response->LogonDomainName.Buffer << std::endl;
+            std::wcout << L"LogonDomainName: " << ToWString(&response->LogonDomainName) << std::endl;
             offset = offset + response->LogonServer.Length;
-            std::wcout << L"LogonServer    : " << response->LogonServer.Buffer << std::endl;
+            std::wcout << L"LogonServer    : " << ToWString(&response->LogonServer) << std::endl;
             LsaFreeReturnBuffer(response);
         }
         return result;
@@ -302,16 +298,8 @@ namespace Msv1_0 {
             buffer = reinterpret_cast<const char*>(response->CaseInsensitiveChallengeResponse.Buffer);
             std::string caseInensitiveResponse(buffer, buffer + (response->CaseInsensitiveChallengeResponse.Length));
             OutputHex(lsa->out, "CaseInsensitiveChallengeResponse", caseInensitiveResponse);
-            if (response->UserName.Buffer) {
-                std::wcout << L"UserName                              : " << response->UserName.Buffer << std::endl;
-            } else {
-                std::wcout << L"UserName                              : nullptr" << std::endl;
-            }
-            if (response->LogonDomainName.Buffer) {
-                std::wcout << L"LogonDomainName                       : " << response->LogonDomainName.Buffer << std::endl;
-            } else {
-                std::wcout << L"LogonDomainName                       : nullptr" << std::endl;
-            }
+            std::wcout << L"UserName                              : " << ToWString(&response->UserName) << std::endl;
+            std::wcout << L"LogonDomainName                       : " << ToWString(&response->LogonDomainName) << std::endl;
             std::string userSessionKey(reinterpret_cast<const char*>(response->UserSessionKey), sizeof(response->UserSessionKey));
             OutputHex(lsa->out, "UserSessionKey                  ", userSessionKey);
             std::string lanmanSessionKey(reinterpret_cast<const char*>(response->LanmanSessionKey), sizeof(response->LanmanSessionKey));

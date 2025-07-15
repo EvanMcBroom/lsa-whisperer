@@ -118,3 +118,4 @@ namespace Lsa {
 
 void OutputHex(std::ostream& out, const std::string& data);
 void OutputHex(std::ostream& out, const std::string& prompt, const std::string& data);
+std::wstring ToWString(PUNICODE_STRING uString);

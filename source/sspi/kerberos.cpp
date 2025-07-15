@@ -222,13 +222,13 @@ namespace Kerberos {
                 auto& entry{ response->Entries[index] };
                 std::wcout << index << ": " << std::endl;
                 std::wcout << "    DiscoveryTime: 0x" << entry.DiscoveryTime << std::endl;
-                std::wcout << "    RealmName    : " << std::wstring(entry.RealmName.Buffer, entry.RealmName.Buffer + (entry.RealmName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    KdcAddress   : " << std::wstring(entry.KdcAddress.Buffer, entry.KdcAddress.Buffer + (entry.KdcAddress.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    RealmName    : " << ToWString(&entry.RealmName) << std::endl;
+                std::wcout << "    KdcAddress   : " << ToWString(&entry.KdcAddress) << std::endl;
                 std::wcout << "    AddressType  : 0x" << entry.AddressType << std::endl;
                 std::wcout << "    Flags        : 0x" << entry.Flags << std::endl;
                 std::wcout << "    DcFlags      : 0x" << entry.DcFlags << std::endl;
                 std::wcout << "    CacheFlags   : 0x" << entry.CacheFlags << std::endl;
-                std::wcout << "    KdcName      : " << std::wstring(entry.KdcName.Buffer, entry.KdcName.Buffer + (entry.KdcName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    KdcName      : " << ToWString(&entry.KdcName) << std::endl;
             }
             LsaFreeReturnBuffer(response);
         }
@@ -272,13 +272,13 @@ namespace Kerberos {
                 auto& entry{ response->Entries[index] };
                 std::wcout << index << ": " << std::endl;
                 std::wcout << "    SinceLastUsed  : " << entry.SinceLastUsed << std::endl;
-                std::wcout << "    DomainName     : " << std::wstring(entry.DomainName.Buffer, entry.DomainName.Buffer + (entry.DomainName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ApiServerName: " << std::wstring(entry.ProxyServerName.Buffer, entry.ProxyServerName.Buffer + (entry.ProxyServerName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ApiServerVdir: " << std::wstring(entry.ProxyServerVdir.Buffer, entry.ProxyServerVdir.Buffer + (entry.ProxyServerVdir.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    DomainName     : " << ToWString(&entry.DomainName) << std::endl;
+                std::wcout << "    ApiServerName: " << ToWString(&entry.ProxyServerName) << std::endl;
+                std::wcout << "    ApiServerVdir: " << ToWString(&entry.ProxyServerVdir) << std::endl;
                 std::wcout << "    ApiServerPort: " << entry.ProxyServerPort << std::endl;
                 std::cout << "    LogonId        : " << std::setfill('0') << std::setw(8) << entry.LogonId.HighPart << "-" << std::setw(8) << entry.LogonId.LowPart << std::endl;
-                std::wcout << "    CredUserName   : " << std::wstring(entry.CredUserName.Buffer, entry.CredUserName.Buffer + (entry.CredUserName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    CredDomainName : " << std::wstring(entry.CredDomainName.Buffer, entry.CredDomainName.Buffer + (entry.CredDomainName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    CredUserName   : " << ToWString(&entry.CredUserName) << std::endl;
+                std::wcout << "    CredDomainName : " << ToWString(&entry.CredDomainName) << std::endl;
                 std::wcout << "    GlobalCache    : " << entry.GlobalCache << std::endl;
             }
             LsaFreeReturnBuffer(response);
@@ -298,15 +298,15 @@ namespace Kerberos {
             for (size_t index{ 0 }; index < response->CountOfCreds; index++) {
                 auto& cred{ response->Creds[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    UserName  : " << std::wstring(cred.UserName.Buffer, cred.UserName.Buffer + (cred.UserName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    DomainName: " << std::wstring(cred.DomainName.Buffer, cred.DomainName.Buffer + (cred.DomainName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    UserName  : " << ToWString(&cred.UserName) << std::endl;
+                std::wcout << "    DomainName: " << ToWString(&cred.DomainName) << std::endl;
                 std::wcout << "    Flags     : " << cred.Flags << std::endl;
                 std::wcout << "    LastStatus: " << cred.LastStatus << std::endl;
                 std::wcout << "    Expiry    : " << cred.Expiry.QuadPart << std::endl;
                 for (size_t index{ 0 }; index < cred.CountOfEntries; index++) {
                     std::wcout << "    Entry " << index << ": " << std::endl;
                     auto& entry{ cred.Entries[index] };
-                    std::wcout << "        ServerName: " << std::wstring(entry.ServerName.Buffer, entry.ServerName.Buffer + (entry.ServerName.Length / sizeof(wchar_t))) << std::endl;
+                    std::wcout << "        ServerName: " << ToWString(&entry.ServerName) << std::endl;
                     std::wcout << "        Flags     : " << entry.Flags << std::endl;
                     std::wcout << "        LastStatus: " << entry.LastStatus << std::endl;
                     std::wcout << "        Expiry    : " << entry.Expiry.QuadPart << std::endl;
@@ -328,8 +328,8 @@ namespace Kerberos {
             for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
                 auto& ticket{ response->Tickets[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    ServerName    : " << std::wstring(ticket.ServerName.Buffer, ticket.ServerName.Buffer + (ticket.ServerName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    RealmName     : " << std::wstring(ticket.RealmName.Buffer, ticket.RealmName.Buffer + (ticket.RealmName.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    ServerName    : " << ToWString(&ticket.ServerName) << std::endl;
+                std::wcout << "    RealmName     : " << ToWString(&ticket.RealmName) << std::endl;
                 std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
                 std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
                 std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
@@ -352,10 +352,10 @@ namespace Kerberos {
             for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
                 auto& ticket{ response->Tickets[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    ClientName    : " << std::wstring(ticket.ClientName.Buffer, ticket.ClientName.Buffer + (ticket.ClientName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ClientRealm   : " << std::wstring(ticket.ClientRealm.Buffer, ticket.ClientRealm.Buffer + (ticket.ClientRealm.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerName    : " << std::wstring(ticket.ServerName.Buffer, ticket.ServerName.Buffer + (ticket.ServerName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerRealm   : " << std::wstring(ticket.ServerRealm.Buffer, ticket.ServerRealm.Buffer + (ticket.ServerRealm.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    ClientName    : " << ToWString(&ticket.ClientName) << std::endl;
+                std::wcout << "    ClientRealm   : " << ToWString(&ticket.ClientRealm) << std::endl;
+                std::wcout << "    ServerName    : " << ToWString(&ticket.ServerName) << std::endl;
+                std::wcout << "    ServerRealm   : " << ToWString(&ticket.ServerRealm) << std::endl;
                 std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
                 std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
                 std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
@@ -378,10 +378,10 @@ namespace Kerberos {
             for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
                 auto& ticket{ response->Tickets[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    ClientName    : " << std::wstring(ticket.ClientName.Buffer, ticket.ClientName.Buffer + (ticket.ClientName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ClientRealm   : " << std::wstring(ticket.ClientRealm.Buffer, ticket.ClientRealm.Buffer + (ticket.ClientRealm.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerName    : " << std::wstring(ticket.ServerName.Buffer, ticket.ServerName.Buffer + (ticket.ServerName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerRealm   : " << std::wstring(ticket.ServerRealm.Buffer, ticket.ServerRealm.Buffer + (ticket.ServerRealm.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    ClientName    : " << ToWString(&ticket.ClientName) << std::endl;
+                std::wcout << "    ClientRealm   : " << ToWString(&ticket.ClientRealm) << std::endl;
+                std::wcout << "    ServerName    : " << ToWString(&ticket.ServerName) << std::endl;
+                std::wcout << "    ServerRealm   : " << ToWString(&ticket.ServerRealm) << std::endl;
                 std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
                 std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
                 std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
@@ -406,10 +406,10 @@ namespace Kerberos {
             for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
                 auto& ticket{ response->Tickets[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    ClientName    : " << std::wstring(ticket.ClientName.Buffer, ticket.ClientName.Buffer + (ticket.ClientName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ClientRealm   : " << std::wstring(ticket.ClientRealm.Buffer, ticket.ClientRealm.Buffer + (ticket.ClientRealm.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerName    : " << std::wstring(ticket.ServerName.Buffer, ticket.ServerName.Buffer + (ticket.ServerName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << "    ServerRealm   : " << std::wstring(ticket.ServerRealm.Buffer, ticket.ServerRealm.Buffer + (ticket.ServerRealm.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    ClientName    : " << ToWString(&ticket.ClientName) << std::endl;
+                std::wcout << "    ClientRealm   : " << ToWString(&ticket.ClientRealm) << std::endl;
+                std::wcout << "    ServerName    : " << ToWString(&ticket.ServerName) << std::endl;
+                std::wcout << "    ServerRealm   : " << ToWString(&ticket.ServerRealm) << std::endl;
                 std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
                 std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
                 std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
@@ -418,7 +418,7 @@ namespace Kerberos {
                 std::cout << "    SessionKeyType: " << ticket.SessionKeyType << std::endl;
                 std::wcout << "    BranchId      : " << ticket.BranchId << std::endl;
                 std::wcout << "    CacheFlags    : " << ticket.CacheFlags << std::endl;
-                std::wcout << "    KdcCalled     : " << std::wstring(ticket.KdcCalled.Buffer, ticket.KdcCalled.Buffer + (ticket.KdcCalled.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << "    KdcCalled     : " << ToWString(&ticket.KdcCalled) << std::endl;
             }
             LsaFreeReturnBuffer(response);
         }
@@ -484,7 +484,7 @@ namespace Kerberos {
                     std::wcout << "/";
                 }
                 auto& name{ ticket.ServiceName->Names[index] };
-                std::wcout << std::wstring(name.Buffer, name.Buffer + (name.Length / sizeof(wchar_t)));
+                std::wcout << ToWString(&name);
             }
             std::wcout << " (Type " << ticket.ServiceName->NameType << ") " << std::endl;
 
@@ -494,7 +494,7 @@ namespace Kerberos {
                     std::wcout << "/";
                 }
                 auto& name{ ticket.TargetName->Names[index] };
-                std::wcout << std::wstring(name.Buffer, name.Buffer + (name.Length / sizeof(wchar_t)));
+                std::wcout << ToWString(&name);
             }
             std::wcout << " (Type " << ticket.TargetName->NameType << ") " << std::endl;
 
@@ -504,12 +504,12 @@ namespace Kerberos {
                     std::wcout << "/";
                 }
                 auto& name{ ticket.ClientName->Names[index] };
-                std::wcout << std::wstring(name.Buffer, name.Buffer + (name.Length / sizeof(wchar_t)));
+                std::wcout << ToWString(&name);
             }
             std::wcout << " (Type " << ticket.ClientName->NameType << ") " << std::endl;
-            std::wcout << "DomainName          : " << std::wstring(ticket.DomainName.Buffer, ticket.DomainName.Buffer + (ticket.DomainName.Length / sizeof(wchar_t))) << std::endl;
-            std::wcout << "TargetDomainName    : " << std::wstring(ticket.TargetDomainName.Buffer, ticket.TargetDomainName.Buffer + (ticket.TargetDomainName.Length / sizeof(wchar_t))) << std::endl;
-            std::wcout << "AltTargetDomainName : " << std::wstring(ticket.AltTargetDomainName.Buffer, ticket.AltTargetDomainName.Buffer + (ticket.AltTargetDomainName.Length / sizeof(wchar_t))) << std::endl;
+            std::wcout << "DomainName          : " << ToWString(&ticket.DomainName) << std::endl;
+            std::wcout << "TargetDomainName    : " << ToWString(&ticket.TargetDomainName) << std::endl;
+            std::wcout << "AltTargetDomainName : " << ToWString(&ticket.AltTargetDomainName) << std::endl;
             std::cout << "SessionKey Type     : " << ticket.SessionKey.KeyType << std::endl;
             OutputHex(lsa->out, "SessionKey Value", std::string{ ticket.SessionKey.Value, ticket.SessionKey.Value + ticket.SessionKey.Length });
             std::wcout << "TicketFlags         : " << ticket.TicketFlags << std::endl;

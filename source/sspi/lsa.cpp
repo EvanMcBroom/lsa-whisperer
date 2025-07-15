@@ -233,9 +233,9 @@ namespace Lsa {
                 if (response) {
                     auto session{ reinterpret_cast<PSECURITY_LOGON_SESSION_DATA>(response) };
                     std::wcout << L"LogonId              : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LogonId.LowPart << std::endl;
-                    std::wcout << L"UserName             : " << std::wstring(session->UserName.Buffer, session->UserName.Buffer + (session->UserName.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"LogonDomain          : " << std::wstring(session->LogonDomain.Buffer, session->LogonDomain.Buffer + (session->LogonDomain.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"AuthenticationPackage: " << std::wstring(session->AuthenticationPackage.Buffer, session->AuthenticationPackage.Buffer + (session->AuthenticationPackage.Length / sizeof(wchar_t))) << std::endl;
+                    std::wcout << L"UserName             : " << ToWString(&session->UserName) << std::endl;
+                    std::wcout << L"LogonDomain          : " << ToWString(&session->LogonDomain) << std::endl;
+                    std::wcout << L"AuthenticationPackage: " << ToWString(&session->AuthenticationPackage) << std::endl;
                     std::wcout << L"LogonType            : " << session->LogonType << std::endl;
                     std::wcout << L"Session              : " << session->Session << std::endl;
                     UNICODE_STRING sidString = { 0 };
@@ -244,18 +244,18 @@ namespace Lsa {
                         RtlFreeUnicodeString(&sidString);
                     }
                     std::wcout << L"LogonTime            : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LogonTime.QuadPart << std::endl;
-                    std::wcout << L"LogonServer          : " << std::wstring(session->LogonServer.Buffer, session->LogonServer.Buffer + (session->LogonServer.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"DnsDomainName        : " << std::wstring(session->DnsDomainName.Buffer, session->DnsDomainName.Buffer + (session->DnsDomainName.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"Upn                  : " << std::wstring(session->Upn.Buffer, session->Upn.Buffer + (session->Upn.Length / sizeof(wchar_t))) << std::endl;
+                    std::wcout << L"LogonServer          : " << ToWString(&session->LogonServer) << std::endl;
+                    std::wcout << L"DnsDomainName        : " << ToWString(&session->DnsDomainName) << std::endl;
+                    std::wcout << L"Upn                  : " << ToWString(&session->Upn) << std::endl;
                     std::wcout << L"UserFlags            : " << session->UserFlags << std::endl;
                     std::wcout << L"LastLogonInfo" << std::endl;
                     std::wcout << L"    LastSuccessfulLogon: 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LastLogonInfo.LastSuccessfulLogon.QuadPart << std::endl;
                     std::wcout << L"    LastFailedLogon    : 0x" << std::hex << std::setfill(L'0') << std::setw(4) << session->LastLogonInfo.LastFailedLogon.QuadPart << std::endl;
                     std::wcout << L"    FailedAttemptCount : " << session->LastLogonInfo.FailedAttemptCountSinceLastSuccessfulLogon << std::endl;
-                    std::wcout << L"LogonScript          : " << std::wstring(session->LogonScript.Buffer, session->LogonScript.Buffer + (session->LogonScript.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"ProfilePath          : " << std::wstring(session->ProfilePath.Buffer, session->ProfilePath.Buffer + (session->ProfilePath.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"HomeDirectory        : " << std::wstring(session->HomeDirectory.Buffer, session->HomeDirectory.Buffer + (session->HomeDirectory.Length / sizeof(wchar_t))) << std::endl;
-                    std::wcout << L"HomeDirectoryDrive   : " << std::wstring(session->HomeDirectoryDrive.Buffer, session->HomeDirectoryDrive.Buffer + (session->HomeDirectoryDrive.Length / sizeof(wchar_t))) << std::endl;
+                    std::wcout << L"LogonScript          : " << ToWString(&session->LogonScript) << std::endl;
+                    std::wcout << L"ProfilePath          : " << ToWString(&session->ProfilePath) << std::endl;
+                    std::wcout << L"HomeDirectory        : " << ToWString(&session->HomeDirectory) << std::endl;
+                    std::wcout << L"HomeDirectoryDrive   : " << ToWString(&session->HomeDirectoryDrive) << std::endl;
                     std::wcout << L"LogoffTime           : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->LogoffTime.QuadPart << std::endl;
                     std::wcout << L"KickOffTime          : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->KickOffTime.QuadPart << std::endl;
                     std::wcout << L"PasswordLastSet      : 0x" << std::hex << std::setfill(L'0') << std::setw(8) << session->PasswordLastSet.QuadPart << std::endl;
@@ -280,9 +280,9 @@ namespace Lsa {
             auto status{ this->sspi->CallSpmApi(&message.pmMessage, &outputMessageSize, reinterpret_cast<void**>(&output)) };
             if (NT_SUCCESS(status) && SUCCEEDED(output->ApiCallRequest.scRet)) {
                 auto response{ output->ApiCallRequest.Args.SpmArguments.Arguments.GetUserInfo.pUserInfo };
-                std::wcout << L"UserName       : " << std::wstring(response->UserName.Buffer, response->UserName.Buffer + (response->UserName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << L"LogonDomainName: " << std::wstring(response->LogonDomainName.Buffer, response->LogonDomainName.Buffer + (response->LogonDomainName.Length / sizeof(wchar_t))) << std::endl;
-                std::wcout << L"LogonServer    : " << std::wstring(response->LogonServer.Buffer, response->LogonServer.Buffer + (response->LogonServer.Length / sizeof(wchar_t))) << std::endl;
+                std::wcout << L"UserName       : " << ToWString(&response->UserName) << std::endl;
+                std::wcout << L"LogonDomainName: " << ToWString(&response->LogonDomainName) << std::endl;
+                std::wcout << L"LogonServer    : " << ToWString(&response->LogonServer) << std::endl;
                 UNICODE_STRING sidString = { 0 };
                 if (RtlConvertSidToUnicodeString(&sidString, response->pSid, true) == STATUS_SUCCESS) {
                     std::wcout << L"Sid            : " << sidString.Buffer << std::endl;
@@ -487,6 +487,6 @@ void OutputHex(std::ostream& out, const std::string& prompt, const std::string& 
     out << std::endl;
 }
 
-constexpr size_t RoundUp(size_t count, size_t powerOfTwo) {
-    return (count + powerOfTwo - 1) & (~powerOfTwo - 1);
+std::wstring ToWString(PUNICODE_STRING string) {
+    return (string->Length && string->MaximumLength >= string->Length && string->Buffer) ? std::wstring(string->Buffer, string->Length / sizeof(wchar_t)) : std::wstring();
 }

@@ -65,10 +65,10 @@ namespace Pku2u {
             for (size_t index{ 0 }; index < response->CountOfTickets; index++) {
                 auto& ticket{ response->Tickets[index] };
                 std::wcout << index << ": " << std::endl;
-                std::wcout << "    ClientName    : " << ticket.ClientName.Buffer << std::endl;
-                std::wcout << "    ClientRealm   : " << ticket.ClientRealm.Buffer << std::endl;
-                std::wcout << "    ServerName    : " << ticket.ServerName.Buffer << std::endl;
-                std::wcout << "    ServerRealm   : " << ticket.ServerRealm.Buffer << std::endl;
+                std::wcout << "    ClientName    : " << ToWString(&ticket.ClientName) << std::endl;
+                std::wcout << "    ClientRealm   : " << ToWString(&ticket.ClientRealm) << std::endl;
+                std::wcout << "    ServerName    : " << ToWString(&ticket.ServerName) << std::endl;
+                std::wcout << "    ServerRealm   : " << ToWString(&ticket.ServerRealm) << std::endl;
                 std::wcout << "    StartTime     : " << ticket.StartTime.QuadPart << std::endl;
                 std::wcout << "    EndTime       : " << ticket.EndTime.QuadPart << std::endl;
                 std::wcout << "    RenewTime     : " << ticket.RenewTime.QuadPart << std::endl;
